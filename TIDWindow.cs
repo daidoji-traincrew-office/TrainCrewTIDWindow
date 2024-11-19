@@ -1,4 +1,4 @@
-using Microsoft.VisualBasic;
+ï»¿using Microsoft.VisualBasic;
 using System.Drawing.Imaging;
 using System.Text.RegularExpressions;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
@@ -10,92 +10,102 @@ namespace TrainCrewTIDWindow {
     public partial class TIDWindow : Form {
 
         /// <summary>
-        /// Šeƒgƒ‰ƒbƒN‚Ìü‚ÌˆÊ’u‚âƒtƒ@ƒCƒ‹–¼‚È‚Ç‚Ìƒf[ƒ^
+        /// å„ãƒˆãƒ©ãƒƒã‚¯ã®ç·šã®ä½ç½®ã‚„ãƒ•ã‚¡ã‚¤ãƒ«åãªã©ã®ãƒ‡ãƒ¼ã‚¿
         /// </summary>
-        private readonly List<LineSetting> lineSettingList;
+        private readonly List<LineSetting> lineSettings;
 
         /// <summary>
-        /// Šeƒgƒ‰ƒbƒN‚Ì—ñÔ”Ô†‚ÌˆÊ’u‚È‚Ç‚Ìƒf[ƒ^i‰º‚è—ñÔ—pj
+        /// å„ãƒˆãƒ©ãƒƒã‚¯ã®åˆ—è»Šç•ªå·ã®ä½ç½®ãªã©ã®ãƒ‡ãƒ¼ã‚¿ï¼ˆä¸‹ã‚Šåˆ—è»Šç”¨ï¼‰
         /// </summary>
-        private readonly List<NumberSetting> numSettingOut;
+        private readonly List<NumberSetting> numSettingsOut;
 
         /// <summary>
-        /// Šeƒgƒ‰ƒbƒN‚Ì—ñÔ”Ô†‚ÌˆÊ’u‚È‚Ç‚Ìƒf[ƒ^iã‚è—ñÔ—pj
+        /// å„ãƒˆãƒ©ãƒƒã‚¯ã®åˆ—è»Šç•ªå·ã®ä½ç½®ãªã©ã®ãƒ‡ãƒ¼ã‚¿ï¼ˆä¸Šã‚Šåˆ—è»Šç”¨ï¼‰
         /// </summary>
-        private readonly List<NumberSetting> numSettingIn;
+        private readonly List<NumberSetting> numSettingsIn;
 
         /// <summary>
-        /// —ñÔ”Ô†‚ÌF
+        /// è¸åˆ‡ã®ä½ç½®ã‚„ãƒ•ã‚¡ã‚¤ãƒ«åãªã©ã®ãƒ‡ãƒ¼ã‚¿
+        /// </summary>
+        private readonly List<CrossingSetting> crossingSettings = [];
+
+        /// <summary>
+        /// å˜ç·šåŒºé–“ã®æ–¹å‘ã¦ã“çŠ¶æ…‹ã‚’ç¤ºã™çŸ¢å°ã®ä½ç½®ã‚„ãƒ•ã‚¡ã‚¤ãƒ«åãªã©ã®ãƒ‡ãƒ¼ã‚¿
+        /// </summary>
+        private readonly List<ArrowSetting> arrowSettings = [];
+
+        /// <summary>
+        /// åˆ—è»Šç•ªå·ã®è‰²
         /// </summary>
         private readonly Dictionary<string, Color> numColor = [];
 
         /// <summary>
-        /// —ñÔ”Ô†ˆÈŠO‚ÌF
+        /// åˆ—è»Šç•ªå·ä»¥å¤–ã®è‰²
         /// </summary>
         private readonly Dictionary<string, Color> dicColor = [];
 
         /// <summary>
-        /// ƒgƒ‰ƒbƒN‰æ‘œ
+        /// ç”»åƒ
         /// </summary>
-        private readonly Dictionary<string, Image> lineImages = [];
+        private readonly Dictionary<string, Image> images = [];
 
         /// <summary>
-        /// ƒT[ƒo‚âTRAIN CREW–{‘Ì‚©‚çæ“¾‚µ‚½‹O“¹‰ñ˜H‚Ìî•ñ
+        /// ã‚µãƒ¼ãƒã‚„TRAIN CREWæœ¬ä½“ã‹ã‚‰å–å¾—ã—ãŸè»Œé“å›è·¯ã®æƒ…å ±
         /// </summary>
         private readonly Dictionary<string, TrackData> trackDataList = [];
 
         /// <summary>
-        /// ƒT[ƒo‚©‚çæ“¾‚µ‚½“]“QŠí‚Ìî•ñ
+        /// ã‚µãƒ¼ãƒã‹ã‚‰å–å¾—ã—ãŸè»¢è½å™¨ã®æƒ…å ±
         /// </summary>
         private readonly Dictionary<string, PointData> pointDataList = [];
 
         /// <summary>
-        /// TRAIN CREW–{‘ÌÚ‘±—p
+        /// TRAIN CREWæœ¬ä½“æ¥ç¶šç”¨
         /// </summary>
         private TrainCrewCommunication communication = new TrainCrewCommunication();
 
         /// <summary>
-        /// ‹N“®”wŒi‰æ‘œ
+        /// èµ·å‹•æ™‚èƒŒæ™¯ç”»åƒ
         /// </summary>
         private Image backgroundDefault;
 
         /// <summary>
-        /// ’Êí”wŒi‰æ‘œ
+        /// é€šå¸¸æ™‚èƒŒæ™¯ç”»åƒ
         /// </summary>
         private Image backgroundImage;
 
         /// <summary>
-        /// —ñÔ”Ô†‰ºüi’x‰„•\¦‚ ‚èj
+        /// åˆ—è»Šç•ªå·ä¸‹ç·šï¼ˆé…å»¶è¡¨ç¤ºã‚ã‚Šï¼‰
         /// </summary>
         private Image numLineL;
 
         /// <summary>
-        /// —ñÔ”Ô†‰ºüi’x‰„•\¦‚È‚µj
+        /// åˆ—è»Šç•ªå·ä¸‹ç·šï¼ˆé…å»¶è¡¨ç¤ºãªã—ï¼‰
         /// </summary>
         private Image numLineM;
 
         /// <summary>
-        /// ‰^s”Ô†‰ºü
+        /// é‹è¡Œç•ªå·ä¸‹ç·š
         /// </summary>
         private Image numLineS;
 
         /// <summary>
-        /// ”Ô†ƒtƒHƒ“ƒg‰æ‘œ
+        /// ç•ªå·ãƒ•ã‚©ãƒ³ãƒˆç”»åƒ
         /// </summary>
         private Image numberImage;
 
         /// <summary>
-        /// —vXV‚©‚ÌŠm”F—p
+        /// è¦æ›´æ–°ã‹ã®ç¢ºèªç”¨
         /// </summary>
         private string states = "";
 
         /// <summary>
-        /// ƒf[ƒ^‚Ìæ“¾Œ³
+        /// ãƒ‡ãƒ¼ã‚¿ã®å–å¾—å…ƒ
         /// </summary>
         private string source = "";
 
         /// <summary>
-        /// Œ»À‚Æ‚Ì·
+        /// ç¾å®Ÿã¨ã®æ™‚å·®
         /// </summary>
         private int timeDifference = -10;
 
@@ -109,9 +119,9 @@ namespace TrainCrewTIDWindow {
             numLineS = Image.FromFile(".\\png\\TID_Retsuban_W_S.png");
             numberImage = Image.FromFile(".\\png\\Number.png");
 
-            lineSettingList = LoadLineSetting("linedata.tsv");
-            numSettingOut = LoadNumberSetting("number_outbound.tsv");
-            numSettingIn = LoadNumberSetting("number_inbound.tsv");
+            lineSettings = LoadLineSetting("linedata.tsv");
+            numSettingsOut = LoadNumberSetting("number_outbound.tsv");
+            numSettingsIn = LoadNumberSetting("number_inbound.tsv");
 
             try {
                 using var sr = new StreamReader(".\\setting\\color_setting.tsv");
@@ -130,6 +140,65 @@ namespace TrainCrewTIDWindow {
                     }
                     else {
                         dicColor.Add(texts[0], Color.FromArgb(int.Parse(texts[1]), int.Parse(texts[2]), int.Parse(texts[3])));
+                    }
+                }
+            }
+            catch {
+            }
+
+            try {
+                using var sr = new StreamReader(".\\setting\\crossing.tsv");
+                sr.ReadLine();
+                var line = sr.ReadLine();
+                var name = "";
+                while (line != null) {
+                    var texts = line.Split('\t');
+                    line = sr.ReadLine();
+                    if (texts.Length < 4 || texts.Any(t => t == "")) {
+                        continue;
+                    }
+                    if(texts[0] != "") {
+                        name = texts[0];
+                    }
+                    if(name == "") {
+                        continue;
+                    }
+
+                    var imageName = texts[1];
+                    crossingSettings.Add(new CrossingSetting(texts[0], imageName, int.Parse(texts[2]), int.Parse(texts[3])));
+
+                    if (!images.ContainsKey($"{imageName}_R")) {
+                        images[$"{imageName}_R"] = Image.FromFile($".\\png\\{imageName}_R.png");
+                        images[$"{imageName}_G"] = Image.FromFile($".\\png\\{imageName}_G.png");
+                    }
+                }
+            }
+            catch {
+            }
+
+            try {
+                using var sr = new StreamReader(".\\setting\\arrow.tsv");
+                sr.ReadLine();
+                var line = sr.ReadLine();
+                var name = "";
+                while (line != null) {
+                    var texts = line.Split('\t');
+                    line = sr.ReadLine();
+                    if (texts.Length < 5 || texts.Any(t => t == "")) {
+                        continue;
+                    }
+                    if (texts[0] != "") {
+                        name = texts[0];
+                    }
+                    if (name == "") {
+                        continue;
+                    }
+
+                    var imageName = texts[2];
+                    arrowSettings.Add(new ArrowSetting(texts[0], texts[1] == "R" ? ArrowType.R : ArrowType.L, imageName, int.Parse(texts[3]), int.Parse(texts[4])));
+
+                    if (!images.ContainsKey(imageName)) {
+                        images[imageName] = Image.FromFile($".\\png\\{imageName}.png");
                     }
                 }
             }
@@ -164,56 +233,69 @@ namespace TrainCrewTIDWindow {
             Size = MaximumSize;
 
 
-            // Œ±•\¦
+            // è©¦é¨“è¡¨ç¤º
             {
                 using var g = Graphics.FromImage(pictureBox1.Image);
-                foreach (var lineData in lineSettingList) {
+                foreach (var lineData in lineSettings) {
                     if (lineData != null && lineData.IsDefault) {
-                        AddImage(g, lineImages[lineData.FileNameR], lineData.PosX, lineData.PosY);
+                        AddImage(g, images[lineData.FileNameR], lineData.PosX, lineData.PosY);
                     }
                 }
 
-                foreach (var numData in numSettingOut) {
-                    if (numData != null && !numData.NotDraw) {
-                        Image image = numData.Size switch {
-                            NumberSize.L => new Bitmap(numLineL),
-                            NumberSize.S => new Bitmap(numLineS),
-                            _ => new Bitmap(numLineM),
-                        };
-                        var cm = new ColorMap {
-                            OldColor = Color.White,
-                            NewColor = Color.Red
-                        };
-                        var ia = new ImageAttributes();
-                        ia.SetRemapTable([cm]);
-                        AddImage(g, image, numData.PosX, numData.PosY + 10, ia);
-
+                foreach (var numData in numSettingsOut) {
+                    if (numData == null || numData.NotDraw) {
+                        continue;
                     }
+                    Image image = numData.Size switch {
+                        NumberSize.L => new Bitmap(numLineL),
+                        NumberSize.S => new Bitmap(numLineS),
+                        _ => new Bitmap(numLineM),
+                    };
+                    var cm = new ColorMap {
+                        OldColor = Color.White,
+                        NewColor = Color.Red
+                    };
+                    var ia = new ImageAttributes();
+                    ia.SetRemapTable([cm]);
+                    AddImage(g, image, numData.PosX, numData.PosY + 10, ia);
                 }
 
-                foreach (var numData in numSettingIn) {
-                    if (numData != null && !numData.NotDraw) {
-                        Image image;
-                        switch (numData.Size) {
-                            case NumberSize.L:
-                                image = new Bitmap(numLineL);
-                                break;
-                            case NumberSize.S:
-                                image = new Bitmap(numLineS);
-                                break;
-                            default:
-                                image = new Bitmap(numLineM);
-                                break;
-                        }
-                        var cm = new ColorMap {
-                            OldColor = Color.White,
-                            NewColor = Color.Red
-                        };
-                        var ia = new ImageAttributes();
-                        ia.SetRemapTable([cm]);
-                        AddImage(g, image, numData.PosX, numData.PosY + 10, ia);
-
+                foreach (var numData in numSettingsIn) {
+                    if(numData == null || numData.NotDraw) {
+                        continue;
                     }
+                    Image image;
+                    switch (numData.Size) {
+                        case NumberSize.L:
+                            image = new Bitmap(numLineL);
+                            break;
+                        case NumberSize.S:
+                            image = new Bitmap(numLineS);
+                            break;
+                        default:
+                            image = new Bitmap(numLineM);
+                            break;
+                    }
+                    var cm = new ColorMap {
+                        OldColor = Color.White,
+                        NewColor = Color.Red
+                    };
+                    var ia = new ImageAttributes();
+                    ia.SetRemapTable([cm]);
+                    AddImage(g, image, numData.PosX, numData.PosY + 10, ia);
+                }
+
+                foreach(var crossing in crossingSettings) {
+                    if(crossing == null) {
+                        continue;
+                    }
+                    AddImage(g, images[crossing.FileNameR], crossing.PosX, crossing.PosY);
+                }
+                foreach (var arrow in arrowSettings) {
+                    if (arrow == null) {
+                        continue;
+                    }
+                    AddImage(g, images[arrow.FileName], arrow.PosX, arrow.PosY);
                 }
             }
 
@@ -222,15 +304,14 @@ namespace TrainCrewTIDWindow {
                 communication.ConnectionStatusChanged += UpdateConnectionStatus;
                 communication.TCDataUpdated += UpdateTCData;
             }
-            Task.Run(ClockUpdateLoop);
             Load += TIDWindow_Load;
         }
 
         /// <summary>
-        /// Šeƒgƒ‰ƒbƒN‚Ìü‚ÌˆÊ’u‚âƒtƒ@ƒCƒ‹–¼‚È‚Ç‚Ìƒf[ƒ^‚ğ“Ç‚İ‚Ş
+        /// å„ãƒˆãƒ©ãƒƒã‚¯ã®ç·šã®ä½ç½®ã‚„ãƒ•ã‚¡ã‚¤ãƒ«åãªã©ã®ãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿è¾¼ã‚€
         /// </summary>
-        /// <param name="fileName">ƒtƒ@ƒCƒ‹–¼</param>
-        /// <returns>“Ç‚İ‚ñ‚¾ƒf[ƒ^‚ÌƒŠƒXƒg</returns>
+        /// <param name="fileName">ãƒ•ã‚¡ã‚¤ãƒ«å</param>
+        /// <returns>èª­ã¿è¾¼ã‚“ã ãƒ‡ãƒ¼ã‚¿ã®ãƒªã‚¹ãƒˆ</returns>
         private List<LineSetting> LoadLineSetting(string fileName) {
             List<LineSetting> list = [];
             try {
@@ -264,9 +345,9 @@ namespace TrainCrewTIDWindow {
                     else {
                         list.Add(new LineSetting(trackName, imageName, int.Parse(texts[2]), int.Parse(texts[3])));
                     }
-                    if (!lineImages.ContainsKey($"{imageName}_R")) {
-                        lineImages[$"{imageName}_R"] = Image.FromFile($".\\png\\{imageName}_R.png");
-                        lineImages[$"{imageName}_Y"] = Image.FromFile($".\\png\\{imageName}_Y.png");
+                    if (!images.ContainsKey($"{imageName}_R")) {
+                        images[$"{imageName}_R"] = Image.FromFile($".\\png\\{imageName}_R.png");
+                        images[$"{imageName}_Y"] = Image.FromFile($".\\png\\{imageName}_Y.png");
                     }
                 }
             }
@@ -276,10 +357,10 @@ namespace TrainCrewTIDWindow {
         }
 
         /// <summary>
-        /// Šeƒgƒ‰ƒbƒN‚Ì—ñÔ”Ô†‚ÌˆÊ’u‚È‚Ç‚Ìƒf[ƒ^‚ğ“Ç‚İ‚Ş
+        /// å„ãƒˆãƒ©ãƒƒã‚¯ã®åˆ—è»Šç•ªå·ã®ä½ç½®ãªã©ã®ãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿è¾¼ã‚€
         /// </summary>
-        /// <param name="fileName">ƒtƒ@ƒCƒ‹–¼</param>
-        /// <returns>“Ç‚İ‚ñ‚¾ƒf[ƒ^‚ÌƒŠƒXƒg</returns>
+        /// <param name="fileName">ãƒ•ã‚¡ã‚¤ãƒ«å</param>
+        /// <returns>èª­ã¿è¾¼ã‚“ã ãƒ‡ãƒ¼ã‚¿ã®ãƒªã‚¹ãƒˆ</returns>
         private List<NumberSetting> LoadNumberSetting(string fileName) {
             List<NumberSetting> list = [];
 
@@ -335,99 +416,99 @@ namespace TrainCrewTIDWindow {
         }
 
         /// <summary>
-        /// À•W‚ğw’è‚µ‚Ä‰æ‘œ‚ğ“\‚è•t‚¯‚é
+        /// åº§æ¨™ã‚’æŒ‡å®šã—ã¦ç”»åƒã‚’è²¼ã‚Šä»˜ã‘ã‚‹
         /// </summary>
-        /// <param name="g">TID‰æ‘œ‚ÌGraphics</param>
-        /// <param name="image">“\‚è•t‚¯‚é‰æ‘œ</param>
-        /// <param name="x">“\‚è•t‚¯‚éxÀ•W</param>
-        /// <param name="y">“\‚è•t‚¯‚éyÀ•W</param>
+        /// <param name="g">TIDç”»åƒã®Graphics</param>
+        /// <param name="image">è²¼ã‚Šä»˜ã‘ã‚‹ç”»åƒ</param>
+        /// <param name="x">è²¼ã‚Šä»˜ã‘ã‚‹xåº§æ¨™</param>
+        /// <param name="y">è²¼ã‚Šä»˜ã‘ã‚‹yåº§æ¨™</param>
         private void AddImage(Graphics g, Image image, int x, int y) {
             g.DrawImage(image, x, y, image.Width, image.Height);
         }
 
         /// <summary>
-        /// À•W‚ÆF‚ğw’è‚µ‚Ä‰æ‘œ‚ğ“\‚è•t‚¯‚é
+        /// åº§æ¨™ã¨è‰²ã‚’æŒ‡å®šã—ã¦ç”»åƒã‚’è²¼ã‚Šä»˜ã‘ã‚‹
         /// </summary>
-        /// <param name="g">TID‰æ‘œ‚ÌGraphics</param>
-        /// <param name="image">“\‚è•t‚¯‚é‰æ‘œ</param>
-        /// <param name="x">“\‚è•t‚¯‚éxÀ•W</param>
-        /// <param name="y">“\‚è•t‚¯‚éyÀ•W</param>
-        /// <param name="ia">F‚Ì’u‚«Š·‚¦‚ğw’è‚µ‚½ImageAttributes</param>
+        /// <param name="g">TIDç”»åƒã®Graphics</param>
+        /// <param name="image">è²¼ã‚Šä»˜ã‘ã‚‹ç”»åƒ</param>
+        /// <param name="x">è²¼ã‚Šä»˜ã‘ã‚‹xåº§æ¨™</param>
+        /// <param name="y">è²¼ã‚Šä»˜ã‘ã‚‹yåº§æ¨™</param>
+        /// <param name="ia">è‰²ã®ç½®ãæ›ãˆã‚’æŒ‡å®šã—ãŸImageAttributes</param>
         private void AddImage(Graphics g, Image image, int x, int y, ImageAttributes ia) {
             g.DrawImage(image, new Rectangle(x, y, image.Width, image.Height), 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, ia);
         }
 
         /// <summary>
-        /// À•W‚ÆF‚ğw’è‚µ‚Ä—ñÔ”Ô†ƒtƒHƒ“ƒg‰æ‘œ‚ğ“\‚è•t‚¯‚éi‘SŠp‰Âj
+        /// åº§æ¨™ã¨è‰²ã‚’æŒ‡å®šã—ã¦åˆ—è»Šç•ªå·ãƒ•ã‚©ãƒ³ãƒˆç”»åƒã‚’è²¼ã‚Šä»˜ã‘ã‚‹ï¼ˆå…¨è§’å¯ï¼‰
         /// </summary>
-        /// <param name="g">TID‰æ‘œ‚ÌGraphics</param>
-        /// <param name="isFullWidth">‘SŠp‚Å‚ ‚é‚©</param>
-        /// <param name="numX">‰æ‘œ’†‚É•¶š‚ª‚ ‚é—ñ</param>
-        /// <param name="numY">‰æ‘œ’†‚É•¶š‚ª‚ ‚és</param>
-        /// <param name="x">“\‚è•t‚¯‚éxÀ•W</param>
-        /// <param name="y">“\‚è•t‚¯‚éyÀ•W</param>
-        /// <param name="ia">F‚Ì’u‚«Š·‚¦‚ğw’è‚µ‚½ImageAttributes</param>
+        /// <param name="g">TIDç”»åƒã®Graphics</param>
+        /// <param name="isFullWidth">å…¨è§’ã§ã‚ã‚‹ã‹</param>
+        /// <param name="numX">ç”»åƒä¸­ã«æ–‡å­—ãŒã‚ã‚‹åˆ—</param>
+        /// <param name="numY">ç”»åƒä¸­ã«æ–‡å­—ãŒã‚ã‚‹è¡Œ</param>
+        /// <param name="x">è²¼ã‚Šä»˜ã‘ã‚‹xåº§æ¨™</param>
+        /// <param name="y">è²¼ã‚Šä»˜ã‘ã‚‹yåº§æ¨™</param>
+        /// <param name="ia">è‰²ã®ç½®ãæ›ãˆã‚’æŒ‡å®šã—ãŸImageAttributes</param>
         private void AddNumImage(Graphics g, bool isFullWidth, int numX, int numY, int x, int y, ImageAttributes ia) {
             g.DrawImage(numberImage, new Rectangle(x, y, isFullWidth ? 11 : 5, 9), 1 + numX * 6, 1 + numY * 10, isFullWidth ? 11 : 5, 9, GraphicsUnit.Pixel, ia);
         }
 
         /// <summary>
-        /// À•W‚ÆF‚ğw’è‚µ‚Ä—ñÔ”Ô†ƒtƒHƒ“ƒg‰æ‘œ‚ğ“\‚è•t‚¯‚é
+        /// åº§æ¨™ã¨è‰²ã‚’æŒ‡å®šã—ã¦åˆ—è»Šç•ªå·ãƒ•ã‚©ãƒ³ãƒˆç”»åƒã‚’è²¼ã‚Šä»˜ã‘ã‚‹
         /// </summary>
-        /// <param name="g">TID‰æ‘œ‚ÌGraphics</param>
-        /// <param name="numX">‰æ‘œ’†‚É•¶š‚ª‚ ‚é—ñ</param>
-        /// <param name="numY">‰æ‘œ’†‚É•¶š‚ª‚ ‚és</param>
-        /// <param name="x">“\‚è•t‚¯‚éxÀ•W</param>
-        /// <param name="y">“\‚è•t‚¯‚éyÀ•W</param>
-        /// <param name="ia">F‚Ì’u‚«Š·‚¦‚ğw’è‚µ‚½ImageAttributes</param>
+        /// <param name="g">TIDç”»åƒã®Graphics</param>
+        /// <param name="numX">ç”»åƒä¸­ã«æ–‡å­—ãŒã‚ã‚‹åˆ—</param>
+        /// <param name="numY">ç”»åƒä¸­ã«æ–‡å­—ãŒã‚ã‚‹è¡Œ</param>
+        /// <param name="x">è²¼ã‚Šä»˜ã‘ã‚‹xåº§æ¨™</param>
+        /// <param name="y">è²¼ã‚Šä»˜ã‘ã‚‹yåº§æ¨™</param>
+        /// <param name="ia">è‰²ã®ç½®ãæ›ãˆã‚’æŒ‡å®šã—ãŸImageAttributes</param>
         private void AddNumImage(Graphics g, int numX, int numY, int x, int y, ImageAttributes ia) {
             AddNumImage(g, false, numX, numY, x, y, ia);
         }
 
         /// <summary>
-        /// À•W‚ÆF‚ğw’è‚µ‚Ä—ñÔ”Ô†ƒtƒHƒ“ƒg‰æ‘œ‚ğ“\‚è•t‚¯‚éi”š‚Ì‚İj
+        /// åº§æ¨™ã¨è‰²ã‚’æŒ‡å®šã—ã¦åˆ—è»Šç•ªå·ãƒ•ã‚©ãƒ³ãƒˆç”»åƒã‚’è²¼ã‚Šä»˜ã‘ã‚‹ï¼ˆæ•°å­—ã®ã¿ï¼‰
         /// </summary>
-        /// <param name="g">TID‰æ‘œ‚ÌGraphics</param>
-        /// <param name="num">”š</param>
-        /// <param name="x">“\‚è•t‚¯‚éxÀ•W</param>
-        /// <param name="y">“\‚è•t‚¯‚éyÀ•W</param>
-        /// <param name="ia">F‚Ì’u‚«Š·‚¦‚ğw’è‚µ‚½ImageAttributes</param>
+        /// <param name="g">TIDç”»åƒã®Graphics</param>
+        /// <param name="num">æ•°å­—</param>
+        /// <param name="x">è²¼ã‚Šä»˜ã‘ã‚‹xåº§æ¨™</param>
+        /// <param name="y">è²¼ã‚Šä»˜ã‘ã‚‹yåº§æ¨™</param>
+        /// <param name="ia">è‰²ã®ç½®ãæ›ãˆã‚’æŒ‡å®šã—ãŸImageAttributes</param>
         private void AddNumImage(Graphics g, int num, int x, int y, ImageAttributes ia) {
             AddNumImage(g, num, 1, x, y, ia);
         }
 
         /// <summary>
-        /// À•W‚ğw’è‚µ‚Ä—ñÔ”Ô†ƒtƒHƒ“ƒg‰æ‘œ‚ğ“\‚è•t‚¯‚éi‘SŠp‰Âj
+        /// åº§æ¨™ã‚’æŒ‡å®šã—ã¦åˆ—è»Šç•ªå·ãƒ•ã‚©ãƒ³ãƒˆç”»åƒã‚’è²¼ã‚Šä»˜ã‘ã‚‹ï¼ˆå…¨è§’å¯ï¼‰
         /// </summary>
-        /// <param name="g">TID‰æ‘œ‚ÌGraphics</param>
-        /// <param name="isFullWidth">‘SŠp‚Å‚ ‚é‚©</param>
-        /// <param name="numX">‰æ‘œ’†‚É•¶š‚ª‚ ‚é—ñ</param>
-        /// <param name="numY">‰æ‘œ’†‚É•¶š‚ª‚ ‚és</param>
-        /// <param name="x">“\‚è•t‚¯‚éxÀ•W</param>
-        /// <param name="y">“\‚è•t‚¯‚éyÀ•W</param>
+        /// <param name="g">TIDç”»åƒã®Graphics</param>
+        /// <param name="isFullWidth">å…¨è§’ã§ã‚ã‚‹ã‹</param>
+        /// <param name="numX">ç”»åƒä¸­ã«æ–‡å­—ãŒã‚ã‚‹åˆ—</param>
+        /// <param name="numY">ç”»åƒä¸­ã«æ–‡å­—ãŒã‚ã‚‹è¡Œ</param>
+        /// <param name="x">è²¼ã‚Šä»˜ã‘ã‚‹xåº§æ¨™</param>
+        /// <param name="y">è²¼ã‚Šä»˜ã‘ã‚‹yåº§æ¨™</param>
         private void AddNumImage(Graphics g, bool isFullWidth, int numX, int numY, int x, int y) {
             g.DrawImage(numberImage, new Rectangle(x, y, isFullWidth ? 11 : 5, 9), 1 + numX * 6, 1 + numY * 10, isFullWidth ? 11 : 5, 9, GraphicsUnit.Pixel);
         }
 
         /// <summary>
-        /// À•W‚ğw’è‚µ‚Ä—ñÔ”Ô†ƒtƒHƒ“ƒg‰æ‘œ‚ğ“\‚è•t‚¯‚é
+        /// åº§æ¨™ã‚’æŒ‡å®šã—ã¦åˆ—è»Šç•ªå·ãƒ•ã‚©ãƒ³ãƒˆç”»åƒã‚’è²¼ã‚Šä»˜ã‘ã‚‹
         /// </summary>
-        /// <param name="g">TID‰æ‘œ‚ÌGraphics</param>
-        /// <param name="numX">‰æ‘œ’†‚É•¶š‚ª‚ ‚é—ñ</param>
-        /// <param name="numY">‰æ‘œ’†‚É•¶š‚ª‚ ‚és</param>
-        /// <param name="x">“\‚è•t‚¯‚éxÀ•W</param>
-        /// <param name="y">“\‚è•t‚¯‚éyÀ•W</param>
+        /// <param name="g">TIDç”»åƒã®Graphics</param>
+        /// <param name="numX">ç”»åƒä¸­ã«æ–‡å­—ãŒã‚ã‚‹åˆ—</param>
+        /// <param name="numY">ç”»åƒä¸­ã«æ–‡å­—ãŒã‚ã‚‹è¡Œ</param>
+        /// <param name="x">è²¼ã‚Šä»˜ã‘ã‚‹xåº§æ¨™</param>
+        /// <param name="y">è²¼ã‚Šä»˜ã‘ã‚‹yåº§æ¨™</param>
         private void AddNumImage(Graphics g, int numX, int numY, int x, int y) {
             AddNumImage(g, false, numX, numY, x, y);
         }
 
         /// <summary>
-        /// À•W‚ğw’è‚µ‚Ä—ñÔ”Ô†ƒtƒHƒ“ƒg‰æ‘œ‚ğ“\‚è•t‚¯‚éi‘SŠp‰Âj
+        /// åº§æ¨™ã‚’æŒ‡å®šã—ã¦åˆ—è»Šç•ªå·ãƒ•ã‚©ãƒ³ãƒˆç”»åƒã‚’è²¼ã‚Šä»˜ã‘ã‚‹ï¼ˆå…¨è§’å¯ï¼‰
         /// </summary>
-        /// <param name="g">TID‰æ‘œ‚ÌGraphics</param>
-        /// <param name="num">”š</param>
-        /// <param name="x">“\‚è•t‚¯‚éxÀ•W</param>
-        /// <param name="y">“\‚è•t‚¯‚éyÀ•W</param>
+        /// <param name="g">TIDç”»åƒã®Graphics</param>
+        /// <param name="num">æ•°å­—</param>
+        /// <param name="x">è²¼ã‚Šä»˜ã‘ã‚‹xåº§æ¨™</param>
+        /// <param name="y">è²¼ã‚Šä»˜ã‘ã‚‹yåº§æ¨™</param>
         private void AddNumImage(Graphics g, int num, int x, int y) {
             AddNumImage(g, num, 1, x, y);
         }
@@ -435,18 +516,19 @@ namespace TrainCrewTIDWindow {
 
 
         private async void TIDWindow_Load(object? sender, EventArgs? e) {
+            _ = Task.Run(ClockUpdateLoop);
 
             switch (source) {
                 case "traincrew":
-                    //ˆø”‚É‚Íall‚Ì‘¼Atrackcircuit, signal, train‚ªg‚¦‚Ü‚·B
+                    //å¼•æ•°ã«ã¯allã®ä»–ã€trackcircuit, signal, trainãŒä½¿ãˆã¾ã™ã€‚
                     communication.Request = ["trackcircuit"];
                     await communication.TryConnectWebSocket();
                     break;
                 case "server":
-                    //ƒfƒtƒHƒ‹ƒg‚ÌƒT[ƒo‚Ö‚ÌÚ‘±ˆ—
+                    //ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®ã‚µãƒ¼ãƒã¸ã®æ¥ç¶šå‡¦ç†
                     break;
                 default:
-                    //w’è‚µ‚½”CˆÓ‚ÌƒT[ƒo‚Ö‚ÌÚ‘±ˆ—
+                    //æŒ‡å®šã—ãŸä»»æ„ã®ã‚µãƒ¼ãƒã¸ã®æ¥ç¶šå‡¦ç†
                     break;
             }
         }
@@ -457,7 +539,7 @@ namespace TrainCrewTIDWindow {
         }
 
         /// <summary>
-        /// TRAIN CREW–{‘Ì‚©‚ç‚Ìƒf[ƒ^‚ªXV‚³‚ê‚½Û‚ÉŒÄ‚Î‚ê‚é
+        /// TRAIN CREWæœ¬ä½“ã‹ã‚‰ã®ãƒ‡ãƒ¼ã‚¿ãŒæ›´æ–°ã•ã‚ŒãŸéš›ã«å‘¼ã°ã‚Œã‚‹
         /// </summary>
         /// <param name="tcData"></param>
         private void UpdateTCData(DataFromTrainCrew tcData) {
@@ -470,19 +552,19 @@ namespace TrainCrewTIDWindow {
                     trackDataList[tc.Name].SetStates(tc.On ? tc.Last : "", 2);
                 }
                 else {
-                    trackDataList.Add(tc.Name, new TrackData(tc.Name, lineSettingList.Where(d => d.TrackName == tc.Name).ToArray(), numSettingOut.Where(d => d.TrackName == tc.Name).ToArray(), numSettingIn.Where(d => d.TrackName == tc.Name).ToArray(), tc.On ? tc.Last : "", 2));
+                    trackDataList.Add(tc.Name, new TrackData(tc.Name, lineSettings.Where(d => d.TrackName == tc.Name).ToArray(), numSettingsOut.Where(d => d.TrackName == tc.Name).ToArray(), numSettingsIn.Where(d => d.TrackName == tc.Name).ToArray(), tc.On ? tc.Last : "", 2));
                 }
             }
             UpdateTID();
         }
 
         /// <summary>
-        /// •K—v‚Å‚ ‚ê‚ÎTID‚Ìİü•\¦‚ğXV‚·‚é
-        /// ƒf[ƒ^‚ªXV‚³‚ê‚½Û‚Í‚Æ‚è‚ ‚¦‚¸‚±‚ê‚ğŒÄ‚Ô
+        /// å¿…è¦ã§ã‚ã‚Œã°TIDã®åœ¨ç·šè¡¨ç¤ºã‚’æ›´æ–°ã™ã‚‹
+        /// ãƒ‡ãƒ¼ã‚¿ãŒæ›´æ–°ã•ã‚ŒãŸéš›ã¯ã¨ã‚Šã‚ãˆãšã“ã‚Œã‚’å‘¼ã¶
         /// </summary>
         public void UpdateTID() {
 
-            // ‘O‰ñ‚Æ‘S‚­“¯‚¶ó‘Ô‚Å‚ ‚ê‚Î•\¦XV‚ğƒXƒLƒbƒv‚·‚é
+            // å‰å›ã¨å…¨ãåŒã˜çŠ¶æ…‹ã§ã‚ã‚Œã°è¡¨ç¤ºæ›´æ–°ã‚’ã‚¹ã‚­ãƒƒãƒ—ã™ã‚‹
             var nextStates = string.Join('/', trackDataList.Values.Select(d => d.ToString()));
             if (nextStates == states) {
                 return;
@@ -497,15 +579,15 @@ namespace TrainCrewTIDWindow {
                     continue;
                 }
 
-                // ƒgƒ‰ƒbƒN‚ÌİüAi˜HŠJ’Êó‘Ô•\¦
+                // ãƒˆãƒ©ãƒƒã‚¯ã®åœ¨ç·šã€é€²è·¯é–‹é€šçŠ¶æ…‹è¡¨ç¤º
 
                 var rule = "";
-                foreach (var line in track.LineSettingArray) {
+                foreach (var line in track.LineSettings) {
                     if (line == null) {
                         continue;
                     }
 
-                    // “]“QŠí‚Ìó‘Ô‚Å•\¦ğŒ‚ğ”»’è
+                    // è»¢è½å™¨ã®çŠ¶æ…‹ã§è¡¨ç¤ºæ¡ä»¶ã‚’åˆ¤å®š
                     var r = line.PointName != "" ? $"{line.PointName}/{line.Reversed}" : "";
                     if (r != "" && rule == "" && pointDataList.ContainsKey(line.PointName)) {
                         var point = pointDataList[line.PointName];
@@ -514,31 +596,31 @@ namespace TrainCrewTIDWindow {
                         }
                     }
 
-                    // •\¦ğŒ‚ğ–‚½‚³‚È‚¢ê‡‚Í•\¦‚µ‚È‚¢
+                    // è¡¨ç¤ºæ¡ä»¶ã‚’æº€ãŸã•ãªã„å ´åˆã¯è¡¨ç¤ºã—ãªã„
                     if (rule != r) {
                         continue;
                     }
-                    AddImage(g, lineImages[track.OnTrain ? line.FileNameR : line.FileNameY], line.PosX, line.PosY);
+                    AddImage(g, images[track.OnTrain ? line.FileNameR : line.FileNameY], line.PosX, line.PosY);
                 }
                 if (!track.OnTrain) {
                     continue;
                 }
 
-                // —ñ”Ô•\¦
+                // åˆ—ç•ªè¡¨ç¤º
 
-                var numHeader = Regex.Replace(track.Train, @"[0-9a-zA-Z]", "");  // —ñ”Ô‚Ì“ª‚Ì•¶ši‰ñA‚È‚Çj
-                _ = int.TryParse(Regex.Replace(track.Train, @"[^0-9]", ""), out var numBody);  // —ñ”Ô–{‘Ìi”š•”•ªj
-                var numFooter = Regex.Replace(track.Train, @"[^a-zA-Z]", "");  // —ñ”Ô‚Ì––”ö‚Ì•¶š
+                var numHeader = Regex.Replace(track.Train, @"[0-9a-zA-Z]", "");  // åˆ—ç•ªã®é ­ã®æ–‡å­—ï¼ˆå›ã€è©¦ãªã©ï¼‰
+                _ = int.TryParse(Regex.Replace(track.Train, @"[^0-9]", ""), out var numBody);  // åˆ—ç•ªæœ¬ä½“ï¼ˆæ•°å­—éƒ¨åˆ†ï¼‰
+                var numFooter = Regex.Replace(track.Train, @"[^a-zA-Z]", "");  // åˆ—ç•ªã®æœ«å°¾ã®æ–‡å­—
 
-                var numSettingList = (numBody % 2 == 1 ? numSettingOut : numSettingIn).Where(d => d.TrackName == track.Name && !d.NotDraw && !d.ExistPoint);
+                var numSettingList = (numBody % 2 == 1 ? numSettingsOut : numSettingsIn).Where(d => d.TrackName == track.Name && !d.NotDraw && !d.ExistPoint);
 
                 rule = "";
-                foreach (var numData in (numBody % 2 == 1 ? track.NumSettingOut : track.NumSettingIn)) {
+                foreach (var numData in (numBody % 2 == 1 ? track.NumSettingsOut : track.NumSettingsIn)) {
                     if (numData == null) {
                         continue;
                     }
 
-                    // “]“QŠí‚Ìó‘Ô‚Å•\¦ğŒ‚ğ”»’è
+                    // è»¢è½å™¨ã®çŠ¶æ…‹ã§è¡¨ç¤ºæ¡ä»¶ã‚’åˆ¤å®š
                     var r = numData.PointName != "" ? $"{numData.PointName}/{numData.Reversed}" : "";
                     if (r != "" && rule == "" && pointDataList.ContainsKey(numData.PointName)) {
                         var point = pointDataList[numData.PointName];
@@ -547,16 +629,16 @@ namespace TrainCrewTIDWindow {
                         }
                     }
 
-                    // •\¦ğŒ‚ğ–‚½‚³‚È‚¢ê‡‚Í•\¦‚µ‚È‚¢
+                    // è¡¨ç¤ºæ¡ä»¶ã‚’æº€ãŸã•ãªã„å ´åˆã¯è¡¨ç¤ºã—ãªã„
                     if (rule != r) {
                         continue;
                     }
 
-                    // ‰^”Ô
+                    // é‹ç•ª
                     if (numData.Size == NumberSize.S) {
                         var umban = numBody / 3000 * 100 + numBody % 100;
 
-                        // ‰^”Ô‚ğ‹ô”‚É‚·‚éE–îˆóİ’u
+                        // é‹ç•ªã‚’å¶æ•°ã«ã™ã‚‹ãƒ»çŸ¢å°è¨­ç½®
                         if (umban % 2 != 0) {
                             umban -= 1;
                             AddNumImage(g, 8, 0, numData.PosX, numData.PosY);
@@ -565,20 +647,20 @@ namespace TrainCrewTIDWindow {
                             AddNumImage(g, 9, 0, numData.PosX, numData.PosY);
                         }
 
-                        // ‰^”Ôİ’u
+                        // é‹ç•ªè¨­ç½®
                         for (var i = 2; i >= 0 && umban > 0; i--) {
                             var num = umban % 10;
                             AddNumImage(g, num, numData.PosX + 6 + i * 6, numData.PosY);
                             umban /= 10;
                         }
-                        // ‰ºüİ’u
+                        // ä¸‹ç·šè¨­ç½®
                         AddImage(g, numLineS, numData.PosX, numData.PosY + 10);
                     }
-                    // —ñ”Ô
+                    // åˆ—ç•ª
                     else {
                         var retsuban = numBody;
 
-                        // í•ÊF
+                        // ç¨®åˆ¥è‰²
                         ImageAttributes? iaType = null;
                         foreach (var k in numColor.Keys) {
                             if ($"{numHeader}{numFooter}".Contains(k)) {
@@ -587,7 +669,7 @@ namespace TrainCrewTIDWindow {
                                 break;
                             }
                         }
-                        // í•ÊF–³‚µ‚©‚Â”š‚È‚µ‚Å‚ ‚ê‚Î•s–¾F‚É
+                        // ç¨®åˆ¥è‰²ç„¡ã—ã‹ã¤æ•°å­—ãªã—ã§ã‚ã‚Œã°ä¸æ˜è‰²ã«
                         if (iaType == null) {
                             iaType = new ImageAttributes();
                             if (retsuban <= 0 && dicColor.TryGetValue("UNKNOWN", out var newColor)) {
@@ -595,20 +677,20 @@ namespace TrainCrewTIDWindow {
                             }
                         }
 
-                        // —ñ”Ô‚Ì“ª‚Ì•¶šİ’u
+                        // åˆ—ç•ªã®é ­ã®æ–‡å­—è¨­ç½®
                         switch (numHeader) {
-                            case "‰ñ":
+                            case "å›":
                                 AddNumImage(g, true, 0, 0, numData.PosX, numData.PosY, iaType);
                                 break;
-                            case "":
+                            case "è©¦":
                                 AddNumImage(g, true, 2, 0, numData.PosX, numData.PosY, iaType);
                                 break;
-                            case "—Õ":
+                            case "è‡¨":
                                 AddNumImage(g, true, 4, 0, numData.PosX, numData.PosY, iaType);
                                 break;
                         }
 
-                        // —ñ”Ô–{‘Ìİ’u
+                        // åˆ—ç•ªæœ¬ä½“è¨­ç½®
                         for (var i = 3; i >= 0 && retsuban > 0; i--) {
                             var num = retsuban % 10;
                             AddNumImage(g, num, numData.PosX + 12 + i * 6, numData.PosY, iaType);
@@ -616,7 +698,7 @@ namespace TrainCrewTIDWindow {
                         }
 
 
-                        // —ñ”Ô‚Ì––”ö‚Ì•¶šİ’u
+                        // åˆ—ç•ªã®æœ«å°¾ã®æ–‡å­—è¨­ç½®
                         if (numFooter.Length > 0) {
                             var x = GetAlphaX(numFooter[0]);
                             if (x < 55) {
@@ -631,7 +713,7 @@ namespace TrainCrewTIDWindow {
                         }
 
 
-                        // ’x‰„•ª•\¦i–¢À‘•‚Ì‚½‚ß•K‚¸0E”’Fj
+                        // é…å»¶æ™‚åˆ†è¡¨ç¤ºï¼ˆæœªå®Ÿè£…ã®ãŸã‚å¿…ãš0ãƒ»ç™½è‰²ï¼‰
 
                         /*var cm = new ColorMap();
                         cm.OldColor = Color.White;
@@ -649,10 +731,10 @@ namespace TrainCrewTIDWindow {
         }
 
         /// <summary>
-        /// —ñ”Ô‰æ‘œ“à‚ÌƒAƒ‹ƒtƒ@ƒxƒbƒg‚Ì—ñÀ•W‚ğæ“¾‚·‚é
+        /// åˆ—ç•ªç”»åƒå†…ã®ã‚¢ãƒ«ãƒ•ã‚¡ãƒ™ãƒƒãƒˆã®åˆ—åº§æ¨™ã‚’å–å¾—ã™ã‚‹
         /// </summary>
-        /// <param name="alpha">ƒAƒ‹ƒtƒ@ƒxƒbƒg</param>
-        /// <returns>—ñ‚ÌÀ•W</returns>
+        /// <param name="alpha">ã‚¢ãƒ«ãƒ•ã‚¡ãƒ™ãƒƒãƒˆ</param>
+        /// <returns>åˆ—ã®åº§æ¨™</returns>
         public int GetAlphaX(char alpha) {
             switch (alpha) {
                 case 'A':

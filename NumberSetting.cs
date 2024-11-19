@@ -57,15 +57,31 @@ namespace TrainCrewTIDWindow {
         /// </summary>
         public bool NotDraw => PosX <= -100 && PosY <= -100;
 
+        /// <summary>
+        /// 列番表示枠についての設定
+        /// </summary>
+        /// <param name="trackName">軌道回路名</param>
+        /// <param name="size">表示枠のサイズ</param>
+        /// <param name="posX">画面上のx座標</param>
+        /// <param name="posY">画面上のy座標</param>
         public NumberSetting(string trackName, NumberSize size, int posX, int posY) : this(trackName, size, posX, posY, "", false) { }
     }
 
     /// <summary>
-    /// 列番表示枠のサイズ（Lは遅れ表示あり、Mは遅れ表示なし、Sは運行番号）
+    /// 列番表示枠のサイズ
     /// </summary>
     public enum NumberSize {
+        /// <summary>
+        /// 列車番号+遅れ表示
+        /// </summary>
         L,
+        /// <summary>
+        /// 列車番号のみ
+        /// </summary>
         M,
+        /// <summary>
+        /// 運行番号のみ
+        /// </summary>
         S
     }
 }

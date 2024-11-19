@@ -85,6 +85,7 @@
             Controls.Add(panel1);
             Controls.Add(label1);
             MaximumSize = new Size(1000, 600);
+            MinimumSize = new Size(540, 300);
             Name = "TIDWindow";
             Text = "全線TID | TID - ダイヤ運転会";
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();

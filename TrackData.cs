@@ -11,10 +11,13 @@ namespace TrainCrewTIDWindow {
     /// サーバやTRAIN CREW本体から取得した軌道回路の情報
     /// </summary>
     /// <param name="name">軌道回路名</param>
+    /// <param name="lineSettings">このトラックの線の位置やファイル名などのデータ</param>
+    /// <param name="numSettingsOut">このトラックの列車番号の位置などのデータ（下り列車用）</param>
+    /// <param name="numSettingsIn">このトラックの列車番号の位置などのデータ（上り列車用）</param>
     /// <param name="train">在線している列車番号</param>
     /// <param name="isReserved">進路が信号により予約されているか</param>
     /// <param name="count">在線消失の際実際に在線を消すまでの猶予（チャタリング対策）</param>
-    public class TrackData(string name, LineSetting[] lineSettingArray, NumberSetting[] numSettingOut, NumberSetting[] numSettingIn, string train, bool isReserved, int count) {
+    public class TrackData(string name, LineSetting[] lineSettings, NumberSetting[] numSettingsOut, NumberSetting[] numSettingsIn, string train, bool isReserved, int count) {
 
         /// <summary>
         /// 軌道回路名
@@ -24,25 +27,34 @@ namespace TrainCrewTIDWindow {
             private set; } = name;
 
         /// <summary>
-        /// 各トラックの線の位置やファイル名などのデータ
+        /// このトラックの線の位置やファイル名などのデータ
         /// </summary>
-        private readonly LineSetting[] lineSettingArray = lineSettingArray;
-
-        public ReadOnlyCollection<LineSetting> LineSettingArray => Array.AsReadOnly(lineSettingArray);
+        private readonly LineSetting[] lineSettings = lineSettings;
 
         /// <summary>
-        /// 各トラックの列車番号の位置などのデータ（下り列車用）
+        /// このトラックの線の位置やファイル名などのデータ
         /// </summary>
-        private readonly NumberSetting[] numSettingOut = numSettingOut;
-
-        public ReadOnlyCollection<NumberSetting> NumSettingOut => Array.AsReadOnly(numSettingOut);
+        public ReadOnlyCollection<LineSetting> LineSettings => Array.AsReadOnly(lineSettings);
 
         /// <summary>
-        /// 各トラックの列車番号の位置などのデータ（上り列車用）
+        /// このトラックの列車番号の位置などのデータ（下り列車用）
         /// </summary>
-        private readonly NumberSetting[] numSettingIn = numSettingIn;
+        private readonly NumberSetting[] numSettingsOut = numSettingsOut;
 
-        public ReadOnlyCollection<NumberSetting> NumSettingIn => Array.AsReadOnly(numSettingIn);
+        /// <summary>
+        /// このトラックの列車番号の位置などのデータ（下り列車用）
+        /// </summary>
+        public ReadOnlyCollection<NumberSetting> NumSettingsOut => Array.AsReadOnly(numSettingsOut);
+
+        /// <summary>
+        /// このトラックの列車番号の位置などのデータ（上り列車用）
+        /// </summary>
+        private readonly NumberSetting[] numSettingsIn = numSettingsIn;
+
+        /// <summary>
+        /// このトラックの列車番号の位置などのデータ（上り列車用）
+        /// </summary>
+        public ReadOnlyCollection<NumberSetting> NumSettingsIn => Array.AsReadOnly(numSettingsIn);
 
         /// <summary>
         /// 在線している列車番号
@@ -69,9 +81,26 @@ namespace TrainCrewTIDWindow {
         /// </summary>
         public bool OnTrain => Train != "";
 
-
+        /// <summary>
+        /// サーバやTRAIN CREW本体から取得した軌道回路の情報
+        /// </summary>
+        /// <param name="name">軌道回路名</param>
+        /// <param name="lineSettings">このトラックの線の位置やファイル名などのデータ</param>
+        /// <param name="numSettingsOut">このトラックの列車番号の位置などのデータ（下り列車用）</param>
+        /// <param name="numSettingsIn">このトラックの列車番号の位置などのデータ（上り列車用）</param>
+        /// <param name="train">在線している列車番号</param>
+        /// <param name="isReserved">進路が信号により予約されているか</param>
         public TrackData(string name, LineSetting[] lineSettingArray, NumberSetting[] numSettingOut, NumberSetting[] numSettingIn, string train, bool isReserved): this(name, lineSettingArray, numSettingOut, numSettingIn, train ,isReserved, 0) { }
 
+        /// <summary>
+        /// サーバやTRAIN CREW本体から取得した軌道回路の情報
+        /// </summary>
+        /// <param name="name">軌道回路名</param>
+        /// <param name="lineSettings">このトラックの線の位置やファイル名などのデータ</param>
+        /// <param name="numSettingsOut">このトラックの列車番号の位置などのデータ（下り列車用）</param>
+        /// <param name="numSettingsIn">このトラックの列車番号の位置などのデータ（上り列車用）</param>
+        /// <param name="train">在線している列車番号</param>
+        /// <param name="count">在線消失の際実際に在線を消すまでの猶予（チャタリング対策）</param>
         public TrackData(string name, LineSetting[] lineSettingArray, NumberSetting[] numSettingOut, NumberSetting[] numSettingIn, string train, int count) : this(name, lineSettingArray, numSettingOut, numSettingIn, train, false, count) { }
 
         /// <summary>

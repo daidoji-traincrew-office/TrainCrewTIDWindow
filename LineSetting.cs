@@ -61,6 +61,13 @@ namespace TrainCrewTIDWindow {
         /// </summary>
         public bool IsDefault => PointName == "";
 
+        /// <summary>
+        /// 軌道回路の状態を表示する線についての設定
+        /// </summary>
+        /// <param name="trackName">軌道回路名</param>
+        /// <param name="fileName">ファイル名称（_Y、_Rなど、状態部分を含まない）</param>
+        /// <param name="posX">画面上のx座標</param>
+        /// <param name="posY">画面上のy座標</param>
         public LineSetting(string trackName, string fileName, int posX, int posY) : this(trackName, fileName, posX, posY, "", false) { }
 
     }
