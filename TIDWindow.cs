@@ -100,7 +100,7 @@ namespace TrainCrewTIDWindow {
         private string states = "";
 
         /// <summary>
-        /// データの取得元
+        /// データの取得元（traincrew/server、もしくはサーバのURL）
         /// </summary>
         private string source = "";
 
@@ -520,17 +520,36 @@ namespace TrainCrewTIDWindow {
 
             switch (source) {
                 case "traincrew":
-                    //引数にはallの他、trackcircuit, signal, trainが使えます。
-                    communication.Request = ["trackcircuit"];
-                    await communication.TryConnectWebSocket();
+                    await TryConnectTrainCrew();
                     break;
                 case "server":
                     //デフォルトのサーバへの接続処理
+                    await TryConnectServer(ServerAddless.SignalAddless);
                     break;
                 default:
                     //指定した任意のサーバへの接続処理
+                    await TryConnectServer(source);
                     break;
             }
+        }
+
+        /// <summary>
+        /// TRAIN CREW本体と接続する
+        /// </summary>
+        /// <returns></returns>
+        private async Task TryConnectTrainCrew() {
+            //引数にはallの他、trackcircuit, signal, trainが使えます。
+            communication.Request = ["trackcircuit"];
+            await communication.TryConnectWebSocket();
+        }
+
+        /// <summary>
+        /// 運転会サーバと接続する
+        /// </summary>
+        /// <param name="url">接続先のURL</param>
+        /// <returns></returns>
+        private async Task TryConnectServer(string url) {
+
         }
 
 
