@@ -12,9 +12,22 @@ namespace TrainCrewTIDWindow {
         [JsonInclude]
         public string[] args = [];
     }
+    [Serializable]
+    public class Data_Base
+    {
+        public string Type { get; set; }
+        public object Data { get; set; }
+    }
 
     [Serializable]
-    public class DataFromTrainCrew {
+    public class TrainCrewState
+    {
+        public string Type { get; set; }
+        public TrainCrewStateData Data { get; set; }
+    }
+
+    [Serializable]
+    public class TrainCrewStateData {
         public TimeData nowTime;
         public TrainState myTrainData = new TrainState();
         public List<TrackCircuitData>? trackCircuitList;

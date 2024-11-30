@@ -561,7 +561,7 @@ namespace TrainCrewTIDWindow {
         /// TRAIN CREW本体からのデータが更新された際に呼ばれる
         /// </summary>
         /// <param name="tcData"></param>
-        private void UpdateTCData(DataFromTrainCrew tcData) {
+        private void UpdateTCData(TrainCrewStateData tcData) {
             var tcList = tcData.trackCircuitList;
             if (tcList == null) {
                 return;
