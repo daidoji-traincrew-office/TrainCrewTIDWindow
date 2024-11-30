@@ -663,7 +663,7 @@ namespace TrainCrewTIDWindow {
                             AddNumImage(g, 8, 0, numData.PosX, numData.PosY);
                         }
                         else {
-                            AddNumImage(g, 9, 0, numData.PosX, numData.PosY);
+                            AddNumImage(g, 9, 0, numData.PosX + 24, numData.PosY);
                         }
 
                         // 運番設置
