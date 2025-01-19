@@ -63,7 +63,6 @@
             // label2
             // 
             label2.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            label2.AutoSize = true;
             label2.Font = new Font("ＭＳ ゴシック", 9F, FontStyle.Regular, GraphicsUnit.Point, 128);
             label2.ForeColor = Color.White;
             label2.Location = new Point(930, 3);

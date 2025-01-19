@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace TrainCrewTIDWindow
+namespace TrainCrewTIDWindow.Communications
 {
 
     /// <summary>
@@ -37,8 +37,8 @@ namespace TrainCrewTIDWindow
             {
                 if (value != null)
                 {
-                    if ((value.Length == 1 && value[0] == "all") ||
-                        (value.All(str => str == "trackcircuit" || str == "signal" || str == "train")))
+                    if (value.Length == 1 && value[0] == "all" ||
+                        value.All(str => str == "trackcircuit" || str == "signal" || str == "train"))
                     {
                         request = value;
                     }

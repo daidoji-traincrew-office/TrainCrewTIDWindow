@@ -4,7 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TrainCrewTIDWindow {
+namespace TrainCrewTIDWindow.Settings
+{
     /// <summary>
     /// 踏切の位置やファイル名などについての設定
     /// </summary>
@@ -12,7 +13,8 @@ namespace TrainCrewTIDWindow {
     /// <param name="fileName">ファイル名称（_G、_Rなど、状態部分を含まない）</param>
     /// <param name="posX">画面上のx座標</param>
     /// <param name="posY">画面上のy座標</param>
-    public class CrossingSetting(string name, string fileName, int posX, int posY) {
+    public class CrossingSetting(string name, string fileName, int posX, int posY)
+    {
         /// <summary>
         /// 踏切名
         /// </summary>

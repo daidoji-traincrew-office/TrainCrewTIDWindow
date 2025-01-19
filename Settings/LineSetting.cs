@@ -4,18 +4,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TrainCrewTIDWindow {
-
+namespace TrainCrewTIDWindow.Settings
+{
     /// <summary>
-    /// 列番表示枠についての設定
+    /// 軌道回路の状態を表示する線についての設定
     /// </summary>
     /// <param name="trackName">軌道回路名</param>
-    /// <param name="size">表示枠のサイズ</param>
+    /// <param name="fileName">ファイル名称（_Y、_Rなど、状態部分を含まない）</param>
     /// <param name="posX">画面上のx座標</param>
     /// <param name="posY">画面上のy座標</param>
     /// <param name="pointName">表示条件となる転轍器の名称</param>
     /// <param name="reversed">転轍器の状態（反位であるか）</param>
-    public class NumberSetting(string trackName, NumberSize size, int posX, int posY, string pointName, bool reversed) {
+    public class LineSetting(string trackName, string fileName, int posX, int posY, string pointName, bool reversed)
+    {
 
         /// <summary>
         /// 軌道回路名
@@ -23,9 +24,19 @@ namespace TrainCrewTIDWindow {
         public string TrackName { get; private set; } = trackName;
 
         /// <summary>
-        /// 表示枠のサイズ
+        /// ファイル名称（_Y、_Rなど、状態部分を含まない）
         /// </summary>
-        public NumberSize Size { get; private set; } = size;
+        public string FileName { get; private set; } = fileName;
+
+        /// <summary>
+        /// ファイル名称（赤線）
+        /// </summary>
+        public string FileNameR { get; private set; } = $"{fileName}_R";
+
+        /// <summary>
+        /// ファイル名称（黄線）
+        /// </summary>
+        public string FileNameY { get; private set; } = $"{fileName}_Y";
 
         /// <summary>
         /// 画面上のx座標
@@ -50,38 +61,16 @@ namespace TrainCrewTIDWindow {
         /// <summary>
         /// 表示条件（分岐器状態）が設定されているか
         /// </summary>
-        public bool ExistPoint => PointName != "";
+        public bool IsDefault => PointName == "";
 
         /// <summary>
-        /// 座標の数値が非表示とする条件に含まれるか（xy両方が-100以下だと非表示）
-        /// </summary>
-        public bool NotDraw => PosX <= -100 && PosY <= -100;
-
-        /// <summary>
-        /// 列番表示枠についての設定
+        /// 軌道回路の状態を表示する線についての設定
         /// </summary>
         /// <param name="trackName">軌道回路名</param>
-        /// <param name="size">表示枠のサイズ</param>
+        /// <param name="fileName">ファイル名称（_Y、_Rなど、状態部分を含まない）</param>
         /// <param name="posX">画面上のx座標</param>
         /// <param name="posY">画面上のy座標</param>
-        public NumberSetting(string trackName, NumberSize size, int posX, int posY) : this(trackName, size, posX, posY, "", false) { }
-    }
+        public LineSetting(string trackName, string fileName, int posX, int posY) : this(trackName, fileName, posX, posY, "", false) { }
 
-    /// <summary>
-    /// 列番表示枠のサイズ
-    /// </summary>
-    public enum NumberSize {
-        /// <summary>
-        /// 列車番号+遅れ表示
-        /// </summary>
-        L,
-        /// <summary>
-        /// 列車番号のみ
-        /// </summary>
-        M,
-        /// <summary>
-        /// 運行番号のみ
-        /// </summary>
-        S
     }
 }

@@ -5,8 +5,10 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TrainCrewTIDWindow.Settings;
 
-namespace TrainCrewTIDWindow {
+namespace TrainCrewTIDWindow.Manager
+{
     /// <summary>
     /// サーバやTRAIN CREW本体から取得した軌道回路の情報
     /// </summary>
@@ -17,14 +19,17 @@ namespace TrainCrewTIDWindow {
     /// <param name="train">在線している列車番号</param>
     /// <param name="isReserved">進路が信号により予約されているか</param>
     /// <param name="count">在線消失の際実際に在線を消すまでの猶予（チャタリング対策）</param>
-    public class TrackData(string name, LineSetting[] lineSettings, NumberSetting[] numSettingsOut, NumberSetting[] numSettingsIn, string train, bool isReserved, int count) {
+    public class TrackData(string name, LineSetting[] lineSettings, NumberSetting[] numSettingsOut, NumberSetting[] numSettingsIn, string train, bool isReserved, int count)
+    {
 
         /// <summary>
         /// 軌道回路名
         /// </summary>
-        public string Name {
-            get; 
-            private set; } = name;
+        public string Name
+        {
+            get;
+            private set;
+        } = name;
 
         /// <summary>
         /// このトラックの線の位置やファイル名などのデータ
@@ -59,22 +64,26 @@ namespace TrainCrewTIDWindow {
         /// <summary>
         /// 在線している列車番号
         /// </summary>
-        public string Train {
+        public string Train
+        {
             get;
-            private set; } = train;
+            private set;
+        } = train;
 
         /// <summary>
         /// 進路が信号により予約されているか
         /// </summary>
-        public bool IsReserved {
+        public bool IsReserved
+        {
             get;
-            private set; } = isReserved;
+            private set;
+        } = isReserved;
 
         /// <summary>
         /// 在線消失の際実際に在線を消すまでの猶予（チャタリング対策）
         /// 在線無しのデータが入力されるたびにカウントダウンし、0になると在線消失の処理が入る
         /// </summary>
-        public int DeeCount { get; private set; } = count > 0 ? count : (train != "" ? 1 : 0);
+        public int DeeCount { get; private set; } = count > 1 ? count : train != "" || isReserved ? 1 : 0;
 
         /// <summary>
         /// 在線中であるか
@@ -90,7 +99,7 @@ namespace TrainCrewTIDWindow {
         /// <param name="numSettingsIn">このトラックの列車番号の位置などのデータ（上り列車用）</param>
         /// <param name="train">在線している列車番号</param>
         /// <param name="isReserved">進路が信号により予約されているか</param>
-        public TrackData(string name, LineSetting[] lineSettingArray, NumberSetting[] numSettingOut, NumberSetting[] numSettingIn, string train, bool isReserved): this(name, lineSettingArray, numSettingOut, numSettingIn, train ,isReserved, 0) { }
+        public TrackData(string name, LineSetting[] lineSettingArray, NumberSetting[] numSettingOut, NumberSetting[] numSettingIn, string train, bool isReserved) : this(name, lineSettingArray, numSettingOut, numSettingIn, train, isReserved, 0) { }
 
         /// <summary>
         /// サーバやTRAIN CREW本体から取得した軌道回路の情報
@@ -104,24 +113,35 @@ namespace TrainCrewTIDWindow {
         public TrackData(string name, LineSetting[] lineSettingArray, NumberSetting[] numSettingOut, NumberSetting[] numSettingIn, string train, int count) : this(name, lineSettingArray, numSettingOut, numSettingIn, train, false, count) { }
 
         /// <summary>
+        /// サーバやTRAIN CREW本体から取得した軌道回路の情報
+        /// </summary>
+        /// <param name="name">軌道回路名</param>
+        /// <param name="displayManager">TIDManagerオブジェクト</param>
+        /// <param name="train">在線している列車番号</param>
+        /// <param name="count">在線消失の際実際に在線を消すまでの猶予（チャタリング対策）</param>
+        public TrackData(string name, TIDManager displayManager, string train, int count) : this(name, displayManager.LineSettings.Where(d => d.TrackName == name).ToArray(), displayManager.NumSettingsOut.Where(d => d.TrackName == name).ToArray(), displayManager.NumSettingsIn.Where(d => d.TrackName == name).ToArray(), train, false, count) { }
+
+        /// <summary>
         /// 在線情報を設定する
         /// </summary>
         /// <param name="train">在線している列車番号</param>
         /// <param name="isReserved">進路が信号により予約されているか</param>
         /// <param name="count">在線消失の際実際に在線を消すまでの猶予（チャタリング対策）</param>
-        public void SetStates(string train, bool isReserved, int count) {
-            if(train == "" && OnTrain) {
-                --DeeCount;
-            }
+        /// <returns>TID画面を更新する必要があるか</returns>
+        public bool SetStates(string train, bool isReserved, int count)
+        {
+            var v = train != Train || train.Length <= 0 && IsReserved ^ isReserved;
             IsReserved = isReserved;
 
-            // DeeCountが0以下でない場合、在線無しのデータが入っても上書きしない
-            if(train == "" && DeeCount > 0) {
-                return;
+            if (train == "" && OnTrain)
+            {
+                return false;
             }
 
             Train = train;
-            DeeCount = OnTrain ? (count > 0 ? count : 1) : 0;
+            DeeCount = OnTrain ? count > 1 ? count : 1 : 0;
+
+            return v;
 
         }
 
@@ -129,21 +149,41 @@ namespace TrainCrewTIDWindow {
         /// 在線情報を設定する
         /// </summary>
         /// <param name="train">在線している列車番号</param>
-        /// <param name="count">進路が信号により予約されているか</param>
-        public void SetStates(string train, int count) {
-            SetStates(train, false, count);
+        /// <param name="count">在線消失の際実際に在線を消すまでの猶予（チャタリング対策）</param>
+        /// <returns>TID画面を更新する必要があるか</returns>
+        public bool SetStates(string train, int count)
+        {
+            return SetStates(train, false, count);
         }
 
         /// <summary>
         /// 在線情報を設定する
         /// </summary>
         /// <param name="train">在線している列車番号</param>
-        /// <param name="isReserved">在線消失の際実際に在線を消すまでの猶予（チャタリング対策）</param>
-        public void SetStates(string train, bool isReserved) {
-            SetStates(train, isReserved, 0);
+        /// <param name="isReserved">進路が信号により予約されているか</param>
+        /// <returns>TID画面を更新する必要があるか</returns>
+        public bool SetStates(string train, bool isReserved)
+        {
+            return SetStates(train, isReserved, 0);
         }
 
-        public override string ToString() {
+        /// <summary>
+        /// 表示期限が切れた列車を消す
+        /// </summary>
+        /// <returns>TID画面を更新する必要があるか</returns>
+        public bool UpdateTrack()
+        {
+            if (DeeCount > 0 && --DeeCount <= 0)
+            {
+                DeeCount = 0;
+                Train = "";
+                return true;
+            }
+            return false;
+        }
+
+        public override string ToString()
+        {
             return $"{Name}:{Train}:{IsReserved}";
         }
     }

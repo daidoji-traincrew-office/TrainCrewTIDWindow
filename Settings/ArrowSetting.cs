@@ -4,7 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TrainCrewTIDWindow {
+namespace TrainCrewTIDWindow.Settings
+{
     /// <summary>
     /// 単線区間の方向てこ状態を示す矢印の位置やファイル名などについての設定
     /// </summary>
@@ -13,7 +14,8 @@ namespace TrainCrewTIDWindow {
     /// <param name="fileName">ファイル名称</param>
     /// <param name="posX">画面上のx座標</param>
     /// <param name="posY">画面上のy座標</param>
-    public class ArrowSetting(string name, ArrowType type, string fileName, int posX, int posY) {
+    public class ArrowSetting(string name, ArrowType type, string fileName, int posX, int posY)
+    {
 
         /// <summary>
         /// 名称（暫定）
@@ -44,7 +46,8 @@ namespace TrainCrewTIDWindow {
     /// <summary>
     /// 矢印の向き
     /// </summary>
-    public enum ArrowType { 
+    public enum ArrowType
+    {
         /// <summary>
         /// 右→
         /// </summary>
