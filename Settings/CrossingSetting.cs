@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TrainCrewTIDWindow.Settings
+﻿namespace TrainCrewTIDWindow.Settings
 {
     /// <summary>
     /// 踏切の位置やファイル名などについての設定

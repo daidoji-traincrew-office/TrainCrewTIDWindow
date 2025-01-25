@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TrainCrewTIDWindow.Settings
+﻿namespace TrainCrewTIDWindow.Settings
 {
     /// <summary>
     /// 単線区間の方向てこ状態を示す矢印の位置やファイル名などについての設定

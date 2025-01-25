@@ -18,9 +18,11 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.1" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="OpenIddict.Abstractions" Version="6.0.0" />
     <PackageReference Include="OpenIddict.Client" Version="6.0.0" />
     <PackageReference Include="OpenIddict.Client.SystemIntegration" Version="6.0.0" />
+    <PackageReference Include="OpenIddict.Client.SystemNetHttp" Version="6.0.0" />
     <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="6.0.0" />
   </ItemGroup>
 

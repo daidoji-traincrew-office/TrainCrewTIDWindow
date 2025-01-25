@@ -1,17 +1,12 @@
-﻿using Microsoft.VisualBasic;
+﻿using Dapplo.Microsoft.Extensions.Hosting.WinForms;
 using System.Collections.ObjectModel;
-using System.Drawing.Imaging;
-using System.Text.RegularExpressions;
 using TrainCrewTIDWindow.Communications;
 using TrainCrewTIDWindow.Manager;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
 namespace TrainCrewTIDWindow
 {
 
-    public partial class TIDWindow : Form {
+    public partial class TIDWindow : Form, IWinFormsShell {
 
 
         /// <summary>
@@ -32,7 +27,12 @@ namespace TrainCrewTIDWindow
         /// <summary>
         /// TRAIN CREW本体接続用
         /// </summary>
-        private TrainCrewCommunication communication = new TrainCrewCommunication();
+        private TrainCrewCommunication tcCommunication = new TrainCrewCommunication();
+
+        /// <summary>
+        /// サーバ接続用
+        /// </summary>
+        private ServerCommunication? serverCommunication;
 
         /// <summary>
         /// データの取得元（traincrew/server、もしくはサーバのURL）
@@ -42,7 +42,12 @@ namespace TrainCrewTIDWindow
         /// <summary>
         /// 現実との時差
         /// </summary>
-        private int timeDifference = -10;
+        private int timeOffset = -10;
+
+        public string LabelStatusText {
+            get => label1.Text;
+            set => label1.Text = value;
+        }
 
         public ReadOnlyDictionary<string, TrackData> TrackDataDict => trackManager.TrackDataDict;
 
@@ -50,7 +55,7 @@ namespace TrainCrewTIDWindow
 
         public TrackManager TrackManager => trackManager;
 
-        public TIDWindow() {
+        public TIDWindow(/*OpenIddictClientService service*/) {
             InitializeComponent();
 
             displayManager = new TIDManager(pictureBox1, this);
@@ -61,7 +66,7 @@ namespace TrainCrewTIDWindow
                 using var sr = new StreamReader(".\\setting\\setting.txt");
                 var line = sr.ReadLine();
                 while (line != null) {
-                    var texts = line.Split('=');
+                    var texts = line.Replace(" ", "").Split('=');
                     line = sr.ReadLine();
 
                     if (texts.Length < 2 || texts.Any(t => t == "")) {
@@ -80,8 +85,8 @@ namespace TrainCrewTIDWindow
 
 
             if (source == "traincrew") {
-                communication.ConnectionStatusChanged += UpdateConnectionStatus;
-                communication.TCDataUpdated += UpdateTCData;
+                tcCommunication.ConnectionStatusChanged += UpdateConnectionStatus;
+                tcCommunication.TCDataUpdated += UpdateTCData;
             }
             Load += TIDWindow_Load;
         }
@@ -111,8 +116,8 @@ namespace TrainCrewTIDWindow
         /// <returns></returns>
         private async Task TryConnectTrainCrew() {
             //引数にはallの他、trackcircuit, signal, trainが使えます。
-            communication.Request = ["trackcircuit"];
-            await communication.TryConnectWebSocket();
+            tcCommunication.Request = ["trackcircuit"];
+            await tcCommunication.TryConnectWebSocket();
         }
 
         /// <summary>
@@ -121,6 +126,12 @@ namespace TrainCrewTIDWindow
         /// <param name="url">接続先のURL</param>
         /// <returns></returns>
         private async Task TryConnectServer(string url) {
+            serverCommunication = new ServerCommunication(this, url);
+
+            if (serverCommunication != null) {
+                await serverCommunication.CheckUserAuthenticationAsync();
+            }
+
 
         }
 
@@ -161,17 +172,18 @@ namespace TrainCrewTIDWindow
         }
 
         private void UpdateClock() {
-            var time = DateTime.Now.AddHours(timeDifference);
+            var time = DateTime.Now.AddHours(timeOffset);
             label2.Text = time.ToString("H:mm:ss");
         }
 
         private void label2_MouseDown(object sender, MouseEventArgs e) {
             if (e.Button == MouseButtons.Right) {
-                timeDifference++;
+                timeOffset++;
             }
             else if(e.Button == MouseButtons.Left) {
-                timeDifference--;
+                timeOffset--;
             }
         }
+
     }
 }
