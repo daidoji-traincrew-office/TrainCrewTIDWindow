@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Timers;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,8 +8,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenIddict.Abstractions;
 using OpenIddict.Client;
-using TrainCrewTIDWindow.Manager;
 using TrainCrewTIDWindow.Services;
+using Timer = System.Windows.Forms.Timer;
 
 namespace TrainCrewTIDWindow.Communications
 {
@@ -19,9 +20,9 @@ namespace TrainCrewTIDWindow.Communications
 
         private readonly TIDWindow _window;
 
-        private string? token;
-
-        public string? Token => token;
+        private static HubConnection? connection;
+        
+        internal event Action<TrainCrewStateData>? TCDataUpdated;
 
         /// <summary>
         /// アプリケーション用のホスト構築
@@ -98,7 +99,13 @@ namespace TrainCrewTIDWindow.Communications
             // see https://aka.ms/applicationconfiguration.
 
             _ = _host.RunAsync();
-            _service = new OpenIddictClientService(_host.Services);
+            _service = _host.Services.GetRequiredService<OpenIddictClientService>();
+             // 1/3秒ごとにデータを送信 
+            var timer = new System.Timers.Timer(333);
+            // Hook up the Elapsed event for the timer. 
+            timer.Elapsed += (_, _) => OnTimedEvent();
+            timer.AutoReset = true;
+            timer.Enabled = true;
         }
 
         /// <summary>
@@ -121,10 +128,10 @@ namespace TrainCrewTIDWindow.Communications
                     CancellationToken = source.Token,
                     Nonce = result.Nonce
                 });
-                token = resultAuth.BackchannelAccessToken;
+                var token = resultAuth.BackchannelAccessToken!;
 
                 _window.LabelStatusText = "Status：サーバ認証成功";
-
+                await ConnectAsync(token);
             }
 
             catch (OperationCanceledException) {
@@ -163,24 +170,36 @@ namespace TrainCrewTIDWindow.Communications
         }
 
         /// <summary>
-        /// サーバーへリクエスト送信
+        /// 接続開始 
         /// </summary>
         /// <param name="token"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private static async Task SendRequestAsync(string token, CancellationToken cancellationToken) {
+        private async Task ConnectAsync(string token) {
             try {
                 // HubConnectionの作成
-                await using var client = new HubConnectionBuilder()
+                connection = new HubConnectionBuilder()
                     .WithUrl($"{ServerAddress.SignalAddress}/hub/TID?access_token={token}")
                     .WithAutomaticReconnect() // 自動再接続
                     .Build();
 
                 // 接続開始
-                await client.StartAsync(cancellationToken);
-
-                // サーバーメソッドの呼び出し
-                var resource = await client.InvokeAsync<int>("Emit", cancellationToken);
+                await connection.StartAsync(); 
+            }
+            catch (Exception exception) {
+                Debug.WriteLine($"Server send failed: {exception.Message}");
+            }
+        }
+        
+        private async Task OnTimedEvent() {
+            if (connection == null) return;
+            try {
+                var trackCircuitList = await connection.InvokeAsync<List<TrackCircuitData>>("SendData_TID");
+                var data = new TrainCrewStateData
+                {
+                    trackCircuitList = trackCircuitList
+                };
+                TCDataUpdated?.Invoke(data);
             }
             catch (Exception exception) {
                 Debug.WriteLine($"Server send failed: {exception.Message}");

@@ -130,6 +130,7 @@ namespace TrainCrewTIDWindow
 
             if (serverCommunication != null) {
                 await serverCommunication.CheckUserAuthenticationAsync();
+                serverCommunication.TCDataUpdated += UpdateTCData;
             }
 
 
