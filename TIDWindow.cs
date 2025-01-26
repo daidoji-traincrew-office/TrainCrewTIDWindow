@@ -1,5 +1,6 @@
 ﻿using Dapplo.Microsoft.Extensions.Hosting.WinForms;
 using System.Collections.ObjectModel;
+using OpenIddict.Client;
 using TrainCrewTIDWindow.Communications;
 using TrainCrewTIDWindow.Manager;
 
@@ -55,7 +56,7 @@ namespace TrainCrewTIDWindow
 
         public TrackManager TrackManager => trackManager;
 
-        public TIDWindow(/*OpenIddictClientService service*/) {
+        public TIDWindow(OpenIddictClientService service) {
             InitializeComponent();
 
             displayManager = new TIDManager(pictureBox1, this);
@@ -88,6 +89,10 @@ namespace TrainCrewTIDWindow
                 tcCommunication.ConnectionStatusChanged += UpdateConnectionStatus;
                 tcCommunication.TCDataUpdated += UpdateTCData;
             }
+            if(source == "server") {
+                serverCommunication = new(this, ServerAddress.SignalAddress, service);
+                serverCommunication.TCDataUpdated += UpdateTCData;
+            }
             Load += TIDWindow_Load;
         }
 
@@ -101,11 +106,12 @@ namespace TrainCrewTIDWindow
                     break;
                 case "server":
                     //デフォルトのサーバへの接続処理
-                    await TryConnectServer(ServerAddress.SignalAddress);
+                    await TryConnectServer();
                     break;
                 default:
+                    // Todo: ここどうする？
                     //指定した任意のサーバへの接続処理
-                    await TryConnectServer(source);
+                    await TryConnectServer();
                     break;
             }
         }
@@ -125,12 +131,9 @@ namespace TrainCrewTIDWindow
         /// </summary>
         /// <param name="url">接続先のURL</param>
         /// <returns></returns>
-        private async Task TryConnectServer(string url) {
-            serverCommunication = new ServerCommunication(this, url);
-
+        private async Task TryConnectServer() {
             if (serverCommunication != null) {
                 await serverCommunication.CheckUserAuthenticationAsync();
-                serverCommunication.TCDataUpdated += UpdateTCData;
             }
 
 
