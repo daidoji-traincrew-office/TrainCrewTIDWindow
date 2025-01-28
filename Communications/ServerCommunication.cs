@@ -22,7 +22,7 @@ namespace TrainCrewTIDWindow.Communications
 
         private static HubConnection? connection;
         
-        internal event Action<TrainCrewStateData>? TCDataUpdated;
+        internal event Action<List<TrackCircuitData>>? DataUpdated;
 
         /// <summary>
         /// アプリケーション用のホスト構築
@@ -127,11 +127,7 @@ namespace TrainCrewTIDWindow.Communications
             if (connection == null) return;
             try {
                 var trackCircuitList = await connection.InvokeAsync<List<TrackCircuitData>>("SendData_TID");
-                var data = new TrainCrewStateData
-                {
-                    trackCircuitList = trackCircuitList
-                };
-                TCDataUpdated?.Invoke(data);
+                DataUpdated?.Invoke(trackCircuitList);
             }
             catch (Exception exception) {
                 Debug.WriteLine($"Server send failed: {exception.Message}");

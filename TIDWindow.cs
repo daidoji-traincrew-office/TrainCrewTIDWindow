@@ -91,7 +91,7 @@ namespace TrainCrewTIDWindow
             }
             if(source == "server") {
                 serverCommunication = new(this, ServerAddress.SignalAddress, service);
-                serverCommunication.TCDataUpdated += UpdateTCData;
+                serverCommunication.DataUpdated += UpdateServerData;
             }
             Load += TIDWindow_Load;
         }
@@ -145,6 +145,19 @@ namespace TrainCrewTIDWindow
         /// <param name="tcData"></param>
         private void UpdateTCData(TrainCrewStateData tcData) {
             var tcList = tcData.trackCircuitList;
+            if (tcList == null) {
+                return;
+            }
+            if (trackManager.UpdateTCData(tcList) || true/* 受信状況を更新したいので常時更新 */) {
+                displayManager.UpdateTID();
+            }
+        }
+
+        /// <summary>
+        /// TRAIN CREW本体からのデータが更新された際に呼ばれる
+        /// </summary>
+        /// <param name="tcData"></param>
+        private void UpdateServerData(List<TrackCircuitData>? tcList) {
             if (tcList == null) {
                 return;
             }
