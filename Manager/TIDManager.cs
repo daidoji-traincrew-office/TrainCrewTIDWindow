@@ -477,11 +477,11 @@ namespace TrainCrewTIDWindow.Manager
             var pointDataDict = window.PointDataDict;
 
 
-            if (pictureBox.Image != null)
-            {
-                pictureBox.Image.Dispose();
-            }
+            var old = pictureBox.Image;
             pictureBox.Image = new Bitmap(backgroundImage);
+
+            old?.Dispose();
+
             using var g = Graphics.FromImage(pictureBox.Image);
 
             foreach (var track in trackDataDict.Values)
@@ -652,6 +652,7 @@ namespace TrainCrewTIDWindow.Manager
 
 
                         // 遅延時分表示（未実装のため必ず0・白色）
+                        // ↑が未実装なので一時的に代わりに受信精度確認用カウントダウン（0になると在線が消える）を表示
 
                         /*var cm = new ColorMap();
                         cm.OldColor = Color.White;
@@ -660,13 +661,15 @@ namespace TrainCrewTIDWindow.Manager
                         /*iaDelay.SetRemapTable([cm]);*/
                         if (numData.Size == NumberSize.L)
                         {
-                            AddNumImage(g, 0, numData.PosX + 54, numData.PosY, iaDelay);
+                            AddNumImage(g, track.DeeCount, numData.PosX + 54, numData.PosY, iaDelay);
                         }
                         Image numLineImage = numData.Size == NumberSize.L ? new Bitmap(numLineL) : new Bitmap(numLineM);
                         AddImage(g, numLineImage, numData.PosX, numData.PosY + 10, iaDelay);
                     }
                 }
             }
+
+
         }
 
         /// <summary>

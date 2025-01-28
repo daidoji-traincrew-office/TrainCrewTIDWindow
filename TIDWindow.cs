@@ -104,13 +104,8 @@ namespace TrainCrewTIDWindow
                 case "traincrew":
                     await TryConnectTrainCrew();
                     break;
-                case "server":
-                    //デフォルトのサーバへの接続処理
-                    await TryConnectServer();
-                    break;
                 default:
-                    // Todo: ここどうする？
-                    //指定した任意のサーバへの接続処理
+                    //デフォルトのサーバへの接続処理
                     await TryConnectServer();
                     break;
             }
@@ -153,7 +148,7 @@ namespace TrainCrewTIDWindow
             if (tcList == null) {
                 return;
             }
-            if (trackManager.UpdateTCData(tcList) || true) {
+            if (trackManager.UpdateTCData(tcList) || true/* 受信状況を更新したいので常時更新 */) {
                 displayManager.UpdateTID();
             }
         }

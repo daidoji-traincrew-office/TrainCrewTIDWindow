@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenIddict.Client;
 using TrainCrewTIDWindow.Services;
+using TrainCrewTIDWindow.Manager;
 
 namespace TrainCrewTIDWindow {
     internal static class Program {

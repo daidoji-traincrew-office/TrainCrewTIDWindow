@@ -8,7 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenIddict.Abstractions;
 using OpenIddict.Client;
-using TrainCrewTIDWindow.Services;
+using TrainCrewTIDWindow.Manager;
 using Timer = System.Windows.Forms.Timer;
 
 namespace TrainCrewTIDWindow.Communications
