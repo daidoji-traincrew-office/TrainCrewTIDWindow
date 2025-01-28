@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Timers;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,8 +8,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenIddict.Abstractions;
 using OpenIddict.Client;
-using TrainCrewTIDWindow.Manager;
 using TrainCrewTIDWindow.Services;
+using Timer = System.Windows.Forms.Timer;
 
 namespace TrainCrewTIDWindow.Communications
 {
@@ -19,86 +20,24 @@ namespace TrainCrewTIDWindow.Communications
 
         private readonly TIDWindow _window;
 
-        private string? token;
-
-        public string? Token => token;
+        private static HubConnection? connection;
+        
+        internal event Action<TrainCrewStateData>? TCDataUpdated;
 
         /// <summary>
         /// アプリケーション用のホスト構築
         /// </summary>
         /// <param name="window">TIDWindowのオブジェクト</param>
         /// <param name="address">接続先のアドレス</param>
-        public ServerCommunication(TIDWindow window, string address) {
+        public ServerCommunication(TIDWindow window, string address, OpenIddictClientService service) {
             _window = window;
-
-            // IHostの初期化
-            _host = new HostBuilder()
-                .ConfigureLogging(options => options.AddDebug())
-                .ConfigureServices(services => {
-                    // DbContextの設定
-                    services.AddDbContext<DbContext>(options => {
-                        options.UseSqlite(
-                            $"Filename={Path.Combine(Path.GetTempPath(), "trancrew-multiats-client.sqlite3")}");
-                        options.UseOpenIddict();
-                    });
-
-                    // OpenIddictの設定
-                    services.AddOpenIddict()
-
-                        // Register the OpenIddict core components.
-                        .AddCore(options => {
-                            // Configure OpenIddict to use the Entity Framework Core stores and models.
-                            // Note: call ReplaceDefaultEntities() to replace the default OpenIddict entities.
-                            options.UseEntityFrameworkCore()
-                                .UseDbContext<DbContext>();
-                        })
-
-                        // Register the OpenIddict client components.
-                        .AddClient(options => {
-                            // Note: this sample uses the authorization code flow,
-                            // but you can enable the other flows if necessary.
-                            options.AllowAuthorizationCodeFlow()
-                                .AllowRefreshTokenFlow();
-
-                            // Register the signing and encryption credentials used to protect
-                            // sensitive data like the state tokens produced by OpenIddict.
-                            options.AddDevelopmentEncryptionCertificate()
-                                .AddDevelopmentSigningCertificate();
-
-                            // Add the operating system integration.
-                            options.UseSystemIntegration();
-
-                            // Register the System.Net.Http integration and use the identity of the current
-                            // assembly as a more specific user agent, which can be useful when dealing with
-                            // providers that use the user agent as a way to throttle requests (e.g Reddit).
-                            options.UseSystemNetHttp()
-                                .SetProductInformation(typeof(Program).Assembly);
-
-                            // Add a client registration matching the client application definition in the server project.
-                            options.AddRegistration(new OpenIddictClientRegistration {
-                                Issuer = new Uri(address, UriKind.Absolute),
-
-                                ClientId = "MultiATS_Client",
-                                RedirectUri = new Uri("/", UriKind.Relative),
-
-                            });
-                        });
-
-                    services.AddSingleton(window);
-
-                    // Register the worker responsible for creating the database used to store tokens
-                    // and adding the registry entries required to register the custom URI scheme.
-                    //
-                    // Note: in a real world application, this step should be part of a setup script.
-                    services.AddHostedService<Worker>();
-
-                })
-                .Build();
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
-
-            _ = _host.RunAsync();
-            _service = new OpenIddictClientService(_host.Services);
+            _service = service;
+             // 1/3秒ごとにデータを送信 
+            var timer = new System.Timers.Timer(333);
+            // Hook up the Elapsed event for the timer. 
+            timer.Elapsed += (_, _) => OnTimedEvent();
+            timer.AutoReset = true;
+            timer.Enabled = true;
         }
 
         /// <summary>
@@ -121,10 +60,10 @@ namespace TrainCrewTIDWindow.Communications
                     CancellationToken = source.Token,
                     Nonce = result.Nonce
                 });
-                token = resultAuth.BackchannelAccessToken;
+                var token = resultAuth.BackchannelAccessToken!;
 
                 _window.LabelStatusText = "Status：サーバ認証成功";
-
+                await ConnectAsync(token);
             }
 
             catch (OperationCanceledException) {
@@ -163,24 +102,36 @@ namespace TrainCrewTIDWindow.Communications
         }
 
         /// <summary>
-        /// サーバーへリクエスト送信
+        /// 接続開始 
         /// </summary>
         /// <param name="token"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private static async Task SendRequestAsync(string token, CancellationToken cancellationToken) {
+        private async Task ConnectAsync(string token) {
             try {
                 // HubConnectionの作成
-                await using var client = new HubConnectionBuilder()
+                connection = new HubConnectionBuilder()
                     .WithUrl($"{ServerAddress.SignalAddress}/hub/TID?access_token={token}")
                     .WithAutomaticReconnect() // 自動再接続
                     .Build();
 
                 // 接続開始
-                await client.StartAsync(cancellationToken);
-
-                // サーバーメソッドの呼び出し
-                var resource = await client.InvokeAsync<int>("Emit", cancellationToken);
+                await connection.StartAsync(); 
+            }
+            catch (Exception exception) {
+                Debug.WriteLine($"Server send failed: {exception.Message}");
+            }
+        }
+        
+        private async Task OnTimedEvent() {
+            if (connection == null) return;
+            try {
+                var trackCircuitList = await connection.InvokeAsync<List<TrackCircuitData>>("SendData_TID");
+                var data = new TrainCrewStateData
+                {
+                    trackCircuitList = trackCircuitList
+                };
+                TCDataUpdated?.Invoke(data);
             }
             catch (Exception exception) {
                 Debug.WriteLine($"Server send failed: {exception.Message}");
