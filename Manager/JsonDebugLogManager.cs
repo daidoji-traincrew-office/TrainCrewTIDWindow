@@ -24,7 +24,8 @@ namespace TrainCrewTIDWindow.Manager
 
         public static void OutputJsonTexts() {
             if (!alreadyOutput) {
-                var timeStamp = DateTime.Now.ToString("yyyy-MM-dd-HH:mm:ss.fff");
+                var timeStamp = DateTime.Now.ToString("yyyy-MM-dd-HHmmss.fff");
+                Directory.CreateDirectory("jsonLog");
                 for (int i = 0; i < jsonTexts.Count; i++) {
                     File.WriteAllText($"jsonLog/{timeStamp}_{i}.json", jsonTexts[i]);
                 }
