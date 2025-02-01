@@ -9,12 +9,12 @@ using Microsoft.Extensions.Logging;
 using OpenIddict.Abstractions;
 using OpenIddict.Client;
 using TrainCrewTIDWindow.Manager;
+using Newtonsoft.Json;
 using Timer = System.Windows.Forms.Timer;
 
 namespace TrainCrewTIDWindow.Communications
 {
     public class ServerCommunication  {
-        private readonly IHost _host;
 
         private readonly OpenIddictClientService _service;
 
@@ -127,6 +127,7 @@ namespace TrainCrewTIDWindow.Communications
             if (connection == null) return;
             try {
                 var trackCircuitList = await connection.InvokeAsync<List<TrackCircuitData>>("SendData_TID");
+                JsonDebugLogManager.AddJsonText(JsonConvert.SerializeObject(trackCircuitList));
                 DataUpdated?.Invoke(trackCircuitList);
             }
             catch (Exception exception) {

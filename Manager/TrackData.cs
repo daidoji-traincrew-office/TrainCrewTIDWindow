@@ -131,6 +131,9 @@ namespace TrainCrewTIDWindow.Manager
             {
                 return false;
             }
+            if(train == Train && DeeCount < count - 1) {
+                JsonDebugLogManager.OutputJsonTexts();
+            }
 
             Train = train;
             DeeCount = OnTrain ? count > 1 ? count : 1 : 0;

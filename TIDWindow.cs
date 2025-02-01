@@ -154,7 +154,7 @@ namespace TrainCrewTIDWindow
         }
 
         /// <summary>
-        /// TRAIN CREW本体からのデータが更新された際に呼ばれる
+        /// サーバからのデータが更新された際に呼ばれる
         /// </summary>
         /// <param name="tcData"></param>
         private void UpdateServerData(List<TrackCircuitData>? tcList) {
