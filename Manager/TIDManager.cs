@@ -237,11 +237,9 @@ namespace TrainCrewTIDWindow.Manager
             }
 
 
-
             pictureBox.Image = new Bitmap(backgroundDefault);
             pictureBox.Width = backgroundDefault.Width;
             pictureBox.Height = backgroundDefault.Height;
-
 
             window.MaximumSize = new Size(backgroundDefault.Width + 16, backgroundDefault.Height + 39 + 24);
             window.Size = window.MaximumSize;
@@ -477,12 +475,9 @@ namespace TrainCrewTIDWindow.Manager
             var pointDataDict = window.PointDataDict;
 
 
-            var old = pictureBox.Image;
-            pictureBox.Image = new Bitmap(backgroundImage);
+            var newPic = new Bitmap(backgroundImage);
 
-            old?.Dispose();
-
-            using var g = Graphics.FromImage(pictureBox.Image);
+            using var g = Graphics.FromImage(newPic);
 
             foreach (var track in trackDataDict.Values)
             {
@@ -667,6 +662,12 @@ namespace TrainCrewTIDWindow.Manager
                         AddImage(g, numLineImage, numData.PosX, numData.PosY + 10, iaDelay);
                     }
                 }
+            }
+
+            lock (pictureBox) {
+                var oldPic = pictureBox.Image;
+                pictureBox.Image = newPic;
+                oldPic?.Dispose();
             }
 
 
