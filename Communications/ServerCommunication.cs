@@ -69,12 +69,10 @@ namespace TrainCrewTIDWindow.Communications
             catch (OperationCanceledException) {
 
                 _window.LabelStatusText = "Status：サーバ認証失敗（タイムアウト）";
-                TaskDialog.ShowDialog(new TaskDialogPage {
-                    Caption = "サーバ認証失敗（タイムアウト）",
-                    Heading = "サーバ認証失敗（タイムアウト）",
-                    Icon = TaskDialogIcon.Error,
-                    Text = "サーバ認証中にタイムアウトしました。\n再試行するにはアプリケーションを再起動してください。"
-                });
+                DialogResult result = MessageBox.Show($"サーバ認証中にタイムアウトしました。\n再認証しますか？", "サーバ認証失敗（タイムアウト） | TID - ダイヤ運転会", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+                if (result == DialogResult.Yes) {
+                    await CheckUserAuthenticationAsync();
+                }
             }
 
             catch (OpenIddictExceptions.ProtocolException exception) when (exception.Error is OpenIddictConstants.Errors
@@ -82,22 +80,20 @@ namespace TrainCrewTIDWindow.Communications
 
                 _window.LabelStatusText = "Status：サーバ認証失敗（拒否）";
                 TaskDialog.ShowDialog(new TaskDialogPage {
-                    Caption = "サーバ認証失敗（拒否）",
+                    Caption = "サーバ認証失敗（拒否） | TID - ダイヤ運転会",
                     Heading = "サーバ認証失敗（拒否）",
                     Icon = TaskDialogIcon.Error,
-                    Text = "サーバ認証は拒否されました。\n再試行するにはアプリケーションを再起動してください。"
+                    Text = "サーバ認証は拒否されました。\n必要な権限を持っていない可能性があります。\n司令主任に連絡してください。\n再試行する場合はアプリケーションを再起動してください。"
                 });
             }
 
             catch (Exception exception) {
                 Debug.WriteLine(exception);
                 _window.LabelStatusText = "Status：サーバ認証失敗";
-                TaskDialog.ShowDialog(new TaskDialogPage {
-                    Caption = "サーバ認証失敗",
-                    Heading = "サーバ認証失敗",
-                    Icon = TaskDialogIcon.Error,
-                    Text = "サーバ認証に失敗しました。\n再試行するにはアプリケーションを再起動してください。"
-                });
+                DialogResult result = MessageBox.Show($"サーバ認証に失敗しました。\n再認証しますか？\n\n{exception.Message}\n{exception.StackTrace})", "サーバ認証失敗 | TID - ダイヤ運転会", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+                if (result == DialogResult.Yes) {
+                    await CheckUserAuthenticationAsync();
+                }
             }
         }
 
