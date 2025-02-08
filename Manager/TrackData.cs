@@ -77,12 +77,14 @@ namespace TrainCrewTIDWindow.Manager
         /// 在線消失の際実際に在線を消すまでの猶予（チャタリング対策）
         /// 在線無しのデータが入力されるたびにカウントダウンし、0になると在線消失の処理が入る
         /// </summary>
-        public int DeeCount { get; private set; } = count > 1 ? count : train != "" || isReserved ? 1 : 0;
+        public int DeeCount { get; private set; } = train != "" || isReserved ? (count > 1 ? count : 2) : 0;
 
         /// <summary>
         /// 在線中であるか
         /// </summary>
         public bool OnTrain => Train != "";
+
+
 
         /// <summary>
         /// サーバやTRAIN CREW本体から取得した軌道回路の情報
@@ -116,6 +118,16 @@ namespace TrainCrewTIDWindow.Manager
         public TrackData(string name, TIDManager displayManager, string train, int count) : this(name, displayManager.LineSettings.Where(d => d.TrackName == name).ToArray(), displayManager.NumSettingsOut.Where(d => d.TrackName == name).ToArray(), displayManager.NumSettingsIn.Where(d => d.TrackName == name).ToArray(), train, false, count) { }
 
         /// <summary>
+        /// サーバやTRAIN CREW本体から取得した軌道回路の情報
+        /// </summary>
+        /// <param name="name">軌道回路名</param>
+        /// <param name="displayManager">TIDManagerオブジェクト</param>
+        /// <param name="train">在線している列車番号</param>
+        /// <param name="isReserved">進路が信号により予約されているか</param>
+        /// <param name="count">在線消失の際実際に在線を消すまでの猶予（チャタリング対策）</param>
+        public TrackData(string name, TIDManager displayManager, string train, bool isReserved, int count) : this(name, displayManager.LineSettings.Where(d => d.TrackName == name).ToArray(), displayManager.NumSettingsOut.Where(d => d.TrackName == name).ToArray(), displayManager.NumSettingsIn.Where(d => d.TrackName == name).ToArray(), train, isReserved, count) { }
+
+        /// <summary>
         /// 在線情報を設定する
         /// </summary>
         /// <param name="train">在線している列車番号</param>
@@ -127,16 +139,22 @@ namespace TrainCrewTIDWindow.Manager
             var v = train != Train || train.Length <= 0 && IsReserved ^ isReserved;
             IsReserved = isReserved;
 
+
+            /*// ちょっと書き変えかけ気味のまま凍結
             if (train == "" && OnTrain)
             {
-                return false;
-            }
+                Train = train;
+                if (!isReserved) {
+
+                }
+                return true;
+            }*/
             if(train == Train && DeeCount < count - 1) {
                 JsonDebugLogManager.OutputJsonTexts();
             }
 
             Train = train;
-            DeeCount = OnTrain ? count > 1 ? count : 1 : 0;
+            DeeCount = OnTrain || IsReserved ? (count > 1 ? count : 2) : 0;
 
             return v;
 
@@ -174,6 +192,7 @@ namespace TrainCrewTIDWindow.Manager
             {
                 DeeCount = 0;
                 Train = "";
+                IsReserved = false;
                 return true;
             }
             return false;

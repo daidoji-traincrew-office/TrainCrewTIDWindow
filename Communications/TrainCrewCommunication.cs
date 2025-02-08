@@ -1,6 +1,7 @@
 ﻿using System.Net.WebSockets;
 using System.Text;
 using Newtonsoft.Json;
+using TrainCrewTIDWindow.Manager;
 
 namespace TrainCrewTIDWindow.Communications
 {
@@ -140,6 +141,7 @@ namespace TrainCrewTIDWindow.Communications
                 } while (!result.EndOfMessage);
 
                 string jsonResponse = messageBuilder.ToString();
+                JsonDebugLogManager.AddJsonText(jsonResponse);
                 messageBuilder.Clear();
 
 

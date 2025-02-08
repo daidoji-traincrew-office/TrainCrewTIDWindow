@@ -64,14 +64,16 @@ namespace TrainCrewTIDWindow.Manager
 
             var updatedTID = false;
             foreach (var tc in tcList) {
-                if (!tc.On || !Regex.IsMatch(tc.Last, @"^([溝月レイルﾚｲﾙ]+|[回試臨]?[\d]{3,4}[ABCKST]?[XYZ]?)$")) {
+                if (!tc.On && tc.Last != "" || !Regex.IsMatch(tc.Last, @"^([溝月レイルﾚｲﾙ]+|[回試臨]?[\d]{3,4}[ABCKST]?[XYZ]?)$")) {
                     continue;
                 }
                 if (trackDataDict.ContainsKey(tc.Name)) {
-                    updatedTID |= trackDataDict[tc.Name].SetStates(tc.Last, countStart);
+                    if (tc.On || tc.Last == "") {
+                        updatedTID |= trackDataDict[tc.Name].SetStates(tc.Last, tc.Lock, countStart);
+                    }
                 }
                 else {
-                    trackDataDict.Add(tc.Name, new TrackData(tc.Name, displayManager, tc.Last, countStart));
+                    trackDataDict.Add(tc.Name, new TrackData(tc.Name, displayManager, tc.Last, tc.Lock, countStart));
                     updatedTID = true;
                 }
             }
