@@ -123,12 +123,12 @@ namespace TrainCrewTIDWindow.Communications
         private async Task OnTimedEvent() {
             if (connection == null) return;
             try {
-                var trackCircuitList = await connection.InvokeAsync<List<TrackCircuitData>>("SendData_TID");
+                /*var trackCircuitList = await connection.InvokeAsync<List<TrackCircuitData>>("SendData_TID");
                 var data = new ConstantDataToServer {
                     TrackCircuitDatas = trackCircuitList
-                };
-                /*var data = await connection.InvokeAsync<ConstantDataToServer>("SendData_TID");
-                var trackCircuitList = data.TrackCircuitDatas;*/
+                };*/
+                var data = await connection.InvokeAsync<ConstantDataToServer>("SendData_TID");
+                var trackCircuitList = data.TrackCircuitDatas;
                 JsonDebugLogManager.AddJsonText(JsonConvert.SerializeObject(trackCircuitList));
                 DataUpdated?.Invoke(data);
             }
