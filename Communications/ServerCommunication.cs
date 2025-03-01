@@ -10,6 +10,7 @@ using OpenIddict.Abstractions;
 using OpenIddict.Client;
 using TrainCrewTIDWindow.Manager;
 using Newtonsoft.Json;
+using TrainCrewTIDWindow.Models;
 using Timer = System.Windows.Forms.Timer;
 
 namespace TrainCrewTIDWindow.Communications
@@ -22,7 +23,7 @@ namespace TrainCrewTIDWindow.Communications
 
         private static HubConnection? connection;
         
-        internal event Action<List<TrackCircuitData>>? DataUpdated;
+        internal event Action<ConstantDataToServer>? DataUpdated;
 
         /// <summary>
         /// アプリケーション用のホスト構築
@@ -123,8 +124,13 @@ namespace TrainCrewTIDWindow.Communications
             if (connection == null) return;
             try {
                 var trackCircuitList = await connection.InvokeAsync<List<TrackCircuitData>>("SendData_TID");
+                var data = new ConstantDataToServer {
+                    TrackCircuitDatas = trackCircuitList
+                };
+                /*var data = await connection.InvokeAsync<ConstantDataToServer>("SendData_TID");
+                var trackCircuitList = data.TrackCircuitDatas;*/
                 JsonDebugLogManager.AddJsonText(JsonConvert.SerializeObject(trackCircuitList));
-                DataUpdated?.Invoke(trackCircuitList);
+                DataUpdated?.Invoke(data);
             }
             catch (Exception exception) {
                 Debug.WriteLine($"Server send failed: {exception.Message}");

@@ -1,5 +1,4 @@
-﻿namespace TrainCrewTIDWindow.Settings
-{
+﻿namespace TrainCrewTIDWindow.Settings {
 
     /// <summary>
     /// 列番表示枠についての設定
@@ -10,8 +9,7 @@
     /// <param name="posY">画面上のy座標</param>
     /// <param name="pointName">表示条件となる転轍器の名称</param>
     /// <param name="reversed">転轍器の状態（反位であるか）</param>
-    public class NumberSetting(string trackName, NumberSize size, int posX, int posY, string pointName, bool reversed)
-    {
+    public class NumberSetting(string trackName, NumberSize size, int posX, int posY, string pointName, bool reversed) {
 
         /// <summary>
         /// 軌道回路名
@@ -66,8 +64,7 @@
     /// <summary>
     /// 列番表示枠のサイズ
     /// </summary>
-    public enum NumberSize
-    {
+    public enum NumberSize {
         /// <summary>
         /// 列車番号+遅れ表示
         /// </summary>

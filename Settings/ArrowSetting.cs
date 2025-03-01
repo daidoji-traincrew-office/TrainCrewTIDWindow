@@ -1,5 +1,6 @@
-﻿namespace TrainCrewTIDWindow.Settings
-{
+﻿using TrainCrewTIDWindow.Models;
+
+namespace TrainCrewTIDWindow.Settings {
     /// <summary>
     /// 単線区間の方向てこ状態を示す矢印の位置やファイル名などについての設定
     /// </summary>
@@ -8,18 +9,17 @@
     /// <param name="fileName">ファイル名称</param>
     /// <param name="posX">画面上のx座標</param>
     /// <param name="posY">画面上のy座標</param>
-    public class ArrowSetting(string name, ArrowType type, string fileName, int posX, int posY)
-    {
+    public class ArrowSetting(string name, LCR type, string fileName, int posX, int posY, string lever1Name, string lever2Name) {
 
         /// <summary>
-        /// 名称（暫定）
+        /// 名称（不使用）
         /// </summary>
         public string Name { get; private set; } = name;
 
         /// <summary>
         /// 向き（R/L）
         /// </summary>
-        public ArrowType Type { get; private set; } = type;
+        public LCR Type { get; private set; } = type;
 
         /// <summary>
         /// ファイル名称
@@ -35,13 +35,22 @@
         /// 画面上のy座標
         /// </summary>
         public int PosY { get; private set; } = posY;
+
+        /// <summary>
+        /// 方向てこ名称1
+        /// </summary>
+        public string Lever1Name { get; private set; } = lever1Name;
+
+        /// <summary>
+        /// 方向てこ名称2
+        /// </summary>
+        public string Lever2Name { get; private set; } = lever2Name;
     }
 
     /// <summary>
     /// 矢印の向き
     /// </summary>
-    public enum ArrowType
-    {
+    public enum ArrowType {
         /// <summary>
         /// 右→
         /// </summary>
