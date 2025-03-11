@@ -113,10 +113,13 @@ namespace TrainCrewTIDWindow.Communications
                     .Build();
 
                 // 接続開始
-                await connection.StartAsync(); 
+                await connection.StartAsync();
+
+                _window.LabelStatusText = "Status：データ正常受信";
             }
             catch (Exception exception) {
                 Debug.WriteLine($"Server send failed: {exception.Message}");
+                _window.LabelStatusText = "Status：データ受信失敗";
             }
         }
         
@@ -134,6 +137,7 @@ namespace TrainCrewTIDWindow.Communications
             }
             catch (Exception exception) {
                 Debug.WriteLine($"Server send failed: {exception.Message}");
+                Debug.WriteLine(exception.StackTrace);
             }
         }
     }

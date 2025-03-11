@@ -455,13 +455,11 @@ namespace TrainCrewTIDWindow.Manager {
                 // 列番表示
 
                 var numHeader = Regex.Replace(track.Train, @"[0-9a-zA-Z]", "");  // 列番の頭の文字（回、試など）
-                _ = int.TryParse(Regex.Replace(track.Train, @"[^0-9]", ""), out var numBody);  // 列番本体（数字部分）
+                var isTrain = int.TryParse(Regex.Replace(track.Train, @"[^0-9]", ""), out var numBody);  // 列番本体（数字部分）
                 var numFooter = Regex.Replace(track.Train, @"[^a-zA-Z]", "");  // 列番の末尾の文字
 
-                var numSettingList = (numBody % 2 == 1 ? numSettingsOut : numSettingsIn).Where(d => d.TrackName == track.Name && !d.NotDraw && !d.ExistPoint);
-
                 rule = "";
-                foreach (var numData in numBody % 2 == 1 ? track.NumSettingsOut : track.NumSettingsIn) {
+                foreach (var numData in isTrain ? (numBody % 2 == 1 ? track.NumSettingsOut : track.NumSettingsIn) : track.NumSettingsOut.Union(track.NumSettingsIn)) {
                     if (numData == null) {
                         continue;
                     }
