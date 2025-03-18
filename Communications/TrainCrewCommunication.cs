@@ -1,4 +1,5 @@
-﻿using System.Net.WebSockets;
+﻿using System.Diagnostics;
+using System.Net.WebSockets;
 using System.Text;
 using Newtonsoft.Json;
 using TrainCrewTIDWindow.Manager;
@@ -65,8 +66,9 @@ namespace TrainCrewTIDWindow.Communications {
                     await ConnectWebSocket();
                     break;
                 }
-                catch (Exception) {
-                    ConnectionStatusChanged?.Invoke("Status：接続待機中...");
+                catch (Exception e) {
+                    Debug.WriteLine(e.StackTrace);
+                    ConnectionStatusChanged?.Invoke("Status：TRAIN CREW接続待機中...");
                     await Task.Delay(1000);
                 }
             }
@@ -97,10 +99,11 @@ namespace TrainCrewTIDWindow.Communications {
         /// <returns></returns>
         private async Task ReceiveMessages() {
             var buffer = new byte[2048];
+            var byteList = new List<byte>();
             var messageBuilder = new StringBuilder();
 
             while (ws.State == WebSocketState.Open) {
-                ConnectionStatusChanged?.Invoke("Status：接続完了");
+                ConnectionStatusChanged?.Invoke("Status：TRAIN CREW接続完了");
 
                 WebSocketReceiveResult result;
                 do {
@@ -109,20 +112,20 @@ namespace TrainCrewTIDWindow.Communications {
                     if (result.MessageType == WebSocketMessageType.Close) {
                         // サーバーからの切断要求を受けた場合
                         await CloseAsync();
-                        ConnectionStatusChanged?.Invoke("Status：接続待機中...");
+                        ConnectionStatusChanged?.Invoke("Status：TRAIN CREW接続待機中...");
                         await TryConnectWebSocket();
                         return;
                     }
                     else {
-                        string partMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                        messageBuilder.Append(partMessage);
+                        byteList.AddRange(buffer.Take(result.Count));
                     }
 
                 } while (!result.EndOfMessage);
 
-                string jsonResponse = messageBuilder.ToString();
-                /*JsonDebugLogManager.AddJsonText(jsonResponse);*/
-                messageBuilder.Clear();
+                string jsonResponse = Encoding.UTF8.GetString(byteList.ToArray());
+                /*
+                JsonDebugLogManager.AddJsonText(jsonResponse);*/
+                byteList.Clear();
 
 
                 // 一旦Data_Base型でデシリアライズ

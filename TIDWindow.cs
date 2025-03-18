@@ -123,6 +123,8 @@ namespace TrainCrewTIDWindow
                     await TryConnectTrainCrew();
                     break;
                 default:
+                    trackManager.CountStart = 0;
+
                     //デフォルトのサーバへの接続処理
                     serverCommunication = new(this, ServerAddress.SignalAddress, service);
                     serverCommunication.DataUpdated += UpdateServerData;
