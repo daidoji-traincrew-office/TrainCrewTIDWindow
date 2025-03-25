@@ -100,7 +100,6 @@ namespace TrainCrewTIDWindow.Communications {
         private async Task ReceiveMessages() {
             var buffer = new byte[2048];
             var byteList = new List<byte>();
-            var messageBuilder = new StringBuilder();
 
             while (ws.State == WebSocketState.Open) {
                 ConnectionStatusChanged?.Invoke("Status：TRAIN CREW接続完了");
