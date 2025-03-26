@@ -1,18 +1,12 @@
-﻿using System;
-using System.Diagnostics;
-using System.Timers;
+﻿using System.Diagnostics;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using OpenIddict.Abstractions;
 using OpenIddict.Client;
 using TrainCrewTIDWindow.Manager;
 using Newtonsoft.Json;
 using TrainCrewTIDWindow.Models;
-using Timer = System.Windows.Forms.Timer;
 using System.Net;
+using System.Net.WebSockets;
 
 namespace TrainCrewTIDWindow.Communications
 {
@@ -146,9 +140,17 @@ namespace TrainCrewTIDWindow.Communications
                 JsonDebugLogManager.AddJsonText(JsonConvert.SerializeObject(trackCircuitList));
                 DataUpdated?.Invoke(data);
             }
-            catch (Exception exception) {
-                Debug.WriteLine($"Server send failed: {exception.Message}");
-                Debug.WriteLine(exception.StackTrace);
+            catch (WebSocketException e) {
+                Debug.WriteLine($"Server send failed: {e.Message}");
+                Debug.WriteLine($"status {e.WebSocketErrorCode.ToString()}");
+                Debug.WriteLine(e.StackTrace);
+                _window.LabelStatusText = "Status：データ受信失敗";
+
+            }
+            catch (Exception e) {
+                Debug.WriteLine($"Server send failed: {e.Message}");
+                Debug.WriteLine(e.StackTrace);
+                _window.LabelStatusText = "Status：データ受信失敗";
             }
         }
     }

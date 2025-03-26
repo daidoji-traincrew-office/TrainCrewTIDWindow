@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using TrainCrewTIDWindow.Models;
 
 namespace TrainCrewTIDWindow.Manager
@@ -65,26 +59,27 @@ namespace TrainCrewTIDWindow.Manager
         public bool UpdateTCData(List<TrackCircuitData> tcList) {
 
             var updatedTID = false;
-            foreach (var tc in tcList) {
-                if (!tc.On && tc.Last != "" || !Regex.IsMatch(tc.Last, @"^([溝月レイルﾚｲﾙ]+|[回試臨]?[\d]{3,4}[ABCKST]?[XYZ]?)$")) {
-                    continue;
-                }
-                if (trackDataDict.ContainsKey(tc.Name)) {
-                    if (tc.On || tc.Last == "") {
-                        updatedTID |= trackDataDict[tc.Name].SetStates(tc.Last, tc.Lock, countStart);
+            lock (trackDataDict) {
+                foreach (var tc in tcList) {
+                    if (tc == null || !tc.On && tc.Last != "" || !Regex.IsMatch(tc.Last, @"^([溝月レイルﾚｲﾙ]+|[回試臨]?[\d]{3,4}[ABCKST]?[XYZ]?)$")) {
+                        continue;
+                    }
+                    if (!trackDataDict.TryAdd(tc.Name, new TrackData(tc.Name, displayManager, tc.Last, tc.Lock, countStart))) {
+                        if (tc.On || tc.Last == "") {
+                            updatedTID |= trackDataDict[tc.Name].SetStates(tc.Last, tc.Lock, countStart);
+                        }
+                    }
+                    else {
+                        updatedTID = true;
                     }
                 }
-                else {
-                    trackDataDict.Add(tc.Name, new TrackData(tc.Name, displayManager, tc.Last, tc.Lock, countStart));
-                    updatedTID = true;
-                }
             }
 
-            foreach(var td in trackDataDict.Values) {
-                updatedTID |= td.UpdateTrack();
+            foreach (var td in trackDataDict.ToArray()) {
+                updatedTID |= td.Value.UpdateTrack();
             }
 
-            if(trackDataDict.Values.Any(t => t.DeeCount == countStart - 2) && trackDataDict.Values.All(t => t.DeeCount >= countStart - 1)) {
+            if(trackDataDict.Keys.Any(t => trackDataDict[t].DeeCount == countStart - 2) && trackDataDict.Keys.All(t => trackDataDict[t].DeeCount >= countStart - 1)) {
                 JsonDebugLogManager.OutputJsonTexts();
             }
 

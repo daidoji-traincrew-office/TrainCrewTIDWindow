@@ -414,8 +414,10 @@ namespace TrainCrewTIDWindow.Manager {
             var pointDataDict = window.PointDataDict;
             var directionDataDict = window.DirectionDataDict;
 
-
-            var newPic = new Bitmap(backgroundImage);
+            Bitmap? newPic = null;
+            lock (backgroundImage) {
+                newPic = new Bitmap(backgroundImage);
+            }
 
             using var g = Graphics.FromImage(newPic);
 
@@ -480,25 +482,49 @@ namespace TrainCrewTIDWindow.Manager {
 
                     // 運番
                     if (numData.Size == NumberSize.S) {
-                        var umban = numBody / 3000 * 100 + numBody % 100;
+                        if (isTrain) {
+                            var umban = numBody / 3000 * 100 + numBody % 100;
 
-                        // 運番を偶数にする・矢印設置
-                        if (umban % 2 != 0) {
-                            umban -= 1;
-                            AddNumImage(g, 8, 0, numData.PosX, numData.PosY);
-                        }
-                        else {
-                            AddNumImage(g, 9, 0, numData.PosX + 24, numData.PosY);
-                        }
+                            // 運番を偶数にする・矢印設置
+                            if (umban % 2 != 0) {
+                                umban -= 1;
+                                AddNumImage(g, 8, 0, numData.PosX, numData.PosY);
+                            }
+                            else {
+                                AddNumImage(g, 9, 0, numData.PosX + 24, numData.PosY);
+                            }
 
-                        // 運番設置
-                        for (var i = 2; i >= 0 && umban > 0; i--) {
-                            var num = umban % 10;
-                            AddNumImage(g, num, numData.PosX + 6 + i * 6, numData.PosY);
-                            umban /= 10;
+                            // 運番設置
+                            for (var i = 2; i >= 0 && umban > 0; i--) {
+                                var num = umban % 10;
+                                AddNumImage(g, num, numData.PosX + 6 + i * 6, numData.PosY);
+                                umban /= 10;
+                            }
+                            // 下線設置
+                            AddImage(g, numLineS, numData.PosX, numData.PosY + 10);
+
                         }
-                        // 下線設置
-                        AddImage(g, numLineS, numData.PosX, numData.PosY + 10);
+                        else if(numHeader.StartsWith("溝月")) {
+                            // みぞつき色
+                            ImageAttributes? iaType = null;
+                            if (numColor.TryGetValue("溝月", out var newColor)) {
+                                iaType = new ImageAttributes();
+                                iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = newColor }]);
+                            }
+                            // みぞつき色が見つからなければとりあえず不明色に
+                            if (iaType == null) {
+                                iaType = new ImageAttributes();
+                                if (dicColor.TryGetValue("UNKNOWN", out newColor)) {
+                                    iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = newColor }]);
+                                }
+                            }
+
+                            // 溝月ﾚｲﾙ設置
+                            AddNumImage(g, 5, 0, 4, numData.PosX, numData.PosY, iaType);
+                            // 下線設置
+                            AddImage(g, numLineS, numData.PosX, numData.PosY + 10, iaType);
+
+                        }
                     }
                     // 列番
                     else {
@@ -521,55 +547,82 @@ namespace TrainCrewTIDWindow.Manager {
                             }
                         }
 
-                        // 列番の頭の文字設置
-                        switch (numHeader) {
-                            case "回":
-                                AddNumImage(g, true, 0, 0, numData.PosX, numData.PosY, iaType);
-                                break;
-                            case "試":
-                                AddNumImage(g, true, 2, 0, numData.PosX, numData.PosY, iaType);
-                                break;
-                            case "臨":
-                                AddNumImage(g, true, 4, 0, numData.PosX, numData.PosY, iaType);
-                                break;
-                        }
-
-                        // 列番本体設置
-                        for (var i = 3; i >= 0 && retsuban > 0; i--) {
-                            var num = retsuban % 10;
-                            AddNumImage(g, num, numData.PosX + 12 + i * 6, numData.PosY, iaType);
-                            retsuban /= 10;
-                        }
-
-
-                        // 列番の末尾の文字設置
-                        if (numFooter.Length > 0) {
-                            var x = GetAlphaX(numFooter[0]);
-                            if (x < 55) {
-                                AddNumImage(g, x, 2, numData.PosX + 36, numData.PosY, iaType);
+                        if (isTrain) {
+                            // 列番の頭の文字設置
+                            switch (numHeader) {
+                                case "回":
+                                    AddNumImage(g, 2, 0, 0, numData.PosX, numData.PosY, iaType);
+                                    break;
+                                case "試":
+                                    AddNumImage(g, 2, 2, 0, numData.PosX, numData.PosY, iaType);
+                                    break;
+                                case "臨":
+                                    AddNumImage(g, 2, 4, 0, numData.PosX, numData.PosY, iaType);
+                                    break;
                             }
-                        }
-                        if (numFooter.Length > 1) {
-                            var x = GetAlphaX(numFooter[1]);
-                            if (x < 55) {
-                                AddNumImage(g, x, 2, numData.PosX + 42, numData.PosY, iaType);
+
+                            // 列番本体設置
+                            for (var i = 3; i >= 0 && retsuban > 0; i--) {
+                                var num = retsuban % 10;
+                                AddNumImage(g, num, numData.PosX + 12 + i * 6, numData.PosY, iaType);
+                                retsuban /= 10;
                             }
+
+
+                            // 列番の末尾の文字設置
+                            if (numFooter.Length > 0) {
+                                var x = GetAlphaX(numFooter[0]);
+                                if (x < 55) {
+                                    AddNumImage(g, x, 2, numData.PosX + 36, numData.PosY, iaType);
+                                }
+                            }
+                            if (numFooter.Length > 1) {
+                                var x = GetAlphaX(numFooter[1]);
+                                if (x < 55) {
+                                    AddNumImage(g, x, 2, numData.PosX + 42, numData.PosY, iaType);
+                                }
+                            }
+
+
+                            // 遅延時分表示（未実装のため必ず0・白色）
+                            // ↑が未実装なので一時的に代わりに受信精度確認用カウントダウン（-1になると在線が消える）を表示
+
+                            /*var cm = new ColorMap();
+                            cm.OldColor = Color.White;
+                            cm.NewColor = Color.FromArgb(255, 0, 0);*/
+                            var iaDelay = new ImageAttributes();
+                            /*iaDelay.SetRemapTable([cm]);*/
+                            if (numData.Size == NumberSize.L) {
+                                AddNumImage(g, track.DeeCount - 1, numData.PosX + 54, numData.PosY, iaDelay);
+                            }
+
+                            if (numData.Size == NumberSize.L) {
+                                AddImage(g, numLineL, numData.PosX, numData.PosY + 10, iaDelay);
+                            }
+                            else {
+                                AddImage(g, numLineM, numData.PosX, numData.PosY + 10, iaDelay);
+                            }
+
+                        }
+                        else if (numHeader.StartsWith("溝月")) {
+
+                            // 溝月ﾚｲﾙ設置
+                            if(numData.Size == NumberSize.L) {
+                                AddNumImage(g, 7, 0, 3, numData.PosX, numData.PosY, iaType);
+                            }
+                            else {
+                                AddNumImage(g, 5, 0, 4, numData.PosX, numData.PosY, iaType);
+                            }
+                            // 下線設置
+                            if(numData.Size == NumberSize.L) {
+                                AddImage(g, numLineL, numData.PosX, numData.PosY + 10, iaType);
+                            }
+                            else {
+                                AddImage(g, numLineM, numData.PosX, numData.PosY + 10, iaType);
+                            }
+
                         }
 
-
-                        // 遅延時分表示（未実装のため必ず0・白色）
-                        // ↑が未実装なので一時的に代わりに受信精度確認用カウントダウン（-1になると在線が消える）を表示
-
-                        /*var cm = new ColorMap();
-                        cm.OldColor = Color.White;
-                        cm.NewColor = Color.FromArgb(255, 0, 0);*/
-                        var iaDelay = new ImageAttributes();
-                        /*iaDelay.SetRemapTable([cm]);*/
-                        if (numData.Size == NumberSize.L) {
-                            AddNumImage(g, track.DeeCount - 1, numData.PosX + 54, numData.PosY, iaDelay);
-                        }
-                        Image numLineImage = numData.Size == NumberSize.L ? new Bitmap(numLineL) : new Bitmap(numLineM);
-                        AddImage(g, numLineImage, numData.PosX, numData.PosY + 10, iaDelay);
                     }
                 }
             }
@@ -631,7 +684,9 @@ namespace TrainCrewTIDWindow.Manager {
         /// <param name="x">貼り付けるx座標</param>
         /// <param name="y">貼り付けるy座標</param>
         private void AddImage(Graphics g, Image image, int x, int y) {
-            g.DrawImage(image, x, y, image.Width, image.Height);
+            lock (image) {
+                g.DrawImage(image, x, y, image.Width, image.Height);
+            }
         }
 
         /// <summary>
@@ -643,21 +698,25 @@ namespace TrainCrewTIDWindow.Manager {
         /// <param name="y">貼り付けるy座標</param>
         /// <param name="ia">色の置き換えを指定したImageAttributes</param>
         private void AddImage(Graphics g, Image image, int x, int y, ImageAttributes ia) {
-            g.DrawImage(image, new Rectangle(x, y, image.Width, image.Height), 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, ia);
+            lock (image) {
+                g.DrawImage(image, new Rectangle(x, y, image.Width, image.Height), 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, ia);
+            }
         }
 
         /// <summary>
         /// 座標と色を指定して列車番号フォント画像を貼り付ける（全角可）
         /// </summary>
         /// <param name="g">TID画像のGraphics</param>
-        /// <param name="isFullWidth">全角であるか</param>
+        /// <param name="fontSize">フォントの横幅</param>
         /// <param name="numX">画像中に文字がある列</param>
         /// <param name="numY">画像中に文字がある行</param>
         /// <param name="x">貼り付けるx座標</param>
         /// <param name="y">貼り付けるy座標</param>
         /// <param name="ia">色の置き換えを指定したImageAttributes</param>
-        private void AddNumImage(Graphics g, bool isFullWidth, int numX, int numY, int x, int y, ImageAttributes ia) {
-            g.DrawImage(numberImage, new Rectangle(x, y, isFullWidth ? 11 : 5, 9), 1 + numX * 6, 1 + numY * 10, isFullWidth ? 11 : 5, 9, GraphicsUnit.Pixel, ia);
+        private void AddNumImage(Graphics g, int fontSize, int numX, int numY, int x, int y, ImageAttributes ia) {
+            lock (numberImage) {
+                g.DrawImage(numberImage, new Rectangle(x, y, fontSize * 6 - 1, 9), 1 + numX * 6, 1 + numY * 10, fontSize * 6 - 1, 9, GraphicsUnit.Pixel, ia);
+            }
         }
 
         /// <summary>
@@ -670,7 +729,7 @@ namespace TrainCrewTIDWindow.Manager {
         /// <param name="y">貼り付けるy座標</param>
         /// <param name="ia">色の置き換えを指定したImageAttributes</param>
         private void AddNumImage(Graphics g, int numX, int numY, int x, int y, ImageAttributes ia) {
-            AddNumImage(g, false, numX, numY, x, y, ia);
+            AddNumImage(g, 1, numX, numY, x, y, ia);
         }
 
         /// <summary>
@@ -695,7 +754,9 @@ namespace TrainCrewTIDWindow.Manager {
         /// <param name="x">貼り付けるx座標</param>
         /// <param name="y">貼り付けるy座標</param>
         private void AddNumImage(Graphics g, bool isFullWidth, int numX, int numY, int x, int y) {
-            g.DrawImage(numberImage, new Rectangle(x, y, isFullWidth ? 11 : 5, 9), 1 + numX * 6, 1 + numY * 10, isFullWidth ? 11 : 5, 9, GraphicsUnit.Pixel);
+            lock (numberImage) {
+                g.DrawImage(numberImage, new Rectangle(x, y, isFullWidth ? 11 : 5, 9), 1 + numX * 6, 1 + numY * 10, isFullWidth ? 11 : 5, 9, GraphicsUnit.Pixel);
+            }
         }
 
         /// <summary>

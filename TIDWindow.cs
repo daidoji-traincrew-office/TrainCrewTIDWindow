@@ -4,7 +4,6 @@ using OpenIddict.Client;
 using TrainCrewTIDWindow.Communications;
 using TrainCrewTIDWindow.Manager;
 using TrainCrewTIDWindow.Models;
-using System.Text.RegularExpressions;
 
 namespace TrainCrewTIDWindow
 {
@@ -194,13 +193,14 @@ namespace TrainCrewTIDWindow
 
         private bool UpdatePointData(List<SwitchData> switchData) {
             var updatedTID = false;
-            foreach (var s in switchData) {
-                if (pointDataDict.ContainsKey(s.Name)) {
-                    updatedTID |= pointDataDict[s.Name].SetStates(s.State != NRC.Center, s.State == NRC.Reversed);
-                }
-                else {
-                    pointDataDict.Add(s.Name, new PointData(s.Name, s.State != NRC.Center, s.State == NRC.Reversed));
-                    updatedTID = true;
+            lock (pointDataDict) {
+                foreach (var s in switchData) {
+                    if (!pointDataDict.TryAdd(s.Name, new PointData(s.Name, s.State != NRC.Center, s.State == NRC.Reversed))) {
+                        updatedTID |= pointDataDict[s.Name].SetStates(s.State != NRC.Center, s.State == NRC.Reversed);
+                    }
+                    else {
+                        updatedTID = true;
+                    }
                 }
             }
             return updatedTID;
@@ -209,14 +209,15 @@ namespace TrainCrewTIDWindow
 
         private bool UpdateDirectionData(List<DirectionData> directionData) {
             var updatedTID = false;
-            foreach (var d in directionData) {
-                if (directionDataDict.ContainsKey(d.Name)) {
-                    updatedTID |= directionDataDict[d.Name] != d.State;
-                    directionDataDict[d.Name] = d.State;
-                }
-                else {
-                    directionDataDict.Add(d.Name, d.State);
-                    updatedTID = true;
+            lock (directionDataDict) {
+                foreach (var d in directionData) {
+                    if (!directionDataDict.TryAdd(d.Name, d.State)) {
+                        updatedTID |= directionDataDict[d.Name] != d.State;
+                        directionDataDict[d.Name] = d.State;
+                    }
+                    else {
+                        updatedTID = true;
+                    }
                 }
             }
             return updatedTID;

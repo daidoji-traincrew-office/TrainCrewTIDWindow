@@ -2,7 +2,6 @@
 using System.Net.WebSockets;
 using System.Text;
 using Newtonsoft.Json;
-using TrainCrewTIDWindow.Manager;
 
 namespace TrainCrewTIDWindow.Communications {
 
