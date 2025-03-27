@@ -143,32 +143,42 @@ namespace TrainCrewTIDWindow.Communications
         private async Task OnTimedEvent() {
             if (connection == null) return;
             try {
-                /*var trackCircuitList = await connection.InvokeAsync<List<TrackCircuitData>>("SendData_TID");
-                var data = new ConstantDataToServer {
-                    TrackCircuitDatas = trackCircuitList
-                };*/
                 var data = await connection.InvokeAsync<ConstantDataToServer>("SendData_TID");
                 var trackCircuitList = data.TrackCircuitDatas;
                 JsonDebugLogManager.AddJsonText(JsonConvert.SerializeObject(trackCircuitList));
                 DataUpdated?.Invoke(data);
-
-                _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ正常受信"; }));
-            }
-            catch (WebSocketException e) {
-                Debug.WriteLine($"Server send failed: {e.Message}");
-                Debug.WriteLine($"status {e.WebSocketErrorCode.ToString()}");
-                Debug.WriteLine(e.StackTrace);
                 if (!error) {
+                    _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ正常受信"; }));
+                }
+            }
+            catch (WebSocketException e) when (e.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
+                Debug.WriteLine($"Server send failed: {e.Message}");
+                Debug.WriteLine(e.StackTrace);
+                /*if (!error) {
                     error = true;
                     _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ受信失敗"; }));
                     TaskDialog.ShowDialog(new TaskDialogPage {
                         Caption = "データ受信失敗 | TID - ダイヤ運転会",
                         Heading = "データ受信失敗",
                         Icon = TaskDialogIcon.Error,
-                        Text = "データの受信に失敗しました。\n大変恐れ入りますが、アプリケーションの再起動をお願いします。"
+                        Text = "サーバ側から接続が切断されました。\n大変恐れ入りますが、アプリケーションの再起動をお願いします。"
+                    });
+                }*/
+
+            }
+            catch (TimeoutException e) {
+                Debug.WriteLine($"Server send failed: {e.Message}");
+                Debug.WriteLine(e.StackTrace);
+                if (!error) {
+                    error = true;
+                    _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：タイムアウト"; }));
+                    TaskDialog.ShowDialog(new TaskDialogPage {
+                        Caption = "タイムアウト | TID - ダイヤ運転会",
+                        Heading = "タイムアウト",
+                        Icon = TaskDialogIcon.Error,
+                        Text = "サーバとの通信がタイムアウトしました。\n大変恐れ入りますが、アプリケーションの再起動をお願いします。"
                     });
                 }
-
             }
             catch (Exception e) {
                 Debug.WriteLine($"Server send failed: {e.Message}");
