@@ -58,6 +58,10 @@ namespace TrainCrewTIDWindow
             set => label1.Text = value;
         }
 
+        public void SetLabelStatusText(string text) {
+            label1.Text = text;
+        }
+
         public ReadOnlyDictionary<string, TrackData> TrackDataDict => trackManager.TrackDataDict;
 
         public ReadOnlyDictionary<string, PointData> PointDataDict => pointDataDict.AsReadOnly();

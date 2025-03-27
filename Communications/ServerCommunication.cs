@@ -152,7 +152,7 @@ namespace TrainCrewTIDWindow.Communications
                 JsonDebugLogManager.AddJsonText(JsonConvert.SerializeObject(trackCircuitList));
                 DataUpdated?.Invoke(data);
 
-                _window.LabelStatusText = "Status：データ正常受信";
+                _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ正常受信"; }));
             }
             catch (WebSocketException e) {
                 Debug.WriteLine($"Server send failed: {e.Message}");
@@ -160,7 +160,7 @@ namespace TrainCrewTIDWindow.Communications
                 Debug.WriteLine(e.StackTrace);
                 if (!error) {
                     error = true;
-                    _window.LabelStatusText = "Status：データ受信失敗";
+                    _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ受信失敗"; }));
                     TaskDialog.ShowDialog(new TaskDialogPage {
                         Caption = "データ受信失敗 | TID - ダイヤ運転会",
                         Heading = "データ受信失敗",
@@ -175,7 +175,7 @@ namespace TrainCrewTIDWindow.Communications
                 Debug.WriteLine(e.StackTrace);
                 if (!error) {
                     error = true;
-                    _window.LabelStatusText = "Status：データ受信失敗";
+                    _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ受信失敗"; }));
                     TaskDialog.ShowDialog(new TaskDialogPage {
                         Caption = "データ受信失敗 | TID - ダイヤ運転会",
                         Heading = "データ受信失敗",
