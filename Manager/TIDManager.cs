@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Text.RegularExpressions;
 using TrainCrewTIDWindow.Models;
@@ -426,6 +427,8 @@ namespace TrainCrewTIDWindow.Manager {
                     continue;
                 }
 
+                Debug.WriteLine($"draw {track.Name}: {track.Train}");
+
                 // トラックの在線、進路開通状態表示
 
                 var rule = "";
@@ -456,9 +459,15 @@ namespace TrainCrewTIDWindow.Manager {
 
                 // 列番表示
 
-                var numHeader = Regex.Replace(track.Train, @"[0-9a-zA-Z]", "");  // 列番の頭の文字（回、試など）
-                var isTrain = int.TryParse(Regex.Replace(track.Train, @"[^0-9]", ""), out var numBody);  // 列番本体（数字部分）
-                var numFooter = Regex.Replace(track.Train, @"[^a-zA-Z]", "");  // 列番の末尾の文字
+                string train = track.Train ?? "";
+
+                var numHeader = Regex.Replace(train, @"[0-9a-zA-Z]", "");  // 列番の頭の文字（回、試など）
+                var isTrain = int.TryParse(Regex.Replace(train, @"[^0-9]", ""), out var numBody);  // 列番本体（数字部分）
+                var numFooter = Regex.Replace(train, @"[^a-zA-Z]", "");  // 列番の末尾の文字
+
+                if (!Regex.IsMatch(numHeader, @"^([溝月レイルﾚｲﾙ]+|[回試臨]?)$") || !Regex.IsMatch(numFooter, @"^([ABCKST]?[XYZ]?)$")) {
+                    continue;
+                }
 
                 rule = "";
                 foreach (var numData in isTrain ? (numBody % 2 == 1 ? track.NumSettingsOut : track.NumSettingsIn) : track.NumSettingsOut.Union(track.NumSettingsIn)) {

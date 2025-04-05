@@ -147,9 +147,8 @@ namespace TrainCrewTIDWindow.Communications
                 var trackCircuitList = data.TrackCircuitDatas;
                 JsonDebugLogManager.AddJsonText(JsonConvert.SerializeObject(trackCircuitList));
                 DataUpdated?.Invoke(data);
-                if (!error) {
-                    _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ正常受信"; }));
-                }
+                error = false;
+                _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ正常受信"; }));
             }
             catch (WebSocketException e) when (e.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
                 Debug.WriteLine($"Server send failed: {e.Message}");

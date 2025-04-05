@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using TrainCrewTIDWindow.Models;
 
@@ -22,7 +23,7 @@ namespace TrainCrewTIDWindow.Manager
         /// <summary>
         /// DeeCountの初期値
         /// </summary>
-        private int countStart = 6;
+        private int countStart = 2;
 
 
         /// <summary>
@@ -61,12 +62,13 @@ namespace TrainCrewTIDWindow.Manager
             var updatedTID = false;
             lock (trackDataDict) {
                 foreach (var tc in tcList) {
-                    if (tc == null || !tc.On && tc.Last != "" || !Regex.IsMatch(tc.Last, @"^([溝月レイルﾚｲﾙ]+|[回試臨]?[\d]{3,4}[ABCKST]?[XYZ]?)$")) {
+                    if (tc == null/* || !tc.On && !tc.Lock || tc.Last != "" && !Regex.IsMatch(tc.Last, @"^([溝月レイルﾚｲﾙ]+|[回試臨]?[\d]{3,4}[ABCKST]?[XYZ]?)$")*/) {
                         continue;
                     }
-                    if (!trackDataDict.TryAdd(tc.Name, new TrackData(tc.Name, displayManager, tc.Last, tc.Lock, countStart))) {
+                    /*Debug.WriteLine($"track {tc.Name}: {tc.Last} on:{tc.On} lock:{tc.Lock}");*/
+                    if (!trackDataDict.TryAdd(tc.Name, new TrackData(tc.Name, displayManager, !tc.On ? null : tc.Last, tc.Lock, countStart))) {
                         if (tc.On || tc.Last == "") {
-                            updatedTID |= trackDataDict[tc.Name].SetStates(tc.Last, tc.Lock, countStart);
+                            updatedTID |= trackDataDict[tc.Name].SetStates(!tc.On ? null : tc.Last, tc.Lock, countStart);
                         }
                     }
                     else {
