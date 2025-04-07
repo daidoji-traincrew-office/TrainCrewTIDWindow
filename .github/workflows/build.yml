@@ -70,6 +70,7 @@ jobs:
       - name: List downloaded files
         id: list_files
         run: |
+          ls out
           files=$(ls out)
           files_json=$(echo "$files" | jq -R -s -c 'split("\n") | map(select(length > 0))')
           echo "files=${files_json}" >> "$GITHUB_OUTPUT"
