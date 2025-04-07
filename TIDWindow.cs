@@ -173,7 +173,7 @@ namespace TrainCrewTIDWindow
             if (tcList == null) {
                 return;
             }
-            if (trackManager.UpdateTCData(tcList) || true/* 受信状況を更新したいので常時更新 */) {
+            if (trackManager.UpdateTCData(tcList)) {
                 displayManager.UpdateTID();
             }
         }
@@ -190,7 +190,7 @@ namespace TrainCrewTIDWindow
             var sList = data.SwitchDatas;
             var dList = data.DirectionDatas;
 
-            if (tcList != null && trackManager.UpdateTCData(tcList) || sList != null && UpdatePointData(sList) || dList != null && UpdateDirectionData(dList) || true/* 受信状況を更新したいので常時更新 */) {
+            if (tcList != null && trackManager.UpdateTCData(tcList) || sList != null && UpdatePointData(sList) || dList != null && UpdateDirectionData(dList)) {
                 displayManager.UpdateTID();
             }
         }

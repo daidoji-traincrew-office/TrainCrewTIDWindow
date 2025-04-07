@@ -182,7 +182,7 @@ namespace TrainCrewTIDWindow.Models {
         public bool UpdateTrack() {
             if (DeeCount > 0 && --DeeCount <= 0) {
                 DeeCount = 0;
-                Train = "";
+                Train = null;
                 IsReserved = false;
                 return true;
             }
