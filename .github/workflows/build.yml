@@ -1,0 +1,73 @@
+name: Build
+on:
+  push: {}
+  
+env:
+  APP_NAME: "TraincrewTIDWindow"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: "Build"
+    strategy:
+      matrix:
+        standalone: [ true, false ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup dotnet 8.0.x
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+      - name: Build Exe
+        run: |
+          dotnet publish -c Release \
+            -o ../out \
+            -r win-x64 \
+            -p:PublishSingleFile=true \
+            -p:EnableWindowsTargeting=true \
+            --self-contained ${{ matrix.standalone }}
+      - name: Zip binaries
+        run: |
+          cd out
+          zip -r ../out.zip .
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          path: 'out.zip'
+          name: ${{ env.APP_NAME }}${{ (matrix.standalone && '-standalone') || '' }}.zip
+  create_new_release:
+    runs-on: ubuntu-latest
+    name: "Create New Release"
+    needs: build
+    # mainブランチにpushした場合のみ、このワークフローを作動させる
+    # if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Get latest release
+        id: latest_release
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const response = await github.rest.repos.getLatestRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            return response.data.tag_name;
+      - name: Bump patch version
+        id: bump_version
+        run: |
+          version=$(echo ${{ steps.latest_release.outputs.result }} | awk -F. '{$3+=1; OFS="."; print $1,$2,$3}')
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+      - name: Download Artifact
+        uses: actions/download-artifact@v4.2.1
+        with:
+          path: 'out'
+          merge-multiple: 'true'
+      - name: Create New Release
+        id: create_release
+        uses: softprops/action-gh-release@v2.2.1
+        with:
+          tag_name: ${{ steps.bump_version.outputs.version }}
+          name: Release ${{ steps.bump_version.outputs.version }}
+          files: out/* 
+          
