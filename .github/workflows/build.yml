@@ -40,8 +40,8 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4.6.2
         with:
-          path: ${{ env.ZIP_FILE_NAME }}
-          name: ${{ env.APP_NAME }}${{ (matrix.standalone && '-standalone') || '' }}.zip
+          path: ./${{ env.ZIP_FILE_NAME }}
+          name: ${{ env.ZIP_FILE_NAME }}
   create_new_release:
     runs-on: ubuntu-latest
     name: "Create New Release"
