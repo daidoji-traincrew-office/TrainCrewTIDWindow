@@ -3,8 +3,8 @@ on:
   push: {}
   
 env:
-  APP_NAME: "TraincrewTIDWindow"
-  NAMESPACE: "TraincrewTIDWindow"
+  APP_NAME: "TrainCrewTIDWindow"
+  NAMESPACE: "TrainCrewTIDWindow"
 
 jobs:
   build:
