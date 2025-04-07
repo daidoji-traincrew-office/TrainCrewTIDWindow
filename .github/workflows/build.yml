@@ -46,6 +46,8 @@ jobs:
     strategy:
       matrix:
         standalone: [ true, false ]
+        # 接続先をProdにしたバージョンを作成する場合は、リストにfalseを追加する
+        dev: [ true ]
     steps:
       - name: Set Zip File Name
         # ZIP_FILE_NAMEは、ビルドしたアプリケーションのファイル名を指定するための環境変数。ソフトによって変えると良さげ
@@ -54,7 +56,12 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Write ServerAddress.cs
         run: |
-          echo "namespace ${{ env.NAMESPACE }}; public static class ServerAddress { public const string SignalAddress = \"${{ secrets.SERVER_ADDRESS }}\"; }" > ./ServerAddress.cs
+          if [ "${{ matrix.dev }}" = "true" ]; then
+            SERVER_ADDRESS=${{ secrets.SERVER_ADDRESS_DEV }}
+          else
+            SERVER_ADDRESS=${{ secrets.SERVER_ADDRESS }}
+          fi
+          echo "namespace ${{ env.NAMESPACE }}; public static class ServerAddress { public const string SignalAddress = \"${SERVER_ADDRESS}\"; }" > ./ServerAddress.cs
       - name: Setup dotnet 8.0.x
         uses: actions/setup-dotnet@v4.3.1
         with:
