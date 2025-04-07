@@ -5,6 +5,7 @@ on:
 env:
   APP_NAME: ${{ github.event.repository.name }}
   NAMESPACE: "TrainCrewTIDWindow"
+  TZ: "Asia/Tokyo"
 
 jobs:
   calc_version:
