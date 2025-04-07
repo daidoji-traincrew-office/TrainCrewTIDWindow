@@ -15,6 +15,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Write ServerAddress.cs
+        run: |
+          echo "namespace TraincrewTIDWindow; { public static class ServerAddress { public const string Address = \"${{ secrets.SERVER_ADDRESS }}\"; } }" > ./ServerAddress.cs
       - name: Setup dotnet 8.0.x
         uses: actions/setup-dotnet@v3
         with:
