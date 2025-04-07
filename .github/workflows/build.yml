@@ -3,7 +3,7 @@ on:
   push: { }
 
 env:
-  APP_NAME: "TrainCrewTIDWindow"
+  APP_NAME: ${{ github.event.repository.name }}
   NAMESPACE: "TrainCrewTIDWindow"
 
 jobs:
