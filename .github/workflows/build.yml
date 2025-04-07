@@ -36,7 +36,7 @@ jobs:
       - name: Zip binaries
         run: |
           cd out
-          zip -r ../${{ env.FILE_NAME }} .
+          zip -r ../${{ env.ZIP_FILE_NAME }} .
       - name: Upload Artifact
         uses: actions/upload-artifact@v4.6.2
         with:
