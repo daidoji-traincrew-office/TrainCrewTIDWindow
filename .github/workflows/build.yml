@@ -25,7 +25,7 @@ jobs:
       - name: Calculate Version
         id: calc_version
         run: |
-          latest_tag=${{ steps.latest_release.outputs.result }}
+          latest_tag="${{ steps.latest_release.outputs.result }}"
           if [ -n "${latest_tag}" ]; then
             today=$(date +%Y%m%d)
             if [[ $latest_tag == $today* ]]; then
