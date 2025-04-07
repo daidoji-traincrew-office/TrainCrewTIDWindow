@@ -19,11 +19,20 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           script: |
-            const response = await github.rest.repos.getLatestRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo
-            });
-            return response.data.tag_name;
+            try {
+              const response = await github.rest.repos.getLatestRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo
+              });
+              return response.data.tag_name;
+            }
+            catch (e){
+              if (e.status === 404) {
+                return '';
+              } else {
+                throw e;
+              }
+            }
       - name: Calculate Version
         id: calc_version
         run: |
