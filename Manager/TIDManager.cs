@@ -427,8 +427,6 @@ namespace TrainCrewTIDWindow.Manager {
                     continue;
                 }
 
-                Debug.WriteLine($"draw {track.Name}: {track.Train}");
-
                 // トラックの在線、進路開通状態表示
 
                 var rule = "";
