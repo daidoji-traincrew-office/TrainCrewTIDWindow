@@ -10,14 +10,15 @@ using System.Net.WebSockets;
 
 namespace TrainCrewTIDWindow.Communications
 {
-    public class ServerCommunication  {
+    public class ServerCommunication
+    {
 
         private readonly OpenIddictClientService _service;
 
         private readonly TIDWindow _window;
 
         private static HubConnection? connection;
-        
+
         internal event Action<ConstantDataToServer>? DataUpdated;
 
         private bool error = false;
@@ -27,10 +28,11 @@ namespace TrainCrewTIDWindow.Communications
         /// </summary>
         /// <param name="window">TIDWindowのオブジェクト</param>
         /// <param name="address">接続先のアドレス</param>
-        public ServerCommunication(TIDWindow window, string address, OpenIddictClientService service) {
+        public ServerCommunication(TIDWindow window, string address, OpenIddictClientService service)
+        {
             _window = window;
             _service = service;
-             // 1/3秒ごとにデータを送信 
+            // 1/3秒ごとにデータを送信 
             var timer = new System.Timers.Timer(333);
             // Hook up the Elapsed event for the timer. 
             timer.Elapsed += (_, _) => OnTimedEvent();
@@ -42,20 +44,29 @@ namespace TrainCrewTIDWindow.Communications
         /// ユーザー認証
         /// </summary>
         /// <returns></returns>
-        public async Task CheckUserAuthenticationAsync() {
+        public async Task CheckUserAuthenticationAsync()
+        {
+            if (ServerAddress.IsDebug)
+            {
+                await ConnectAsync("");
+                return;
+            }
             using var source = new CancellationTokenSource(delay: TimeSpan.FromSeconds(90));
 
-            try {
+            try
+            {
                 _window.LabelStatusText = "Status：サーバ認証待機中";
                 error = false;
 
                 // 認証フローの開始
-                var result = await _service.ChallengeInteractivelyAsync(new() {
+                var result = await _service.ChallengeInteractivelyAsync(new()
+                {
                     CancellationToken = source.Token
                 });
 
                 // ユーザー認証の完了を待つ
-                var resultAuth = await _service.AuthenticateInteractivelyAsync(new() {
+                var resultAuth = await _service.AuthenticateInteractivelyAsync(new()
+                {
                     CancellationToken = source.Token,
                     Nonce = result.Nonce
                 });
@@ -64,22 +75,26 @@ namespace TrainCrewTIDWindow.Communications
                 await ConnectAsync(token);
             }
 
-            catch (OperationCanceledException) {
+            catch (OperationCanceledException)
+            {
                 error = true;
 
                 _window.LabelStatusText = "Status：サーバ認証失敗（タイムアウト）";
                 DialogResult result = MessageBox.Show($"サーバ認証中にタイムアウトしました。\n再認証しますか？", "サーバ認証失敗（タイムアウト） | TID - ダイヤ運転会", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
-                if (result == DialogResult.Yes) {
+                if (result == DialogResult.Yes)
+                {
                     await CheckUserAuthenticationAsync();
                 }
             }
 
             catch (OpenIddictExceptions.ProtocolException exception) when (exception.Error is OpenIddictConstants.Errors
-                                                                               .AccessDenied) {
+                                                                               .AccessDenied)
+            {
                 error = true;
 
                 _window.LabelStatusText = "Status：サーバ認証失敗（拒否）";
-                TaskDialog.ShowDialog(new TaskDialogPage {
+                TaskDialog.ShowDialog(new TaskDialogPage
+                {
                     Caption = "サーバ認証失敗（拒否） | TID - ダイヤ運転会",
                     Heading = "サーバ認証失敗（拒否）",
                     Icon = TaskDialogIcon.Error,
@@ -87,41 +102,54 @@ namespace TrainCrewTIDWindow.Communications
                 });
             }
 
-            catch (Exception exception) {
+            catch (Exception exception)
+            {
                 error = true;
                 Debug.WriteLine(exception);
                 _window.LabelStatusText = "Status：サーバ認証失敗";
                 DialogResult result = MessageBox.Show($"サーバ認証に失敗しました。\n再認証しますか？\n\n{exception.Message}\n{exception.StackTrace})", "サーバ認証失敗 | TID - ダイヤ運転会", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
-                if (result == DialogResult.Yes) {
+                if (result == DialogResult.Yes)
+                {
                     await CheckUserAuthenticationAsync();
                 }
             }
         }
-
+        public class InfiniteRetryPolicy : IRetryPolicy
+        {
+            public TimeSpan? NextRetryDelay(RetryContext retryContext)
+            {
+                // 常に 10 秒後に再接続を試みる
+                return TimeSpan.FromSeconds(10);
+            }
+        }
         /// <summary>
         /// 接続開始 
         /// </summary>
         /// <param name="token"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task ConnectAsync(string token) {
+        private async Task ConnectAsync(string token)
+        {
 
             // HubConnectionの作成
             connection = new HubConnectionBuilder()
                 .WithUrl($"{ServerAddress.SignalAddress}/hub/TID?access_token={token}")
-                .WithAutomaticReconnect() // 自動再接続
+                .WithAutomaticReconnect(new InfiniteRetryPolicy()) // 自動再接続
                 .Build();
 
-            try {
+            try
+            {
 
                 // 接続開始
                 await connection.StartAsync();
                 _window.LabelStatusText = "Status：サーバ認証成功";
             }
-            catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.Forbidden) {
+            catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.Forbidden)
+            {
                 error = true;
                 _window.LabelStatusText = "Status：サーバ認証失敗（拒否）";
-                TaskDialog.ShowDialog(new TaskDialogPage {
+                TaskDialog.ShowDialog(new TaskDialogPage
+                {
                     Caption = "サーバ認証失敗（拒否） | TID - ダイヤ運転会",
                     Heading = "サーバ認証失敗（拒否）",
                     Icon = TaskDialogIcon.Error,
@@ -129,20 +157,28 @@ namespace TrainCrewTIDWindow.Communications
                 });
                 return;
             }
-            catch (Exception exception) {
+            catch (Exception exception)
+            {
                 error = true;
                 Debug.WriteLine($"Server send failed: {exception.Message}");
                 _window.LabelStatusText = "Status：サーバ認証失敗";
                 DialogResult result = MessageBox.Show($"サーバ認証に失敗しました。\n再認証しますか？\n\n{exception.Message}\n{exception.StackTrace})", "サーバ認証失敗 | TID - ダイヤ運転会", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
-                if (result == DialogResult.Yes) {
+                if (result == DialogResult.Yes)
+                {
                     await CheckUserAuthenticationAsync();
                 }
             }
         }
-        
-        private async Task OnTimedEvent() {
-            if (connection == null) return;
-            try {
+
+        private async Task OnTimedEvent()
+        {
+            if (connection == null)
+            {
+                Debug.WriteLine("Connection is not active. Skipping data send.");
+                return;
+            }
+            try
+            {
                 var data = await connection.InvokeAsync<ConstantDataToServer>("SendData_TID");
                 var trackCircuitList = data.TrackCircuitDatas;
                 JsonDebugLogManager.AddJsonText(JsonConvert.SerializeObject(trackCircuitList));
@@ -150,7 +186,8 @@ namespace TrainCrewTIDWindow.Communications
                 error = false;
                 _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ正常受信"; }));
             }
-            catch (WebSocketException e) when (e.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
+            catch (WebSocketException e) when (e.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
+            {
                 Debug.WriteLine($"Server send failed: {e.Message}");
                 Debug.WriteLine(e.StackTrace);
                 /*if (!error) {
@@ -165,13 +202,16 @@ namespace TrainCrewTIDWindow.Communications
                 }*/
 
             }
-            catch (TimeoutException e) {
+            catch (TimeoutException e)
+            {
                 Debug.WriteLine($"Server send failed: {e.Message}");
                 Debug.WriteLine(e.StackTrace);
-                if (!error) {
+                if (!error)
+                {
                     error = true;
                     _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：タイムアウト"; }));
-                    TaskDialog.ShowDialog(new TaskDialogPage {
+                    TaskDialog.ShowDialog(new TaskDialogPage
+                    {
                         Caption = "タイムアウト | TID - ダイヤ運転会",
                         Heading = "タイムアウト",
                         Icon = TaskDialogIcon.Error,
@@ -179,13 +219,16 @@ namespace TrainCrewTIDWindow.Communications
                     });
                 }
             }
-            catch (Exception e) {
+            catch (Exception e)
+            {
                 Debug.WriteLine($"Server send failed: {e.Message}");
                 Debug.WriteLine(e.StackTrace);
-                if (!error) {
+                if (!error)
+                {
                     error = true;
                     _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ受信失敗"; }));
-                    TaskDialog.ShowDialog(new TaskDialogPage {
+                    TaskDialog.ShowDialog(new TaskDialogPage
+                    {
                         Caption = "データ受信失敗 | TID - ダイヤ運転会",
                         Heading = "データ受信失敗",
                         Icon = TaskDialogIcon.Error,
