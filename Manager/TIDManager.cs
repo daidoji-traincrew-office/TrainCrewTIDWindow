@@ -163,7 +163,13 @@ namespace TrainCrewTIDWindow.Manager {
                 while (line != null) {
                     var texts = line.Split('\t');
                     line = sr.ReadLine();
-                    if (texts.Length < 4 || texts.Any(t => t == "")) {
+                    var i = 1;
+                    for (; i < texts.Length; i++) {
+                        if (texts[i] == "") {
+                            break;
+                        }
+                    }
+                    if (i < 4) {
                         continue;
                     }
                     if (texts[0] != "") {
@@ -194,7 +200,13 @@ namespace TrainCrewTIDWindow.Manager {
                 while (line != null) {
                     var texts = line.Split('\t');
                     line = sr.ReadLine();
-                    if (texts.Length < 7 || texts.Any(t => t == "")) {
+                    var i = 1;
+                    for (; i < texts.Length; i++) {
+                        if (texts[i] == "") {
+                            break;
+                        }
+                    }
+                    if (i < 7) {
                         continue;
                     }
                     if (texts[0] != "") {
@@ -222,6 +234,7 @@ namespace TrainCrewTIDWindow.Manager {
 
             window.MaximumSize = new Size(backgroundDefault.Width + 16, backgroundDefault.Height + 39 + 24);
             window.Size = window.MaximumSize;
+            window.TopMost = true;
 
             // 試験表示
             {

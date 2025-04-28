@@ -46,6 +46,8 @@ namespace TrainCrewTIDWindow
         /// </summary>
         private string source = "";
 
+        private bool topMostSetting = false;
+
         /// <summary>
         /// 現実との時差
         /// </summary>
@@ -93,6 +95,9 @@ namespace TrainCrewTIDWindow
                         case "source":
                             source = texts[1];
                             break;
+                        case "topMost":
+                            topMostSetting = texts[1].ToLower() == "true";
+                            break;
                     }
                 }
             }
@@ -109,7 +114,7 @@ namespace TrainCrewTIDWindow
 
             var s = source.Replace(" ", "").ToLower();
 
-            if(s == "select") {
+            if (s == "select") {
                 DialogResult result = MessageBox.Show($"TIDをサーバに接続しますか？\n（いいえを選択するとTRAIN CREW本体に接続します）", "接続先選択 | TID", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (result == DialogResult.Yes) {
                     s = "server";
@@ -118,6 +123,9 @@ namespace TrainCrewTIDWindow
                     s = "traincrew";
                 }
             }
+
+            SetTopMost(topMostSetting);
+
 
             switch (s) {
                 case "traincrew":
@@ -253,10 +261,27 @@ namespace TrainCrewTIDWindow
             if (e.Button == MouseButtons.Right) {
                 timeOffset++;
             }
-            else if(e.Button == MouseButtons.Left) {
+            else if (e.Button == MouseButtons.Left) {
                 timeOffset--;
             }
         }
 
+        private void label3_Click(object sender, EventArgs e) {
+            SetTopMost(!TopMost);
+        }
+
+        private void SetTopMost(bool topMost) {
+            TopMost = topMost;
+            label3.Text = $"最前面：{(topMost ? "ON" : "OFF")}";
+            label3.ForeColor = topMost ? Color.Yellow : Color.Gray;
+        }
+
+        private void label3_Hover(object sender, EventArgs e) {
+            label3.BackColor = Color.FromArgb(55, 55, 55);
+        }
+
+        private void label3_Leave(object sender, EventArgs e) {
+            label3.BackColor = Color.FromArgb(30, 30, 30);
+        }
     }
 }
