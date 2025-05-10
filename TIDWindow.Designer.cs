@@ -54,6 +54,7 @@
             // label1
             // 
             label1.AutoSize = true;
+            label1.BackColor = Color.Transparent;
             label1.Font = new Font("ＭＳ ゴシック", 9F, FontStyle.Regular, GraphicsUnit.Point, 128);
             label1.ForeColor = Color.White;
             label1.Location = new Point(3, 3);
@@ -65,6 +66,7 @@
             // label2
             // 
             label2.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            label2.BackColor = Color.Transparent;
             label2.Font = new Font("ＭＳ ゴシック", 9F, FontStyle.Regular, GraphicsUnit.Point, 128);
             label2.ForeColor = Color.White;
             label2.Location = new Point(930, 3);
@@ -87,15 +89,15 @@
             label3.TabIndex = 4;
             label3.Text = "最前面：OFF";
             label3.Click += label3_Click;
-            label3.MouseHover += label3_Hover;
             label3.MouseLeave += label3_Leave;
+            label3.MouseHover += label3_Hover;
             // 
             // TIDWindow
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             AutoScroll = true;
-            BackColor = Color.Black;
+            BackColor = Color.FromArgb(5, 5, 5);
             ClientSize = new Size(984, 561);
             Controls.Add(label3);
             Controls.Add(label2);

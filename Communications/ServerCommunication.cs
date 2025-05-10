@@ -21,7 +21,7 @@ namespace TrainCrewTIDWindow.Communications
 
         internal event Action<ConstantDataToServer>? DataUpdated;
 
-        private bool error = false;
+        private static bool error = false;
 
         /// <summary>
         /// アプリケーション用のホスト構築

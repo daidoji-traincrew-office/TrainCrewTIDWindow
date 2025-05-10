@@ -144,9 +144,10 @@ namespace TrainCrewTIDWindow.Models {
                 }
                 return true;
             }*/
-            if (train == Train && DeeCount < count - 1) {
+            //ログ爆弾注意
+            /*if (train == Train && DeeCount < count - 1) {
                 JsonDebugLogManager.OutputJsonTexts();
-            }
+            }*/
 
             Train = train;
             DeeCount = OnTrain || IsReserved ? (count > 1 ? count : 2) : 0;

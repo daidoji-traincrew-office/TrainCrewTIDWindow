@@ -81,9 +81,10 @@ namespace TrainCrewTIDWindow.Manager
                 updatedTID |= td.Value.UpdateTrack();
             }
 
-            if(trackDataDict.Keys.Any(t => trackDataDict[t].DeeCount == countStart - 2) && trackDataDict.Keys.All(t => trackDataDict[t].DeeCount >= countStart - 1)) {
+            //ログ爆弾注意
+            /*if(trackDataDict.Keys.Any(t => trackDataDict[t].DeeCount == countStart - 2) && trackDataDict.Keys.All(t => trackDataDict[t].DeeCount >= countStart - 1)) {
                 JsonDebugLogManager.OutputJsonTexts();
-            }
+            }*/
 
             return updatedTID;
         }
