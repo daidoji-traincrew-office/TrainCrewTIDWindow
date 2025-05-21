@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.SignalR.Client;
 using OpenIddict.Abstractions;
 using OpenIddict.Client;
 using TrainCrewTIDWindow.Manager;
-using Newtonsoft.Json;
 using TrainCrewTIDWindow.Models;
 using System.Net;
 using System.Net.WebSockets;
@@ -33,11 +32,11 @@ namespace TrainCrewTIDWindow.Communications
             _window = window;
             _service = service;
             // 1/3秒ごとにデータを送信 
-            var timer = new System.Timers.Timer(333);
+            /*var timer = new System.Timers.Timer(333);
             // Hook up the Elapsed event for the timer. 
             timer.Elapsed += (_, _) => OnTimedEvent();
             timer.AutoReset = true;
-            timer.Enabled = true;
+            timer.Enabled = true;*/
         }
 
         /// <summary>
@@ -118,8 +117,8 @@ namespace TrainCrewTIDWindow.Communications
         {
             public TimeSpan? NextRetryDelay(RetryContext retryContext)
             {
-                // 常に 10 秒後に再接続を試みる
-                return TimeSpan.FromSeconds(10);
+                // 常に 5 秒後に再接続を試みる
+                return TimeSpan.FromSeconds(5);
             }
         }
         /// <summary>
@@ -168,9 +167,71 @@ namespace TrainCrewTIDWindow.Communications
                     await CheckUserAuthenticationAsync();
                 }
             }
+
+            connection.On<ConstantDataToServer>("ReceiveData", OnReceiveDataFromServer);
         }
 
-        private async Task OnTimedEvent()
+        /// <summary>
+        /// サーバーからデータが来たときの処理
+        /// </summary>
+        /// <param name="data">サーバーから受信されたデータ</param>
+        private void OnReceiveDataFromServer(ConstantDataToServer data) {
+            if(data == null) {
+                Debug.WriteLine("Failed to receive Data.");
+                return;
+            }
+            try {
+                var trackCircuitList = data.TrackCircuitDatas;
+                DataUpdated?.Invoke(data);
+                error = false;
+                _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ正常受信"; }));
+            }
+            catch (WebSocketException e) when (e.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
+                Debug.WriteLine($"Server send failed: {e.Message}\n{e.StackTrace}");
+
+            }
+            catch (WebSocketException e) {
+                Debug.WriteLine($"Server send failed: {e.Message}\nerrorCode: {e.WebSocketErrorCode}\n{e.StackTrace}");
+                if (!error) {
+                    error = true;
+                    _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ受信失敗"; }));
+                    TaskDialog.ShowDialog(new TaskDialogPage {
+                        Caption = "データ受信失敗 | TID - ダイヤ運転会",
+                        Heading = "データ受信失敗",
+                        Icon = TaskDialogIcon.Error,
+                        Text = $"データの受信に失敗しました。\n復旧を試みますが、しばらく経っても復旧しない場合はアプリケーションの再起動をお願いします。\nerrorcode:{e.WebSocketErrorCode}"
+                    });
+                }
+            }
+            catch (TimeoutException e) {
+                Debug.WriteLine($"Server send failed: {e.Message}\n{e.StackTrace}");
+                if (!error) {
+                    error = true;
+                    _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：タイムアウト"; }));
+                    TaskDialog.ShowDialog(new TaskDialogPage {
+                        Caption = "タイムアウト | TID - ダイヤ運転会",
+                        Heading = "タイムアウト",
+                        Icon = TaskDialogIcon.Error,
+                        Text = "サーバとの通信がタイムアウトしました。\n大変恐れ入りますが、アプリケーションの再起動をお願いします。"
+                    });
+                }
+            }
+            catch (Exception e) {
+                Debug.WriteLine($"Server send failed: {e.Message}\n{e.StackTrace}");
+                if (!error) {
+                    error = true;
+                    _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ受信失敗"; }));
+                    TaskDialog.ShowDialog(new TaskDialogPage {
+                        Caption = "データ受信失敗 | TID - ダイヤ運転会",
+                        Heading = "データ受信失敗",
+                        Icon = TaskDialogIcon.Error,
+                        Text = "データの受信に失敗しました。\n復旧を試みますが、しばらく経っても復旧しない場合はアプリケーションの再起動をお願いします。"
+                    });
+                }
+            }
+        }
+
+        /*private async Task OnTimedEvent()
         {
             if (connection == null)
             {
@@ -181,31 +242,30 @@ namespace TrainCrewTIDWindow.Communications
             {
                 var data = await connection.InvokeAsync<ConstantDataToServer>("SendData_TID");
                 var trackCircuitList = data.TrackCircuitDatas;
-                JsonDebugLogManager.AddJsonText(JsonConvert.SerializeObject(trackCircuitList));
                 DataUpdated?.Invoke(data);
                 error = false;
                 _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ正常受信"; }));
             }
             catch (WebSocketException e) when (e.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
             {
-                Debug.WriteLine($"Server send failed: {e.Message}");
-                Debug.WriteLine(e.StackTrace);
-                /*if (!error) {
+                Debug.WriteLine($"Server send failed: {e.Message}\n{e.StackTrace}");
+
+            }
+            catch (WebSocketException e) {
+                Debug.WriteLine($"Server send failed: {e.Message}\nerrorCode: {e.WebSocketErrorCode}\n{e.StackTrace}");
+                if (!error) {
                     error = true;
                     _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ受信失敗"; }));
                     TaskDialog.ShowDialog(new TaskDialogPage {
                         Caption = "データ受信失敗 | TID - ダイヤ運転会",
                         Heading = "データ受信失敗",
                         Icon = TaskDialogIcon.Error,
-                        Text = "サーバ側から接続が切断されました。\n大変恐れ入りますが、アプリケーションの再起動をお願いします。"
+                        Text = $"データの受信に失敗しました。\n復旧を試みますが、しばらく経っても復旧しない場合はアプリケーションの再起動をお願いします。\nerrorcode:{e.WebSocketErrorCode}"
                     });
-                }*/
-
+                }
             }
-            catch (TimeoutException e)
-            {
-                Debug.WriteLine($"Server send failed: {e.Message}");
-                Debug.WriteLine(e.StackTrace);
+            catch (TimeoutException e) {
+                Debug.WriteLine($"Server send failed: {e.Message}\n{e.StackTrace}");
                 if (!error)
                 {
                     error = true;
@@ -219,10 +279,8 @@ namespace TrainCrewTIDWindow.Communications
                     });
                 }
             }
-            catch (Exception e)
-            {
-                Debug.WriteLine($"Server send failed: {e.Message}");
-                Debug.WriteLine(e.StackTrace);
+            catch (Exception e) {
+                Debug.WriteLine($"Server send failed: {e.Message}\n{e.StackTrace}");
                 if (!error)
                 {
                     error = true;
@@ -232,10 +290,10 @@ namespace TrainCrewTIDWindow.Communications
                         Caption = "データ受信失敗 | TID - ダイヤ運転会",
                         Heading = "データ受信失敗",
                         Icon = TaskDialogIcon.Error,
-                        Text = "データの受信に失敗しました。\n大変恐れ入りますが、アプリケーションの再起動をお願いします。"
+                        Text = "データの受信に失敗しました。\n復旧を試みますが、しばらく経っても復旧しない場合はアプリケーションの再起動をお願いします。"
                     });
                 }
             }
-        }
+        }*/
     }
 }
