@@ -51,7 +51,11 @@ namespace TrainCrewTIDWindow
         /// <summary>
         /// 現実との時差
         /// </summary>
-        private int timeOffset = -10;
+        public int TimeOffset {
+            get;
+            private set;
+        } = -10;
+
 
         private OpenIddictClientService service;
 
@@ -248,21 +252,42 @@ namespace TrainCrewTIDWindow
                     await timer;
                 }
             }
-            catch (ObjectDisposedException ex) {
+            catch (ObjectDisposedException) {
             }
         }
 
         private void UpdateClock() {
-            var time = DateTime.Now.AddHours(timeOffset);
+            var time = DateTime.Now.AddHours(TimeOffset);
             label2.Text = time.ToString("H:mm:ss");
+            if(serverCommunication == null) {
+                return;
+            }
+            var updatedTime = serverCommunication.UpdatedTime;
+            if (updatedTime == null) {
+                return;
+            }
+            var delaySeconds = (time - (DateTime)updatedTime).TotalSeconds;
+            if (delaySeconds > 1) {
+                LabelStatusText = $"Status：データ正常受信(最終受信：{updatedTime?.ToString("H:mm:ss")})";
+            }
+            if (delaySeconds > 5 && !serverCommunication.Error) {
+                serverCommunication.Error = true;
+                LabelStatusText = $"Status：データ受信不能(最終受信：{updatedTime?.ToString("H:mm:ss")})";
+                TaskDialog.ShowDialog(new TaskDialogPage {
+                    Caption = "データ受信不能 | TID - ダイヤ運転会",
+                    Heading = "データ受信不能",
+                    Icon = TaskDialogIcon.Error,
+                    Text = "サーバ側からのデータ受信が5秒以上ありませんでした。\nアプリケーションの再起動をおすすめします。"
+                });
+            }
         }
 
         private void label2_MouseDown(object sender, MouseEventArgs e) {
             if (e.Button == MouseButtons.Right) {
-                timeOffset++;
+                TimeOffset++;
             }
             else if (e.Button == MouseButtons.Left) {
-                timeOffset--;
+                TimeOffset--;
             }
         }
 

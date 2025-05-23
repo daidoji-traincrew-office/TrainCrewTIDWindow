@@ -22,6 +22,20 @@ namespace TrainCrewTIDWindow.Communications
 
         private static bool error = false;
 
+        public bool Error {
+            get {
+                return error;
+            }
+            set {
+                error = value;
+            }
+        }
+
+        public DateTime? UpdatedTime {
+            get;
+            private set;
+        } = null;
+
         /// <summary>
         /// アプリケーション用のホスト構築
         /// </summary>
@@ -185,6 +199,7 @@ namespace TrainCrewTIDWindow.Communications
                 DataUpdated?.Invoke(data);
                 error = false;
                 _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ正常受信"; }));
+                UpdatedTime = DateTime.Now.AddHours(_window.TimeOffset);
             }
             catch (WebSocketException e) when (e.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
                 Debug.WriteLine($"Server send failed: {e.Message}\n{e.StackTrace}");
