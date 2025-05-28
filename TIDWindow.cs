@@ -4,6 +4,7 @@ using OpenIddict.Client;
 using TrainCrewTIDWindow.Communications;
 using TrainCrewTIDWindow.Manager;
 using TrainCrewTIDWindow.Models;
+using System.Diagnostics;
 
 namespace TrainCrewTIDWindow
 {
@@ -267,18 +268,22 @@ namespace TrainCrewTIDWindow
                 return;
             }
             var delaySeconds = (time - (DateTime)updatedTime).TotalSeconds;
-            if (delaySeconds > 1) {
-                LabelStatusText = $"Status：データ正常受信(最終受信：{updatedTime?.ToString("H:mm:ss")})";
+            if (delaySeconds > 10) {
+                if (!serverCommunication.Error) {
+                    serverCommunication.Error = true;
+                    LabelStatusText = $"Status：データ受信不能(最終受信：{updatedTime?.ToString("H:mm:ss")})";
+                    Debug.WriteLine($"データ受信不能: {delaySeconds}");
+                    TaskDialog.ShowDialog(new TaskDialogPage {
+                        Caption = "データ受信不能 | TID - ダイヤ運転会",
+                        Heading = "データ受信不能",
+                        Icon = TaskDialogIcon.Error,
+                        Text = "サーバ側からのデータ受信が10秒以上ありませんでした。\nアプリケーションの再起動をおすすめします。"
+                    });
+                }
             }
-            if (delaySeconds > 5 && !serverCommunication.Error) {
-                serverCommunication.Error = true;
-                LabelStatusText = $"Status：データ受信不能(最終受信：{updatedTime?.ToString("H:mm:ss")})";
-                TaskDialog.ShowDialog(new TaskDialogPage {
-                    Caption = "データ受信不能 | TID - ダイヤ運転会",
-                    Heading = "データ受信不能",
-                    Icon = TaskDialogIcon.Error,
-                    Text = "サーバ側からのデータ受信が5秒以上ありませんでした。\nアプリケーションの再起動をおすすめします。"
-                });
+            else if (delaySeconds > 1) {
+                LabelStatusText = $"Status：データ正常受信(最終受信：{updatedTime?.ToString("H:mm:ss")})";
+                Debug.WriteLine($"データ受信不能: {delaySeconds}");
             }
         }
 
