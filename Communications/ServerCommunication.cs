@@ -199,7 +199,7 @@ namespace TrainCrewTIDWindow.Communications
                 DataUpdated?.Invoke(data);
                 error = false;
                 _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ正常受信"; }));
-                UpdatedTime = DateTime.Now.AddHours(_window.TimeOffset);
+                UpdatedTime = DateTime.Now;
             }
             catch (WebSocketException e) when (e.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
                 Debug.WriteLine($"Server send failed: {e.Message}\n{e.StackTrace}");
@@ -231,6 +231,7 @@ namespace TrainCrewTIDWindow.Communications
                     });
                 }
             }
+            catch (ObjectDisposedException) { }
             catch (Exception e) {
                 Debug.WriteLine($"Server send failed: {e.Message}\n{e.StackTrace}");
                 if (!error) {

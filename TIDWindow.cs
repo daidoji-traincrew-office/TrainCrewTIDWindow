@@ -52,10 +52,7 @@ namespace TrainCrewTIDWindow
         /// <summary>
         /// 現実との時差
         /// </summary>
-        public int TimeOffset {
-            get;
-            private set;
-        } = -10;
+        private int timeOffset = -10;
 
 
         private OpenIddictClientService service;
@@ -258,8 +255,8 @@ namespace TrainCrewTIDWindow
         }
 
         private void UpdateClock() {
-            var time = DateTime.Now.AddHours(TimeOffset);
-            label2.Text = time.ToString("H:mm:ss");
+            var time = DateTime.Now;
+            label2.Text = time.AddHours(timeOffset).ToString("H:mm:ss");
             if(serverCommunication == null) {
                 return;
             }
@@ -268,6 +265,7 @@ namespace TrainCrewTIDWindow
                 return;
             }
             var delaySeconds = (time - (DateTime)updatedTime).TotalSeconds;
+            updatedTime = updatedTime?.AddHours(timeOffset);
             if (delaySeconds > 10) {
                 if (!serverCommunication.Error) {
                     serverCommunication.Error = true;
@@ -289,10 +287,10 @@ namespace TrainCrewTIDWindow
 
         private void label2_MouseDown(object sender, MouseEventArgs e) {
             if (e.Button == MouseButtons.Right) {
-                TimeOffset++;
+                timeOffset++;
             }
             else if (e.Button == MouseButtons.Left) {
-                TimeOffset--;
+                timeOffset--;
             }
         }
 
