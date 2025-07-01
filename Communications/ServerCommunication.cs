@@ -26,7 +26,6 @@ namespace TrainCrewTIDWindow.Communications
         internal event Action<bool>? ConnectionStatusChanged;
 
         private static bool error = false;
-        private bool connectErrorDialog = false;
         public static bool connected { get; set; } = false;
 
         // 再接続間隔（ミリ秒）
@@ -125,8 +124,6 @@ namespace TrainCrewTIDWindow.Communications
             catch (OperationCanceledException)
             {
                 error = true;
-                if (connectErrorDialog) return false;
-                connectErrorDialog = true;
 
                 _window.LabelStatusText = "Status：サーバ認証失敗（タイムアウト）";
                 DialogResult result = MessageBox.Show($"サーバ認証中にタイムアウトしました。\n再認証しますか？", "サーバ認証失敗（タイムアウト） | TID - ダイヤ運転会",
@@ -134,7 +131,6 @@ namespace TrainCrewTIDWindow.Communications
                 if (result == DialogResult.Yes)
                 {
                     var r = await CheckUserAuthenticationAsync();
-                    connectErrorDialog = false;
                     return r;
                 }
                 return false;
@@ -159,8 +155,6 @@ namespace TrainCrewTIDWindow.Communications
             catch (Exception exception)
             {
                 error = true;
-                if (connectErrorDialog) return false;
-                connectErrorDialog = true;
                 
                 Debug.WriteLine(exception);
                 _window.LabelStatusText = "Status：サーバ認証失敗";
@@ -170,7 +164,6 @@ namespace TrainCrewTIDWindow.Communications
                 if (result == DialogResult.Yes)
                 {
                     var r = await Authorize();
-                    connectErrorDialog = false;
                     return r;
                 }
                 return false;
@@ -354,8 +347,6 @@ namespace TrainCrewTIDWindow.Communications
         private async Task<bool> HandleTokenRefreshFailure()
         {
             Debug.WriteLine("Refresh token is invalid or expired.");
-            if (connectErrorDialog) return false;
-            connectErrorDialog = true;
             
             DialogResult dialogResult = MessageBox.Show(
                 "トークンが切れました。\n再認証してください。\n※いいえを選択した場合、再認証にはアプリケーション再起動が必要です。",
@@ -363,7 +354,6 @@ namespace TrainCrewTIDWindow.Communications
             if (dialogResult == DialogResult.Yes)
             {
                 var r = await Authorize();
-                connectErrorDialog = false;
                 return r;
             }
             return true;
@@ -411,16 +401,12 @@ namespace TrainCrewTIDWindow.Communications
             }
             catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Forbidden)
             {
-                if (connectErrorDialog) return false;
-                connectErrorDialog = true;
-                
                 DialogResult dialogResult = MessageBox.Show(
                     "認証が拒否されました。\n再認証してください。",
                     "認証拒否 | TID - ダイヤ運転会", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
                 if (dialogResult == DialogResult.Yes)
                 {
                     var r = await Authorize();
-                    connectErrorDialog = false;
                     return r;
                 }
                 return true;
