@@ -162,11 +162,10 @@ namespace TrainCrewTIDWindow
         /// <param name="url">接続先のURL</param>
         /// <returns></returns>
         private async Task TryConnectServer() {
-            if (serverCommunication != null) {
-                await serverCommunication.CheckUserAuthenticationAsync();
+            if (serverCommunication != null)
+            {
+                await serverCommunication.Authorize();
             }
-
-
         }
 
 
