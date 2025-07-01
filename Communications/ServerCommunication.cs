@@ -104,7 +104,8 @@ namespace TrainCrewTIDWindow.Communications
                 // 認証フローの開始
                 var result = await _service.ChallengeInteractivelyAsync(new()
                 {
-                    CancellationToken = cancellationToken
+                    CancellationToken = cancellationToken,
+                    Scopes = [ OpenIddictConstants.Scopes.OfflineAccess ]
                 });
 
                 // ユーザー認証の完了を待つ
