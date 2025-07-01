@@ -98,7 +98,7 @@ namespace TrainCrewTIDWindow.Communications
         {
             try
             {
-                _window.Invoke(() => { _window.LabelStatusText = "Status：サーバ認証待機中"; });
+                _window.LabelStatusText = "Status：サーバ認証待機中";
                 error = false;
 
                 // 認証フローの開始
@@ -126,7 +126,7 @@ namespace TrainCrewTIDWindow.Communications
             {
                 error = true;
 
-                _window.Invoke(() => { _window.LabelStatusText = "Status：サーバ認証失敗（タイムアウト）"; });
+                _window.LabelStatusText = "Status：サーバ認証失敗（タイムアウト）";
                 DialogResult result = MessageBox.Show($"サーバ認証中にタイムアウトしました。\n再認証しますか？", "サーバ認証失敗（タイムアウト） | TID - ダイヤ運転会",
                     MessageBoxButtons.YesNo, MessageBoxIcon.Error);
                 if (result == DialogResult.Yes)
@@ -144,7 +144,7 @@ namespace TrainCrewTIDWindow.Communications
                 error = true;
 
 
-                _window.Invoke(() => { _window.LabelStatusText = "Status：サーバ認証失敗（拒否）"; });
+                 _window.LabelStatusText = "Status：サーバ認証失敗（拒否）";
 
                 TaskDialog.ShowDialog(new TaskDialogPage
                 {
@@ -161,7 +161,7 @@ namespace TrainCrewTIDWindow.Communications
                 error = true;
 
                 Debug.WriteLine(exception);
-                _window.Invoke(() => { _window.LabelStatusText = "Status：サーバ認証失敗"; });
+                _window.LabelStatusText = "Status：サーバ認証失敗";
                 DialogResult result =
                     MessageBox.Show($"サーバ認証に失敗しました。\n再認証しますか？\n\n{exception.Message}\n{exception.StackTrace})",
                         "サーバ認証失敗 | TID - ダイヤ運転会", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
