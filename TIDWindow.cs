@@ -57,9 +57,20 @@ namespace TrainCrewTIDWindow
 
         private OpenIddictClientService service;
 
-        public string LabelStatusText {
+        public string LabelStatusText
+        {
             get => label1.Text;
-            set => label1.Text = value;
+            set
+            {
+                if (InvokeRequired)
+                {
+                    Invoke(() => label1.Text = value);
+                }
+                else
+                {
+                    label1.Text = value;
+                }
+            }
         }
 
         public void SetLabelStatusText(string text) {
@@ -162,11 +173,10 @@ namespace TrainCrewTIDWindow
         /// <param name="url">接続先のURL</param>
         /// <returns></returns>
         private async Task TryConnectServer() {
-            if (serverCommunication != null) {
-                await serverCommunication.CheckUserAuthenticationAsync();
+            if (serverCommunication != null)
+            {
+                await serverCommunication.Authorize();
             }
-
-
         }
 
 
