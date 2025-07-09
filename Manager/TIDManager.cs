@@ -111,6 +111,9 @@ namespace TrainCrewTIDWindow.Manager {
         /// </summary>
         public ReadOnlyCollection<NumberSetting> NumSettingsIn => numSettingsIn.AsReadOnly();
 
+
+        private Bitmap originalBitmap;
+
         /// <summary>
         /// TID画面管理用
         /// </summary>
@@ -301,6 +304,7 @@ namespace TrainCrewTIDWindow.Manager {
                     AddImage(g, images[arrow.FileName], arrow.PosX, arrow.PosY);
                 }
             }
+            originalBitmap = new Bitmap(pictureBox.Image);
 
 
 
@@ -657,8 +661,11 @@ namespace TrainCrewTIDWindow.Manager {
 
             lock (pictureBox) {
                 var oldPic = pictureBox.Image;
-                pictureBox.Image = newPic;
+                var oldOriginal = originalBitmap;
+                pictureBox.Image = new Bitmap(newPic, newPic.Width * window.TIDScale / 100, newPic.Height * window.TIDScale / 100);
+                originalBitmap = newPic;
                 oldPic?.Dispose();
+                oldOriginal.Dispose();
             }
 
 
@@ -800,6 +807,45 @@ namespace TrainCrewTIDWindow.Manager {
         /// <param name="y">貼り付けるy座標</param>
         private void AddNumImage(Graphics g, int num, int x, int y) {
             AddNumImage(g, num, 1, x, y);
+        }
+
+        public void ChangeScale() {
+
+            PrepareChangeScale();
+
+            lock (pictureBox) {
+
+                var oldPic = pictureBox.Image;
+                if(oldPic != null) {
+                    pictureBox.Image = new Bitmap(originalBitmap, originalBitmap.Width * window.TIDScale / 100, originalBitmap.Height * window.TIDScale / 100);
+                    oldPic.Dispose();
+                }
+            }
+
+        }
+
+        private void PrepareChangeScale() {
+            var width = originalBitmap.Width * window.TIDScale / 100;
+            var height = originalBitmap.Height * window.TIDScale / 100;
+
+            window.MaximumSize = new Size(Math.Max(width, originalBitmap.Width) + 16, Math.Max(height, originalBitmap.Height) + 39 + 24);
+
+            if(-window.Location.X > window.Size.Width - 60) {
+                window.Location = new Point(0, 80);
+            }
+
+            lock (pictureBox) {
+                pictureBox.Width = width > originalBitmap.Width ? width : originalBitmap.Width;
+                pictureBox.Height = height > originalBitmap.Height ? height : originalBitmap.Height;
+            }
+
+        }
+
+        public void CopyImage() {
+            var i = new Bitmap(originalBitmap);
+            using var g = Graphics.FromImage(i);
+            g.DrawString((DateTime.Now + window.TimeOffset).ToString("H:mm:ss"), new Font("ＭＳ ゴシック", 9), Brushes.White, 1869, 0);
+            Clipboard.SetImage(i);
         }
 
     }

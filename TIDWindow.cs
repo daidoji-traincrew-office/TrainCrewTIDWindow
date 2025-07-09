@@ -5,9 +5,9 @@ using TrainCrewTIDWindow.Communications;
 using TrainCrewTIDWindow.Manager;
 using TrainCrewTIDWindow.Models;
 using System.Diagnostics;
+using System.Windows.Input;
 
-namespace TrainCrewTIDWindow
-{
+namespace TrainCrewTIDWindow {
 
     public partial class TIDWindow : Form, IWinFormsShell {
 
@@ -52,29 +52,35 @@ namespace TrainCrewTIDWindow
         /// <summary>
         /// 現実との時差
         /// </summary>
-        private int timeOffset = -10;
+        public TimeSpan TimeOffset {
+            get;
+            private set;
+        } = new(14, 0, 0);
+
+        private int showOffset = 0;
+
+        public int TIDScale {
+            get;
+            private set;
+        } = 100;
 
 
         private OpenIddictClientService service;
 
-        public string LabelStatusText
-        {
-            get => label1.Text;
-            set
-            {
-                if (InvokeRequired)
-                {
-                    Invoke(() => label1.Text = value);
+        public string LabelStatusText {
+            get => labelStatus.Text;
+            set {
+                if (InvokeRequired) {
+                    Invoke(() => labelStatus.Text = value);
                 }
-                else
-                {
-                    label1.Text = value;
+                else {
+                    labelStatus.Text = value;
                 }
             }
         }
 
         public void SetLabelStatusText(string text) {
-            label1.Text = text;
+            labelStatus.Text = text;
         }
 
         public ReadOnlyDictionary<string, TrackData> TrackDataDict => trackManager.TrackDataDict;
@@ -173,15 +179,14 @@ namespace TrainCrewTIDWindow
         /// <param name="url">接続先のURL</param>
         /// <returns></returns>
         private async Task TryConnectServer() {
-            if (serverCommunication != null)
-            {
+            if (serverCommunication != null) {
                 await serverCommunication.Authorize();
             }
         }
 
 
         private void UpdateConnectionStatus(string status) {
-            label1.Text = status;
+            labelStatus.Text = status;
         }
 
         /// <summary>
@@ -266,8 +271,13 @@ namespace TrainCrewTIDWindow
 
         private void UpdateClock() {
             var time = DateTime.Now;
-            label2.Text = time.AddHours(timeOffset).ToString("H:mm:ss");
-            if(serverCommunication == null) {
+            if (showOffset > 0) {
+                showOffset--;
+            }
+            else {
+                labelClock.Text = (time + TimeOffset).ToString("H:mm:ss");
+            }
+            if (serverCommunication == null) {
                 return;
             }
             var updatedTime = serverCommunication.UpdatedTime;
@@ -275,7 +285,7 @@ namespace TrainCrewTIDWindow
                 return;
             }
             var delaySeconds = (time - (DateTime)updatedTime).TotalSeconds;
-            updatedTime = updatedTime?.AddHours(timeOffset);
+            updatedTime = updatedTime?.Add(TimeOffset);
             if (delaySeconds > 10) {
                 if (!serverCommunication.Error) {
                     serverCommunication.Error = true;
@@ -285,7 +295,7 @@ namespace TrainCrewTIDWindow
                         Caption = "データ受信不能 | TID - ダイヤ運転会",
                         Heading = "データ受信不能",
                         Icon = TaskDialogIcon.Error,
-                        Text = "サーバ側からのデータ受信が10秒以上ありませんでした。\nアプリケーションの再起動をおすすめします。"
+                        Text = "サーバ側からのデータ受信が10秒以上ありませんでした。\n復旧を試みますが、しばらく経っても復旧しない場合はアプリケーションの再起動をおすすめします。"
                     });
                 }
             }
@@ -295,31 +305,193 @@ namespace TrainCrewTIDWindow
             }
         }
 
-        private void label2_MouseDown(object sender, MouseEventArgs e) {
+        private void labelClock_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e) {
+            var hour = TimeOffset.Hours;
+            var min = TimeOffset.Minutes;
+            var sec = TimeOffset.Seconds;
             if (e.Button == MouseButtons.Right) {
-                timeOffset++;
+                if ((int)Keyboard.GetKeyStates(Key.LeftCtrl) % 2 == 0 && (int)Keyboard.GetKeyStates(Key.LeftCtrl) % 2 == 0) {
+                    hour++;
+                }
+                else if ((int)Keyboard.GetKeyStates(Key.LeftShift) % 2 == 0 && (int)Keyboard.GetKeyStates(Key.RightShift) % 2 == 0) {
+                    min++;
+                    if (min >= 60) {
+                        hour++;
+                    }
+                    showOffset = 40;
+                }
+                else {
+                    sec++;
+                    if (sec >= 60) {
+                        min++;
+                        if (min >= 60) {
+                            hour++;
+                        }
+                    }
+                    showOffset = 40;
+                }
             }
             else if (e.Button == MouseButtons.Left) {
-                timeOffset--;
+                if ((int)Keyboard.GetKeyStates(Key.LeftCtrl) % 2 == 0 && (int)Keyboard.GetKeyStates(Key.RightCtrl) % 2 == 0) {
+                    hour += 23;
+                }
+                else if ((int)Keyboard.GetKeyStates(Key.LeftShift) % 2 == 0 && (int)Keyboard.GetKeyStates(Key.RightShift) % 2 == 0) {
+                    if (min == 0) {
+                        hour += 23;
+                    }
+                    min += 59;
+                    showOffset = 40;
+                }
+                else {
+                    if (sec == 0) {
+                        if (min == 0) {
+                            hour += 23;
+                        }
+                        min += 59;
+                    }
+                    sec += 59;
+                    showOffset = 40;
+                }
             }
+            else {
+                return;
+            }
+            TimeOffset = new TimeSpan(hour % 24, min % 60, sec % 60);
+            if (showOffset > 0) {
+                labelClock.Text = $"+{TimeOffset.Hours}h{TimeOffset.Minutes}m{TimeOffset.Seconds}s";
+            }
+            var key = Keyboard.GetKeyStates(Key.LeftCtrl);
         }
 
-        private void label3_Click(object sender, EventArgs e) {
+        private void labelTopMost_Click(object sender, EventArgs e) {
             SetTopMost(!TopMost);
         }
 
         private void SetTopMost(bool topMost) {
             TopMost = topMost;
-            label3.Text = $"最前面：{(topMost ? "ON" : "OFF")}";
-            label3.ForeColor = topMost ? Color.Yellow : Color.Gray;
+            labelTopMost.Text = $"最前面：{(topMost ? "ON" : "OFF")}";
+            labelTopMost.ForeColor = topMost ? Color.Yellow : Color.Gray;
         }
 
-        private void label3_Hover(object sender, EventArgs e) {
-            label3.BackColor = Color.FromArgb(55, 55, 55);
+        private void labelTopMost_Hover(object sender, EventArgs e) {
+            labelTopMost.BackColor = Color.FromArgb(55, 55, 55);
         }
 
-        private void label3_Leave(object sender, EventArgs e) {
-            label3.BackColor = Color.FromArgb(30, 30, 30);
+        private void labelTopMost_Leave(object sender, EventArgs e) {
+            labelTopMost.BackColor = Color.FromArgb(30, 30, 30);
+        }
+
+        private void menuItemCopy_Click(object sender, EventArgs e) {
+            displayManager.CopyImage();
+        }
+
+        private void SetScale(int scale) {
+            if (scale < 50) {
+                scale = 50;
+            }
+            if (scale > 200) {
+                scale = 200;
+            }
+
+            menuItemScale50.Text = "50%";
+            menuItemScale75.Text = "75%";
+            menuItemScale100.Text = "100%";
+            menuItemScale125.Text = "125%";
+            menuItemScale150.Text = "150%";
+            menuItemScale175.Text = "175%";
+            menuItemScale200.Text = "200%";
+
+            switch (scale) {
+                case 50:
+                    menuItemScale50.Text = "50%（現在）";
+                    break;
+                case 75:
+                    menuItemScale75.Text = "75%（現在）";
+                    break;
+                case 100:
+                    menuItemScale100.Text = "100%（現在）";
+                    break;
+                case 125:
+                    menuItemScale125.Text = "125%（現在）";
+                    break;
+                case 150:
+                    menuItemScale150.Text = "150%（現在）";
+                    break;
+                case 175:
+                    menuItemScale175.Text = "175%（現在）";
+                    break;
+                case 200:
+                    menuItemScale200.Text = "200%（現在）";
+                    break;
+            }
+
+            TIDScale = scale;
+            labelScale.Text = $"Scale：{scale}%";
+
+            displayManager.ChangeScale();
+        }
+
+
+
+        private void menuItemScale50_Click(object sender, EventArgs e) {
+            SetScale(50);
+        }
+
+        private void menuItemScale75_Click(object sender, EventArgs e) {
+            SetScale(75);
+        }
+
+        private void menuItemScale100_Click(object sender, EventArgs e) {
+            SetScale(100);
+        }
+
+        private void menuItemScale125_Click(object sender, EventArgs e) {
+            SetScale(125);
+        }
+
+        private void menuItemScale150_Click(object sender, EventArgs e) {
+            SetScale(150);
+        }
+
+        private void menuItemScale175_Click(object sender, EventArgs e) {
+            SetScale(175);
+        }
+
+        private void menuItemScale200_Click(object sender, EventArgs e) {
+            SetScale(200);
+        }
+
+        private void labelScale_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e) {
+            if (e.Button == MouseButtons.Right) {
+                SetScale(TIDScale + 25);
+            }
+            else if (e.Button == MouseButtons.Left) {
+                SetScale(TIDScale - 25);
+            }
+        }
+
+        private void TIDWindow_KeyDown(object sender, System.Windows.Forms.KeyEventArgs e) {
+            if (e.KeyData == (Keys.C | Keys.Control)) {
+                displayManager.CopyImage();
+            }
+        }
+
+        private void PictureBox1_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e) {
+            if (ModifierKeys.HasFlag(Keys.Control)) {
+                if (e.Delta > 0) {
+                    SetScale(TIDScale + 25);
+                }
+                else {
+                    SetScale(TIDScale - 25);
+                }
+            }
+            else if (ModifierKeys.HasFlag(Keys.Shift)) {
+                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value - e.Delta, panel1.VerticalScroll.Value);
+            }
+            else {
+                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value, panel1.VerticalScroll.Value - e.Delta);
+            }
+            ((HandledMouseEventArgs)e).Handled = true;
         }
     }
 }

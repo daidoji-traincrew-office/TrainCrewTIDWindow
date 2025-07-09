@@ -23,22 +23,106 @@
         ///  the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
+            components = new System.ComponentModel.Container();
             pictureBox1 = new PictureBox();
+            contextMenuStrip1 = new ContextMenuStrip(components);
+            menuItemCopy = new ToolStripMenuItem();
+            menuItemScale = new ToolStripMenuItem();
+            menuItemScale50 = new ToolStripMenuItem();
+            menuItemScale75 = new ToolStripMenuItem();
+            menuItemScale100 = new ToolStripMenuItem();
+            menuItemScale125 = new ToolStripMenuItem();
+            menuItemScale150 = new ToolStripMenuItem();
+            menuItemScale175 = new ToolStripMenuItem();
+            menuItemScale200 = new ToolStripMenuItem();
             panel1 = new Panel();
-            label1 = new Label();
-            label2 = new Label();
-            label3 = new Label();
+            labelStatus = new Label();
+            labelClock = new Label();
+            labelTopMost = new Label();
+            labelScale = new Label();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
+            contextMenuStrip1.SuspendLayout();
             panel1.SuspendLayout();
             SuspendLayout();
             // 
             // pictureBox1
             // 
+            pictureBox1.ContextMenuStrip = contextMenuStrip1;
             pictureBox1.Location = new Point(0, 0);
             pictureBox1.Name = "pictureBox1";
             pictureBox1.Size = new Size(984, 537);
             pictureBox1.TabIndex = 0;
             pictureBox1.TabStop = false;
+            pictureBox1.MouseWheel += PictureBox1_MouseWheel;
+            // 
+            // contextMenuStrip1
+            // 
+            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { menuItemCopy, menuItemScale });
+            contextMenuStrip1.Name = "contextMenuStrip1";
+            contextMenuStrip1.Size = new Size(150, 48);
+            // 
+            // menuItemCopy
+            // 
+            menuItemCopy.Name = "menuItemCopy";
+            menuItemCopy.Size = new Size(149, 22);
+            menuItemCopy.Text = "TID画面をコピー";
+            menuItemCopy.Click += menuItemCopy_Click;
+            // 
+            // menuItemScale
+            // 
+            menuItemScale.DropDownItems.AddRange(new ToolStripItem[] { menuItemScale50, menuItemScale75, menuItemScale100, menuItemScale125, menuItemScale150, menuItemScale175, menuItemScale200 });
+            menuItemScale.Name = "menuItemScale";
+            menuItemScale.Size = new Size(149, 22);
+            menuItemScale.Text = "拡大率";
+            // 
+            // menuItemScale50
+            // 
+            menuItemScale50.Name = "menuItemScale50";
+            menuItemScale50.Size = new Size(150, 22);
+            menuItemScale50.Text = "50%";
+            menuItemScale50.Click += menuItemScale50_Click;
+            // 
+            // menuItemScale75
+            // 
+            menuItemScale75.Name = "menuItemScale75";
+            menuItemScale75.Size = new Size(150, 22);
+            menuItemScale75.Text = "75%";
+            menuItemScale75.Click += menuItemScale75_Click;
+            // 
+            // menuItemScale100
+            // 
+            menuItemScale100.Name = "menuItemScale100";
+            menuItemScale100.Size = new Size(150, 22);
+            menuItemScale100.Text = "100%（現在）";
+            menuItemScale100.Click += menuItemScale100_Click;
+            // 
+            // menuItemScale125
+            // 
+            menuItemScale125.Name = "menuItemScale125";
+            menuItemScale125.Size = new Size(150, 22);
+            menuItemScale125.Text = "125%";
+            menuItemScale125.Click += menuItemScale125_Click;
+            // 
+            // menuItemScale150
+            // 
+            menuItemScale150.Name = "menuItemScale150";
+            menuItemScale150.Size = new Size(150, 22);
+            menuItemScale150.Text = "150%";
+            menuItemScale150.Click += menuItemScale150_Click;
+            // 
+            // menuItemScale175
+            // 
+            menuItemScale175.Name = "menuItemScale175";
+            menuItemScale175.Size = new Size(150, 22);
+            menuItemScale175.Text = "175%";
+            menuItemScale175.Click += menuItemScale175_Click;
+            // 
+            // menuItemScale200
+            // 
+            menuItemScale200.Name = "menuItemScale200";
+            menuItemScale200.Size = new Size(150, 22);
+            menuItemScale200.Text = "200%";
+            menuItemScale200.Click += menuItemScale200_Click;
             // 
             // panel1
             // 
@@ -51,46 +135,60 @@
             panel1.Size = new Size(984, 537);
             panel1.TabIndex = 2;
             // 
-            // label1
+            // labelStatus
             // 
-            label1.AutoSize = true;
-            label1.BackColor = Color.Transparent;
-            label1.Font = new Font("ＭＳ ゴシック", 9F, FontStyle.Regular, GraphicsUnit.Point, 128);
-            label1.ForeColor = Color.White;
-            label1.Location = new Point(3, 3);
-            label1.Name = "label1";
-            label1.Size = new Size(107, 12);
-            label1.TabIndex = 1;
-            label1.Text = "Status：起動中...";
+            labelStatus.AutoSize = true;
+            labelStatus.BackColor = Color.Transparent;
+            labelStatus.Font = new Font("ＭＳ ゴシック", 9F, FontStyle.Regular, GraphicsUnit.Point, 128);
+            labelStatus.ForeColor = Color.White;
+            labelStatus.Location = new Point(3, 3);
+            labelStatus.Name = "labelStatus";
+            labelStatus.Size = new Size(107, 12);
+            labelStatus.TabIndex = 1;
+            labelStatus.Text = "Status：起動中...";
             // 
-            // label2
+            // labelClock
             // 
-            label2.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            label2.BackColor = Color.Transparent;
-            label2.Font = new Font("ＭＳ ゴシック", 9F, FontStyle.Regular, GraphicsUnit.Point, 128);
-            label2.ForeColor = Color.White;
-            label2.Location = new Point(930, 3);
-            label2.Name = "label2";
-            label2.Size = new Size(53, 12);
-            label2.TabIndex = 3;
-            label2.Text = "00:00:00";
-            label2.TextAlign = ContentAlignment.TopRight;
-            label2.MouseDown += label2_MouseDown;
+            labelClock.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            labelClock.BackColor = Color.Transparent;
+            labelClock.Font = new Font("ＭＳ ゴシック", 9F, FontStyle.Regular, GraphicsUnit.Point, 128);
+            labelClock.ForeColor = Color.White;
+            labelClock.Location = new Point(918, 3);
+            labelClock.Name = "labelClock";
+            labelClock.Size = new Size(67, 12);
+            labelClock.TabIndex = 3;
+            labelClock.Text = "00:00:00";
+            labelClock.TextAlign = ContentAlignment.TopRight;
+            labelClock.MouseDown += labelClock_MouseDown;
             // 
-            // label3
+            // labelTopMost
             // 
-            label3.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            label3.BackColor = Color.FromArgb(30, 30, 30);
-            label3.Font = new Font("ＭＳ ゴシック", 9F, FontStyle.Regular, GraphicsUnit.Point, 128);
-            label3.ForeColor = Color.Gray;
-            label3.Location = new Point(850, 3);
-            label3.Name = "label3";
-            label3.Size = new Size(78, 12);
-            label3.TabIndex = 4;
-            label3.Text = "最前面：OFF";
-            label3.Click += label3_Click;
-            label3.MouseLeave += label3_Leave;
-            label3.MouseHover += label3_Hover;
+            labelTopMost.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            labelTopMost.BackColor = Color.FromArgb(30, 30, 30);
+            labelTopMost.Font = new Font("ＭＳ ゴシック", 9F, FontStyle.Regular, GraphicsUnit.Point, 128);
+            labelTopMost.ForeColor = Color.Gray;
+            labelTopMost.Location = new Point(840, 3);
+            labelTopMost.Name = "labelTopMost";
+            labelTopMost.Size = new Size(78, 12);
+            labelTopMost.TabIndex = 4;
+            labelTopMost.Text = "最前面：OFF";
+            labelTopMost.Click += labelTopMost_Click;
+            labelTopMost.MouseLeave += labelTopMost_Leave;
+            labelTopMost.MouseHover += labelTopMost_Hover;
+            // 
+            // labelScale
+            // 
+            labelScale.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            labelScale.BackColor = Color.Transparent;
+            labelScale.Font = new Font("ＭＳ ゴシック", 9F, FontStyle.Regular, GraphicsUnit.Point, 128);
+            labelScale.ForeColor = Color.White;
+            labelScale.Location = new Point(750, 3);
+            labelScale.Name = "labelScale";
+            labelScale.Size = new Size(80, 12);
+            labelScale.TabIndex = 5;
+            labelScale.Text = "Scale：100%";
+            labelScale.TextAlign = ContentAlignment.TopRight;
+            labelScale.MouseDown += labelScale_MouseDown;
             // 
             // TIDWindow
             // 
@@ -99,16 +197,19 @@
             AutoScroll = true;
             BackColor = Color.FromArgb(5, 5, 5);
             ClientSize = new Size(984, 561);
-            Controls.Add(label3);
-            Controls.Add(label2);
+            Controls.Add(labelScale);
+            Controls.Add(labelTopMost);
+            Controls.Add(labelClock);
             Controls.Add(panel1);
-            Controls.Add(label1);
+            Controls.Add(labelStatus);
             MaximumSize = new Size(1000, 600);
             MinimumSize = new Size(540, 300);
             Name = "TIDWindow";
             Text = "全線TID | TID - ダイヤ運転会";
             TopMost = true;
+            KeyDown += TIDWindow_KeyDown;
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
+            contextMenuStrip1.ResumeLayout(false);
             panel1.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
@@ -117,9 +218,20 @@
         #endregion
 
         private PictureBox pictureBox1;
-        private Label label1;
+        private Label labelStatus;
         private Panel panel1;
-        private Label label2;
-        private Label label3;
+        private Label labelClock;
+        private Label labelTopMost;
+        private ContextMenuStrip contextMenuStrip1;
+        private ToolStripMenuItem menuItemCopy;
+        private ToolStripMenuItem menuItemScale;
+        private ToolStripMenuItem menuItemScale50;
+        private ToolStripMenuItem menuItemScale75;
+        private ToolStripMenuItem menuItemScale100;
+        private ToolStripMenuItem menuItemScale125;
+        private ToolStripMenuItem menuItemScale150;
+        private ToolStripMenuItem menuItemScale175;
+        private ToolStripMenuItem menuItemScale200;
+        private Label labelScale;
     }
 }
