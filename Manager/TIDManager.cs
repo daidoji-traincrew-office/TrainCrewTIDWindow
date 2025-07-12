@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Text.RegularExpressions;
 using TrainCrewTIDWindow.Models;
@@ -91,9 +90,19 @@ namespace TrainCrewTIDWindow.Manager {
         private Image numberImage;
 
         /// <summary>
+        /// TID画像の元画像（リサイズ前）
+        /// </summary>
+        private Bitmap originalBitmap;
+
+        /// <summary>
         /// TID画面表示用のPictureBox
         /// </summary>
         public PictureBox PictureBox => pictureBox;
+
+        /// <summary>
+        /// TID画像の元画像（リサイズ前）
+        /// </summary>
+        public Bitmap OriginalBitmap => originalBitmap;
 
 
         /// <summary>
@@ -110,9 +119,6 @@ namespace TrainCrewTIDWindow.Manager {
         /// 各トラックの列車番号の位置などのデータ（上り列車用）
         /// </summary>
         public ReadOnlyCollection<NumberSetting> NumSettingsIn => numSettingsIn.AsReadOnly();
-
-
-        private Bitmap originalBitmap;
 
         /// <summary>
         /// TID画面管理用
@@ -231,12 +237,36 @@ namespace TrainCrewTIDWindow.Manager {
             }
 
 
+
+            var width = backgroundDefault.Width * window.TIDScale / 100;
+            var height = backgroundDefault.Height * window.TIDScale / 100;
+
+            if (window.TIDScale < 0) {
+                width = backgroundDefault.Width * 2;
+                height = backgroundDefault.Height * 2;
+            }
+
+            window.MaximumSize = new Size(Math.Max(width, backgroundDefault.Width) + 16, Math.Max(height, backgroundDefault.Height) + 39 + 24);
+
+
+            lock (pictureBox) {
+                if (window.TIDScale < 0) {
+                    pictureBox.Width = window.Size.Width - 16;
+                    pictureBox.Height = window.Size.Height - 39 - 24;
+                }
+                else {
+                    pictureBox.Width = width > backgroundDefault.Width ? width : backgroundDefault.Width;
+                    pictureBox.Height = height > backgroundDefault.Height ? height : backgroundDefault.Height;
+                }
+            }
+
+
             pictureBox.Image = new Bitmap(backgroundDefault);
-            pictureBox.Width = backgroundDefault.Width;
+            /*pictureBox.Width = backgroundDefault.Width;
             pictureBox.Height = backgroundDefault.Height;
 
-            window.MaximumSize = new Size(backgroundDefault.Width + 16, backgroundDefault.Height + 39 + 24);
-            window.Size = window.MaximumSize;
+            window.MaximumSize = new Size(backgroundDefault.Width + 16, backgroundDefault.Height + 39 + 24);*/
+            window.Size = new Size(Math.Max(backgroundDefault.Width * window.TIDScale / 100, backgroundDefault.Width) + 16, Math.Max(backgroundDefault.Height * window.TIDScale / 100, backgroundDefault.Height) + 39 + 24);
             window.TopMost = true;
 
             // 試験表示
@@ -305,7 +335,7 @@ namespace TrainCrewTIDWindow.Manager {
                 }
             }
             originalBitmap = new Bitmap(pictureBox.Image);
-
+            ChangeScale();
 
 
 
@@ -662,7 +692,21 @@ namespace TrainCrewTIDWindow.Manager {
             lock (pictureBox) {
                 var oldPic = pictureBox.Image;
                 var oldOriginal = originalBitmap;
-                pictureBox.Image = new Bitmap(newPic, newPic.Width * window.TIDScale / 100, newPic.Height * window.TIDScale / 100);
+
+
+                if (window.TIDScale < 0) {
+                    var aspectRatio = (double)newPic.Width / newPic.Height;
+                    if (aspectRatio < (double)pictureBox.Width / pictureBox.Height) {
+                        pictureBox.Image = new Bitmap(newPic, (int)(pictureBox.Height * aspectRatio), pictureBox.Height);
+                    }
+                    else {
+                        pictureBox.Image = new Bitmap(newPic, pictureBox.Width, (int)(pictureBox.Width / aspectRatio));
+                    }
+                }
+                else {
+                    pictureBox.Image = new Bitmap(newPic, newPic.Width * window.TIDScale / 100, newPic.Height * window.TIDScale / 100);
+                }
+
                 originalBitmap = newPic;
                 oldPic?.Dispose();
                 oldOriginal.Dispose();
@@ -817,7 +861,18 @@ namespace TrainCrewTIDWindow.Manager {
 
                 var oldPic = pictureBox.Image;
                 if(oldPic != null) {
-                    pictureBox.Image = new Bitmap(originalBitmap, originalBitmap.Width * window.TIDScale / 100, originalBitmap.Height * window.TIDScale / 100);
+                    if (window.TIDScale < 0) {
+                        var aspectRatio = (double)originalBitmap.Width / originalBitmap.Height;
+                        if (aspectRatio < (double)pictureBox.Width / pictureBox.Height) {
+                            pictureBox.Image = new Bitmap(originalBitmap, (int)(pictureBox.Height * aspectRatio), pictureBox.Height);
+                        }
+                        else {
+                            pictureBox.Image = new Bitmap(originalBitmap, pictureBox.Width, (int)(pictureBox.Width / aspectRatio));
+                        }
+                    }
+                    else {
+                        pictureBox.Image = new Bitmap(originalBitmap, originalBitmap.Width * window.TIDScale / 100, originalBitmap.Height * window.TIDScale / 100);
+                    }
                     oldPic.Dispose();
                 }
             }
@@ -828,6 +883,11 @@ namespace TrainCrewTIDWindow.Manager {
             var width = originalBitmap.Width * window.TIDScale / 100;
             var height = originalBitmap.Height * window.TIDScale / 100;
 
+            if(window.TIDScale < 0) {
+                width = originalBitmap.Width * 2;
+                height = originalBitmap.Height * 2;
+            }
+
             window.MaximumSize = new Size(Math.Max(width, originalBitmap.Width) + 16, Math.Max(height, originalBitmap.Height) + 39 + 24);
 
             if(-window.Location.X > window.Size.Width - 60) {
@@ -835,8 +895,14 @@ namespace TrainCrewTIDWindow.Manager {
             }
 
             lock (pictureBox) {
-                pictureBox.Width = width > originalBitmap.Width ? width : originalBitmap.Width;
-                pictureBox.Height = height > originalBitmap.Height ? height : originalBitmap.Height;
+                if (window.TIDScale < 0) {
+                    pictureBox.Width = window.Size.Width - 16;
+                    pictureBox.Height = window.Size.Height - 39 - 24;
+                }
+                else {
+                    pictureBox.Width = width > originalBitmap.Width ? width : originalBitmap.Width;
+                    pictureBox.Height = height > originalBitmap.Height ? height : originalBitmap.Height;
+                }
             }
 
         }
@@ -844,7 +910,7 @@ namespace TrainCrewTIDWindow.Manager {
         public void CopyImage() {
             var i = new Bitmap(originalBitmap);
             using var g = Graphics.FromImage(i);
-            g.DrawString((DateTime.Now + window.TimeOffset).ToString("H:mm:ss"), new Font("ＭＳ ゴシック", 9), Brushes.White, 1869, 0);
+            g.DrawString((window.Clock + window.TimeOffset).ToString("H:mm:ss"), new Font("ＭＳ ゴシック", 9), Brushes.White, 1869, 0);
             Clipboard.SetImage(i);
         }
 

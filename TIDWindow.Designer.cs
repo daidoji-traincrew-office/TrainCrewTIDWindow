@@ -35,6 +35,7 @@
             menuItemScale150 = new ToolStripMenuItem();
             menuItemScale175 = new ToolStripMenuItem();
             menuItemScale200 = new ToolStripMenuItem();
+            menuItemScaleFit = new ToolStripMenuItem();
             panel1 = new Panel();
             labelStatus = new Label();
             labelClock = new Label();
@@ -64,65 +65,72 @@
             // menuItemCopy
             // 
             menuItemCopy.Name = "menuItemCopy";
-            menuItemCopy.Size = new Size(149, 22);
+            menuItemCopy.Size = new Size(180, 22);
             menuItemCopy.Text = "TID画面をコピー";
             menuItemCopy.Click += menuItemCopy_Click;
             // 
             // menuItemScale
             // 
-            menuItemScale.DropDownItems.AddRange(new ToolStripItem[] { menuItemScale50, menuItemScale75, menuItemScale100, menuItemScale125, menuItemScale150, menuItemScale175, menuItemScale200 });
+            menuItemScale.DropDownItems.AddRange(new ToolStripItem[] { menuItemScale50, menuItemScale75, menuItemScale100, menuItemScale125, menuItemScale150, menuItemScale175, menuItemScale200, menuItemScaleFit });
             menuItemScale.Name = "menuItemScale";
-            menuItemScale.Size = new Size(149, 22);
+            menuItemScale.Size = new Size(180, 22);
             menuItemScale.Text = "拡大率";
             // 
             // menuItemScale50
             // 
             menuItemScale50.Name = "menuItemScale50";
-            menuItemScale50.Size = new Size(150, 22);
+            menuItemScale50.Size = new Size(180, 22);
             menuItemScale50.Text = "50%";
             menuItemScale50.Click += menuItemScale50_Click;
             // 
             // menuItemScale75
             // 
             menuItemScale75.Name = "menuItemScale75";
-            menuItemScale75.Size = new Size(150, 22);
+            menuItemScale75.Size = new Size(180, 22);
             menuItemScale75.Text = "75%";
             menuItemScale75.Click += menuItemScale75_Click;
             // 
             // menuItemScale100
             // 
             menuItemScale100.Name = "menuItemScale100";
-            menuItemScale100.Size = new Size(150, 22);
+            menuItemScale100.Size = new Size(180, 22);
             menuItemScale100.Text = "100%（現在）";
             menuItemScale100.Click += menuItemScale100_Click;
             // 
             // menuItemScale125
             // 
             menuItemScale125.Name = "menuItemScale125";
-            menuItemScale125.Size = new Size(150, 22);
+            menuItemScale125.Size = new Size(180, 22);
             menuItemScale125.Text = "125%";
             menuItemScale125.Click += menuItemScale125_Click;
             // 
             // menuItemScale150
             // 
             menuItemScale150.Name = "menuItemScale150";
-            menuItemScale150.Size = new Size(150, 22);
+            menuItemScale150.Size = new Size(180, 22);
             menuItemScale150.Text = "150%";
             menuItemScale150.Click += menuItemScale150_Click;
             // 
             // menuItemScale175
             // 
             menuItemScale175.Name = "menuItemScale175";
-            menuItemScale175.Size = new Size(150, 22);
+            menuItemScale175.Size = new Size(180, 22);
             menuItemScale175.Text = "175%";
             menuItemScale175.Click += menuItemScale175_Click;
             // 
             // menuItemScale200
             // 
             menuItemScale200.Name = "menuItemScale200";
-            menuItemScale200.Size = new Size(150, 22);
+            menuItemScale200.Size = new Size(180, 22);
             menuItemScale200.Text = "200%";
             menuItemScale200.Click += menuItemScale200_Click;
+            // 
+            // menuItemScaleFit
+            // 
+            menuItemScaleFit.Name = "menuItemScaleFit";
+            menuItemScaleFit.Size = new Size(180, 22);
+            menuItemScaleFit.Text = "フィット表示";
+            menuItemScaleFit.Click += menuItemScaleFit_Click;
             // 
             // panel1
             // 
@@ -208,6 +216,7 @@
             Text = "全線TID | TID - ダイヤ運転会";
             TopMost = true;
             KeyDown += TIDWindow_KeyDown;
+            Resize += TIDWindow_Resize;
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             contextMenuStrip1.ResumeLayout(false);
             panel1.ResumeLayout(false);
@@ -232,6 +241,7 @@
         private ToolStripMenuItem menuItemScale150;
         private ToolStripMenuItem menuItemScale175;
         private ToolStripMenuItem menuItemScale200;
+        private ToolStripMenuItem menuItemScaleFit;
         private Label labelScale;
     }
 }

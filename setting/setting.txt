@@ -1,2 +1,3 @@
 source=select
 topMost=true
+scale=100

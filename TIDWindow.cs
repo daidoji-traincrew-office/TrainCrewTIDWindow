@@ -6,6 +6,7 @@ using TrainCrewTIDWindow.Manager;
 using TrainCrewTIDWindow.Models;
 using System.Diagnostics;
 using System.Windows.Input;
+using System.Text;
 
 namespace TrainCrewTIDWindow {
 
@@ -43,11 +44,22 @@ namespace TrainCrewTIDWindow {
         private ServerCommunication? serverCommunication;
 
         /// <summary>
-        /// データの取得元（traincrew/server、もしくはサーバのURL）
+        /// データの取得元（traincrew/server/select）
         /// </summary>
-        private string source = "";
+        private string source = "select";
 
-        private bool topMostSetting = false;
+        /// <summary>
+        /// 最前面表示であるか
+        /// </summary>
+        private bool topMostSetting = true;
+
+        /// <summary>
+        /// 表示される時刻の時差を足す前
+        /// </summary>
+        public DateTime Clock {
+            get;
+            set;
+        }
 
         /// <summary>
         /// 現実との時差
@@ -95,12 +107,41 @@ namespace TrainCrewTIDWindow {
             this.service = service;
             InitializeComponent();
 
+            var loaded = false;
+
+            loaded |= LoadSetting(Environment.GetFolderPath(Environment.SpecialFolder.Personal) + @"\TRAIN CREW Tool\TrainCrewTIDWindow\setting.txt");
+
+            loaded |= LoadSetting(".\\setting\\setting.txt");
+
+            if (!loaded) {
+                using (StreamWriter w = new(".\\setting\\setting.txt", false, new UTF8Encoding(false))) {
+                    w.Write("source=select\ntopMost=true\nscale=100\ntimeOffset=14");
+                }
+            }
+
             displayManager = new TIDManager(pictureBox1, this);
+
+            if (TIDScale > 0) {
+                labelScale.ForeColor = Color.White;
+                labelScale.Text = $"Scale：{TIDScale}%";
+            }
+            else {
+                labelScale.ForeColor = Color.LightGreen;
+                labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalBitmap.Width * 100 + 0.5)}%";
+            }
 
             trackManager = new TrackManager(displayManager);
 
+            Load += TIDWindow_Load;
+        }
+
+        private bool LoadSetting(string path) {
+
             try {
-                using var sr = new StreamReader(".\\setting\\setting.txt");
+                if (!File.Exists(path)) {
+                    return false;
+                }
+                using var sr = new StreamReader(path);
                 var line = sr.ReadLine();
                 while (line != null) {
                     var texts = line.Replace(" ", "").Split('=');
@@ -112,26 +153,75 @@ namespace TrainCrewTIDWindow {
 
                     switch (texts[0]) {
                         case "source":
-                            source = texts[1];
+                            source = texts[1].Replace(" ", "").ToLower();
                             break;
                         case "topMost":
                             topMostSetting = texts[1].ToLower() == "true";
+                            break;
+                        case "scale":
+                            menuItemScale50.Text = "50%";
+                            menuItemScale75.Text = "75%";
+                            menuItemScale100.Text = "100%";
+                            menuItemScale125.Text = "125%";
+                            menuItemScale150.Text = "150%";
+                            menuItemScale175.Text = "175%";
+                            menuItemScale200.Text = "200%";
+                            menuItemScaleFit.Text = "フィット表示";
+
+                            if (texts[1].ToLower() == "fit") {
+                                TIDScale = -1;
+                                menuItemScaleFit.Text = "フィット表示（現在）";
+                                break;
+                            }
+                                switch (texts[1]) {
+                                case "50":
+                                    TIDScale = 50;
+                                    menuItemScale50.Text = "50%（現在）";
+                                    break;
+                                case "75":
+                                    TIDScale = 75;
+                                    menuItemScale75.Text = "75%（現在）";
+                                    break;
+                                case "100":
+                                    TIDScale = 100;
+                                    menuItemScale100.Text = "100%（現在）";
+                                    break;
+                                case "125":
+                                    TIDScale = 125;
+                                    menuItemScale125.Text = "125%（現在）";
+                                    break;
+                                case "150":
+                                    TIDScale = 150;
+                                    menuItemScale150.Text = "150%（現在）";
+                                    break;
+                                case "175":
+                                    TIDScale = 175;
+                                    menuItemScale175.Text = "175%（現在）";
+                                    break;
+                                case "200":
+                                    TIDScale = 200;
+                                    menuItemScale200.Text = "200%（現在）";
+                                    break;
+                            }
+                            break;
+                        case "timeOffset":
+                            if (int.TryParse(texts[1], out var hours)) {
+                                TimeOffset = new TimeSpan(((hours % 24) + 24) % 24, 0, 0);
+                            }
                             break;
                     }
                 }
             }
             catch {
             }
-
-
-            Load += TIDWindow_Load;
+            return true;
         }
 
 
         private async void TIDWindow_Load(object? sender, EventArgs? e) {
             _ = Task.Run(ClockUpdateLoop);
 
-            var s = source.Replace(" ", "").ToLower();
+            var s = source;
 
             if (s == "select") {
                 DialogResult result = MessageBox.Show($"TIDをサーバに接続しますか？\n（いいえを選択するとTRAIN CREW本体に接続します）", "接続先選択 | TID", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
@@ -148,6 +238,7 @@ namespace TrainCrewTIDWindow {
 
             switch (s) {
                 case "traincrew":
+                    TimeOffset = new(0, 0, 0);
                     tcCommunication.ConnectionStatusChanged += UpdateConnectionStatus;
                     tcCommunication.TCDataUpdated += UpdateTCData;
                     await TryConnectTrainCrew();
@@ -198,6 +289,15 @@ namespace TrainCrewTIDWindow {
             if (tcList == null) {
                 return;
             }
+            if (showOffset <= 0) {
+                var now = DateTime.Now;
+                Debug.WriteLine($"clock: {tcData.nowTime.hour}:{tcData.nowTime.minute}:{tcData.nowTime.second}");
+                Clock = new DateTime(now.Year, now.Month, now.Day, tcData.nowTime.hour, tcData.nowTime.minute, (int)tcData.nowTime.second);
+                if (showOffset <= 0) {
+                    labelClock.Text = (Clock + TimeOffset).ToString("H:mm:ss");
+                }
+            }
+
             if (trackManager.UpdateTCData(tcList)) {
                 displayManager.UpdateTID();
             }
@@ -270,21 +370,22 @@ namespace TrainCrewTIDWindow {
         }
 
         private void UpdateClock() {
-            var time = DateTime.Now;
+            Debug.WriteLine("Update");
             if (showOffset > 0) {
                 showOffset--;
             }
-            else {
-                labelClock.Text = (time + TimeOffset).ToString("H:mm:ss");
-            }
             if (serverCommunication == null) {
                 return;
+            }
+            Clock = DateTime.Now;
+            if (showOffset <= 0) {
+                labelClock.Text = (Clock + TimeOffset).ToString("H:mm:ss");
             }
             var updatedTime = serverCommunication.UpdatedTime;
             if (updatedTime == null) {
                 return;
             }
-            var delaySeconds = (time - (DateTime)updatedTime).TotalSeconds;
+            var delaySeconds = (Clock - (DateTime)updatedTime).TotalSeconds;
             updatedTime = updatedTime?.Add(TimeOffset);
             if (delaySeconds > 10) {
                 if (!serverCommunication.Error) {
@@ -386,7 +487,7 @@ namespace TrainCrewTIDWindow {
         }
 
         private void SetScale(int scale) {
-            if (scale < 50) {
+            if (scale < 50 && scale != -1) {
                 scale = 50;
             }
             if (scale > 200) {
@@ -400,6 +501,7 @@ namespace TrainCrewTIDWindow {
             menuItemScale150.Text = "150%";
             menuItemScale175.Text = "175%";
             menuItemScale200.Text = "200%";
+            menuItemScaleFit.Text = "フィット表示";
 
             switch (scale) {
                 case 50:
@@ -423,12 +525,23 @@ namespace TrainCrewTIDWindow {
                 case 200:
                     menuItemScale200.Text = "200%（現在）";
                     break;
+                case -1:
+                    menuItemScaleFit.Text = "フィット表示（現在）";
+                    break;
+
             }
 
             TIDScale = scale;
-            labelScale.Text = $"Scale：{scale}%";
 
             displayManager.ChangeScale();
+            if (scale > 0) {
+                labelScale.ForeColor = Color.White;
+                labelScale.Text = $"Scale：{scale}%";
+            }
+            else {
+                labelScale.ForeColor = Color.LightGreen;
+                labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalBitmap.Width * 100 + 0.5)}%";
+            }
         }
 
 
@@ -461,12 +574,18 @@ namespace TrainCrewTIDWindow {
             SetScale(200);
         }
 
+        private void menuItemScaleFit_Click(object sender, EventArgs e) {
+            SetScale(-1);
+        }
+
         private void labelScale_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e) {
-            if (e.Button == MouseButtons.Right) {
-                SetScale(TIDScale + 25);
-            }
-            else if (e.Button == MouseButtons.Left) {
-                SetScale(TIDScale - 25);
+            if(TIDScale > 0) {
+                if (e.Button == MouseButtons.Right) {
+                    SetScale(TIDScale + 25);
+                }
+                else if (e.Button == MouseButtons.Left) {
+                    SetScale(TIDScale - 25);
+                }
             }
         }
 
@@ -478,11 +597,13 @@ namespace TrainCrewTIDWindow {
 
         private void PictureBox1_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e) {
             if (ModifierKeys.HasFlag(Keys.Control)) {
-                if (e.Delta > 0) {
-                    SetScale(TIDScale + 25);
-                }
-                else {
-                    SetScale(TIDScale - 25);
+                if(TIDScale > 0) {
+                    if (e.Delta > 0) {
+                        SetScale(TIDScale + 25);
+                    }
+                    else {
+                        SetScale(TIDScale - 25);
+                    }
                 }
             }
             else if (ModifierKeys.HasFlag(Keys.Shift)) {
@@ -492,6 +613,13 @@ namespace TrainCrewTIDWindow {
                 panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value, panel1.VerticalScroll.Value - e.Delta);
             }
             ((HandledMouseEventArgs)e).Handled = true;
+        }
+
+        private void TIDWindow_Resize(object sender, EventArgs e) {
+            if(displayManager != null && TIDScale == -1) {
+                displayManager.ChangeScale();
+                labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalBitmap.Width * 100 + 0.5)}%";
+            }
         }
     }
 }

@@ -435,10 +435,10 @@ namespace TrainCrewTIDWindow.Communications {
                     error = true;
                     _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ受信失敗"; }));
                     TaskDialog.ShowDialog(new TaskDialogPage {
-                        Caption = "データ受信失敗 | TID - ダイヤ運転会",
-                        Heading = "データ受信失敗",
+                        Caption = "未知のエラー | TID - ダイヤ運転会",
+                        Heading = "未知のエラー",
                         Icon = TaskDialogIcon.Error,
-                        Text = "データの受信に失敗しました。\n復旧を試みますが、しばらく経っても復旧しない場合はアプリケーションの再起動をお願いします。"
+                        Text = "未知のエラーです。\nアプリケーションの再起動をお願いします。"
                     });
                 }
             }
