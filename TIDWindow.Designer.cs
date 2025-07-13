@@ -49,12 +49,16 @@
             // pictureBox1
             // 
             pictureBox1.ContextMenuStrip = contextMenuStrip1;
+            pictureBox1.Cursor = Cursors.SizeAll;
             pictureBox1.Location = new Point(0, 0);
             pictureBox1.Name = "pictureBox1";
             pictureBox1.Size = new Size(984, 537);
             pictureBox1.TabIndex = 0;
             pictureBox1.TabStop = false;
             pictureBox1.MouseWheel += PictureBox1_MouseWheel;
+            pictureBox1.MouseDown += PictureBox1_MouseDown;
+            pictureBox1.MouseUp += PictureBox1_MouseUp;
+            pictureBox1.MouseMove += PictureBox1_MouseMove;
             // 
             // contextMenuStrip1
             // 
@@ -65,7 +69,7 @@
             // menuItemCopy
             // 
             menuItemCopy.Name = "menuItemCopy";
-            menuItemCopy.Size = new Size(180, 22);
+            menuItemCopy.Size = new Size(149, 22);
             menuItemCopy.Text = "TID画面をコピー";
             menuItemCopy.Click += menuItemCopy_Click;
             // 
@@ -73,7 +77,7 @@
             // 
             menuItemScale.DropDownItems.AddRange(new ToolStripItem[] { menuItemScale50, menuItemScale75, menuItemScale100, menuItemScale125, menuItemScale150, menuItemScale175, menuItemScale200, menuItemScaleFit });
             menuItemScale.Name = "menuItemScale";
-            menuItemScale.Size = new Size(180, 22);
+            menuItemScale.Size = new Size(149, 22);
             menuItemScale.Text = "拡大率";
             // 
             // menuItemScale50

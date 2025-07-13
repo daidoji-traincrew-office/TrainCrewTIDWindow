@@ -253,6 +253,7 @@ namespace TrainCrewTIDWindow.Manager {
                 if (window.TIDScale < 0) {
                     pictureBox.Width = window.Size.Width - 16;
                     pictureBox.Height = window.Size.Height - 39 - 24;
+                    pictureBox.Cursor = Cursors.Default;
                 }
                 else {
                     pictureBox.Width = width > backgroundDefault.Width ? width : backgroundDefault.Width;

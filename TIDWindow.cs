@@ -76,6 +76,10 @@ namespace TrainCrewTIDWindow {
             private set;
         } = 100;
 
+        private Point mouseLoc = Point.Empty;
+
+        private int scrollDelta = 20;
+
 
         private OpenIddictClientService service;
 
@@ -370,7 +374,6 @@ namespace TrainCrewTIDWindow {
         }
 
         private void UpdateClock() {
-            Debug.WriteLine("Update");
             if (showOffset > 0) {
                 showOffset--;
             }
@@ -537,10 +540,12 @@ namespace TrainCrewTIDWindow {
             if (scale > 0) {
                 labelScale.ForeColor = Color.White;
                 labelScale.Text = $"Scale：{scale}%";
+                pictureBox1.Cursor = System.Windows.Forms.Cursors.SizeAll;
             }
             else {
                 labelScale.ForeColor = Color.LightGreen;
                 labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalBitmap.Width * 100 + 0.5)}%";
+                pictureBox1.Cursor = System.Windows.Forms.Cursors.Default;
             }
         }
 
@@ -593,6 +598,88 @@ namespace TrainCrewTIDWindow {
             if (e.KeyData == (Keys.C | Keys.Control)) {
                 displayManager.CopyImage();
             }
+            
+            if(e.KeyData == Keys.Right || e.KeyData == Keys.D) {
+                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value + scrollDelta * 2, panel1.VerticalScroll.Value);
+            }
+            if (e.KeyData == Keys.Left || e.KeyData == Keys.A) {
+                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value - scrollDelta * 2, panel1.VerticalScroll.Value);
+            }
+            if (e.KeyData == Keys.Up || e.KeyData == Keys.W) {
+                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value, panel1.VerticalScroll.Value - scrollDelta * 2);
+            }
+            if (e.KeyData == Keys.Down || e.KeyData == Keys.S) {
+                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value, panel1.VerticalScroll.Value + scrollDelta * 2);
+            }
+            if (e.KeyData == (Keys.Right | Keys.Shift) || e.KeyData == (Keys.D | Keys.Shift)) {
+                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value + scrollDelta, panel1.VerticalScroll.Value);
+            }
+            if (e.KeyData == (Keys.Left | Keys.Shift) || e.KeyData == (Keys.A | Keys.Shift)) {
+                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value - scrollDelta, panel1.VerticalScroll.Value);
+            }
+            if (e.KeyData == (Keys.Up | Keys.Shift) || e.KeyData == (Keys.W | Keys.Shift)) {
+                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value, panel1.VerticalScroll.Value - scrollDelta);
+            }
+            if (e.KeyData == (Keys.Down | Keys.Shift) || e.KeyData == (Keys.S | Keys.Shift)) {
+                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value, panel1.VerticalScroll.Value + scrollDelta);
+            }
+            if(e.KeyData == Keys.D1) {
+                panel1.AutoScrollPosition = new Point(0, panel1.VerticalScroll.Value);
+            }
+            if (e.KeyData == Keys.D2) {
+                panel1.AutoScrollPosition = new Point((pictureBox1.Size.Width - panel1.Size.Width + 17) * 1 / 9, panel1.VerticalScroll.Value);
+            }
+            if (e.KeyData == Keys.D3) {
+                panel1.AutoScrollPosition = new Point((pictureBox1.Size.Width - panel1.Size.Width + 17) * 2 / 9, panel1.VerticalScroll.Value);
+            }
+            if (e.KeyData == Keys.D4) {
+                panel1.AutoScrollPosition = new Point((pictureBox1.Size.Width - panel1.Size.Width + 17) * 3 / 9, panel1.VerticalScroll.Value);
+            }
+            if (e.KeyData == Keys.D5) {
+                panel1.AutoScrollPosition = new Point((pictureBox1.Size.Width - panel1.Size.Width + 17) * 4 / 9, panel1.VerticalScroll.Value);
+            }
+            if (e.KeyData == Keys.D6) {
+                panel1.AutoScrollPosition = new Point((pictureBox1.Size.Width - panel1.Size.Width + 17) * 5 / 9, panel1.VerticalScroll.Value);
+            }
+            if (e.KeyData == Keys.D7) {
+                panel1.AutoScrollPosition = new Point((pictureBox1.Size.Width - panel1.Size.Width + 17) * 6 / 9, panel1.VerticalScroll.Value);
+            }
+            if (e.KeyData == Keys.D8) {
+                panel1.AutoScrollPosition = new Point((pictureBox1.Size.Width - panel1.Size.Width + 17) * 7 / 9, panel1.VerticalScroll.Value);
+            }
+            if (e.KeyData == Keys.D9) {
+                panel1.AutoScrollPosition = new Point((pictureBox1.Size.Width - panel1.Size.Width + 17) * 8 / 9, panel1.VerticalScroll.Value);
+            }
+            if (e.KeyData == Keys.D0) {
+                panel1.AutoScrollPosition = new Point(pictureBox1.Size.Width - panel1.Size.Width + 17, panel1.VerticalScroll.Value);
+            }
+            if (e.KeyData == Keys.NumPad7) {
+                panel1.AutoScrollPosition = new Point(0, 0);
+            }
+            if (e.KeyData == Keys.NumPad8) {
+                panel1.AutoScrollPosition = new Point((pictureBox1.Size.Width - panel1.Size.Width + 17) / 2, 0);
+            }
+            if (e.KeyData == Keys.NumPad9) {
+                panel1.AutoScrollPosition = new Point(pictureBox1.Size.Width - panel1.Size.Width + 17, 0);
+            }
+            if (e.KeyData == Keys.NumPad4) {
+                panel1.AutoScrollPosition = new Point(0, (pictureBox1.Size.Height - panel1.Size.Height + 17) / 2);
+            }
+            if (e.KeyData == Keys.NumPad5) {
+                panel1.AutoScrollPosition = new Point((pictureBox1.Size.Width - panel1.Size.Width + 17) / 2, (pictureBox1.Size.Height - panel1.Size.Height + 17) / 2);
+            }
+            if (e.KeyData == Keys.NumPad6) {
+                panel1.AutoScrollPosition = new Point(pictureBox1.Size.Width - panel1.Size.Width + 17, (pictureBox1.Size.Height - panel1.Size.Height + 17) / 2);
+            }
+            if (e.KeyData == Keys.NumPad1) {
+                panel1.AutoScrollPosition = new Point(0, pictureBox1.Size.Height - panel1.Size.Height + 17);
+            }
+            if (e.KeyData == Keys.NumPad2) {
+                panel1.AutoScrollPosition = new Point((pictureBox1.Size.Width - panel1.Size.Width + 17) / 2, pictureBox1.Size.Height - panel1.Size.Height + 17);
+            }
+            if (e.KeyData == Keys.NumPad3) {
+                panel1.AutoScrollPosition = new Point(pictureBox1.Size.Width - panel1.Size.Width + 17, pictureBox1.Size.Height - panel1.Size.Height + 17);
+            }
         }
 
         private void PictureBox1_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e) {
@@ -619,6 +706,24 @@ namespace TrainCrewTIDWindow {
             if(displayManager != null && TIDScale == -1) {
                 displayManager.ChangeScale();
                 labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalBitmap.Width * 100 + 0.5)}%";
+            }
+        }
+
+        private void PictureBox1_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e) {
+            if (e.Button == MouseButtons.Left) {
+                mouseLoc = e.Location;
+            }
+        }
+
+        private void PictureBox1_MouseMove(object sender, System.Windows.Forms.MouseEventArgs e) {
+            if (e.Button == MouseButtons.Left) {
+                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value - e.Location.X + mouseLoc.X, panel1.VerticalScroll.Value - e.Location.Y + mouseLoc.Y);
+            }
+        }
+
+        private void PictureBox1_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e) {
+            if (e.Button == MouseButtons.Left) {
+                mouseLoc = Point.Empty;
             }
         }
     }
