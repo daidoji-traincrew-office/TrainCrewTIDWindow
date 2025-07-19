@@ -5,7 +5,6 @@ using TrainCrewTIDWindow.Communications;
 using TrainCrewTIDWindow.Manager;
 using TrainCrewTIDWindow.Models;
 using System.Diagnostics;
-using System.Windows.Input;
 using System.Text;
 
 namespace TrainCrewTIDWindow {
@@ -69,23 +68,50 @@ namespace TrainCrewTIDWindow {
             private set;
         } = new(14, 0, 0);
 
+        /// <summary>
+        /// 時差を表示するか（0は表示せずそれ以外は0までのカウントダウン）
+        /// </summary>
         private int showOffset = 0;
 
+        /// <summary>
+        /// 拡大率（0未満はフィット表示）
+        /// </summary>
         public int TIDScale {
             get;
             private set;
         } = 100;
 
+        /// <summary>
+        /// マウス位置（ドラッグ操作対応用）
+        /// </summary>
         private Point mouseLoc = Point.Empty;
 
-        private int scrollDelta = 20;
+        /// <summary>
+        /// WASDキーなど使用時の移動量
+        /// </summary>
+        private int scrollDelta = 15;
 
+        /// <summary>
+        /// デバッグモード参照軌道回路管理用（-1は非デバッグモード）
+        /// </summary>
+        private int debugIndex = -1;
+
+        /// <summary>
+        /// デバッグモード表示時間管理用（正数:カウントダウン中 0:更新待ち -10000:カウントダウン停止中で更新待ち -10000未満:初期状態 その他負数:カウントダウン停止中）
+        /// </summary>
+        private int debugCount = -99999;
 
         private OpenIddictClientService service;
 
         public string LabelStatusText {
             get => labelStatus.Text;
             set {
+                if(serverCommunication != null) {
+                    value = $"Status：{(ServerAddress.SignalAddress.Contains("dev") ? "Devサーバ" : "Prodサーバ")} {value}";
+                }
+                else {
+                    value = $"Status：{value}";
+                }
                 if (InvokeRequired) {
                     Invoke(() => labelStatus.Text = value);
                 }
@@ -137,6 +163,16 @@ namespace TrainCrewTIDWindow {
             trackManager = new TrackManager(displayManager);
 
             Load += TIDWindow_Load;
+            menuItemScale50.Click += (sender, e) => { SetScale(50); };
+            menuItemScale75.Click += (sender, e) => { SetScale(75); };
+            menuItemScale90.Click += (sender, e) => { SetScale(90); };
+            menuItemScale100.Click += (sender, e) => { SetScale(100); };
+            menuItemScale110.Click += (sender, e) => { SetScale(110); };
+            menuItemScale125.Click += (sender, e) => { SetScale(125); };
+            menuItemScale150.Click += (sender, e) => { SetScale(150); };
+            menuItemScale175.Click += (sender, e) => { SetScale(175); };
+            menuItemScale200.Click += (sender, e) => { SetScale(200); };
+            menuItemScaleFit.Click += (sender, e) => { SetScale(-1); };
         }
 
         private bool LoadSetting(string path) {
@@ -165,7 +201,9 @@ namespace TrainCrewTIDWindow {
                         case "scale":
                             menuItemScale50.Text = "50%";
                             menuItemScale75.Text = "75%";
+                            menuItemScale90.Text = "90%";
                             menuItemScale100.Text = "100%";
+                            menuItemScale110.Text = "110%";
                             menuItemScale125.Text = "125%";
                             menuItemScale150.Text = "150%";
                             menuItemScale175.Text = "175%";
@@ -177,7 +215,7 @@ namespace TrainCrewTIDWindow {
                                 menuItemScaleFit.Text = "フィット表示（現在）";
                                 break;
                             }
-                                switch (texts[1]) {
+                            switch (texts[1]) {
                                 case "50":
                                     TIDScale = 50;
                                     menuItemScale50.Text = "50%（現在）";
@@ -186,9 +224,17 @@ namespace TrainCrewTIDWindow {
                                     TIDScale = 75;
                                     menuItemScale75.Text = "75%（現在）";
                                     break;
+                                case "90":
+                                    TIDScale = 90;
+                                    menuItemScale90.Text = "90%（現在）";
+                                    break;
                                 case "100":
                                     TIDScale = 100;
                                     menuItemScale100.Text = "100%（現在）";
+                                    break;
+                                case "110":
+                                    TIDScale = 110;
+                                    menuItemScale110.Text = "110%（現在）";
                                     break;
                                 case "125":
                                     TIDScale = 125;
@@ -247,6 +293,9 @@ namespace TrainCrewTIDWindow {
                     tcCommunication.TCDataUpdated += UpdateTCData;
                     await TryConnectTrainCrew();
                     break;
+                case "debug":
+                    debugIndex = 0;
+                    break;
                 default:
                     /*trackManager.CountStart = 0;*/
 
@@ -295,7 +344,6 @@ namespace TrainCrewTIDWindow {
             }
             if (showOffset <= 0) {
                 var now = DateTime.Now;
-                Debug.WriteLine($"clock: {tcData.nowTime.hour}:{tcData.nowTime.minute}:{tcData.nowTime.second}");
                 Clock = new DateTime(now.Year, now.Month, now.Day, tcData.nowTime.hour, tcData.nowTime.minute, (int)tcData.nowTime.second);
                 if (showOffset <= 0) {
                     labelClock.Text = (Clock + TimeOffset).ToString("H:mm:ss");
@@ -377,15 +425,16 @@ namespace TrainCrewTIDWindow {
             if (showOffset > 0) {
                 showOffset--;
             }
-            if (serverCommunication == null) {
+            UpdateDebug();
+            if (debugIndex < 0 && serverCommunication == null) {
                 return;
             }
             Clock = DateTime.Now;
             if (showOffset <= 0) {
                 labelClock.Text = (Clock + TimeOffset).ToString("H:mm:ss");
             }
-            var updatedTime = serverCommunication.UpdatedTime;
-            if (updatedTime == null) {
+            var updatedTime = serverCommunication?.UpdatedTime;
+            if (updatedTime == null || serverCommunication == null) {
                 return;
             }
             var delaySeconds = (Clock - (DateTime)updatedTime).TotalSeconds;
@@ -393,7 +442,7 @@ namespace TrainCrewTIDWindow {
             if (delaySeconds > 10) {
                 if (!serverCommunication.Error) {
                     serverCommunication.Error = true;
-                    LabelStatusText = $"Status：データ受信不能(最終受信：{updatedTime?.ToString("H:mm:ss")})";
+                    LabelStatusText = $"データ受信不能(最終受信：{updatedTime?.ToString("H:mm:ss")})";
                     Debug.WriteLine($"データ受信不能: {delaySeconds}");
                     TaskDialog.ShowDialog(new TaskDialogPage {
                         Caption = "データ受信不能 | TID - ダイヤ運転会",
@@ -404,20 +453,62 @@ namespace TrainCrewTIDWindow {
                 }
             }
             else if (delaySeconds > 1) {
-                LabelStatusText = $"Status：データ正常受信(最終受信：{updatedTime?.ToString("H:mm:ss")})";
+                LabelStatusText = $"データ正常受信(最終受信：{updatedTime?.ToString("H:mm:ss")})";
                 Debug.WriteLine($"データ受信不能: {delaySeconds}");
             }
         }
 
-        private void labelClock_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e) {
+        private void UpdateDebug(bool reversed = false) {
+            if (debugIndex >= 0) {
+                if (debugCount == 0 || debugCount <= -10000) {
+                    var lineData = displayManager.LineSettings;
+
+                    var line = lineData[debugIndex % lineData.Count];
+                    if (debugCount >= 0 || debugCount == -10000) {
+                        if (line.PointName != "") {
+                            UpdatePointData(new List<SwitchData> { new() { Name = line.PointName, State = NRC.Center } });
+                        }
+                        if (reversed) {
+                            debugIndex = (debugIndex + lineData.Count * 2 - 1) % (lineData.Count * 2);
+                        }
+                        else {
+                            debugIndex = (debugIndex + 1) % (lineData.Count * 2);
+                        }
+                    }
+                    line = lineData[debugIndex % lineData.Count];
+                    trackManager.UpdateTCData(new List<TrackCircuitData> { new TrackCircuitData() { Name = line.TrackName, Last = debugIndex < lineData.Count ? "1111" : "1112", On = true } });
+                    if (line.PointName != "") {
+                        UpdatePointData(new List<SwitchData> { new SwitchData() { Name = line.PointName, State = line.Reversed ? NRC.Reversed : NRC.Normal } });
+                        LabelStatusText = $"デバッグモード（{(debugIndex < lineData.Count ? "下り" : "上り")}） track: {line.TrackName}  switch: {line.PointName} {(line.Reversed ? "R" : "N")}";
+                    }
+                    else {
+                        LabelStatusText = $"デバッグモード（{(debugIndex < lineData.Count ? "下り" : "上り")}） track: {line.TrackName}";
+                    }
+                    displayManager.UpdateTID();
+                    debugCount = debugCount == -10000 ? -100 : 100;
+                }
+                if (debugCount > 0) {
+                    debugCount--;
+                }
+            }
+        }
+
+        private void labelClock_MouseDown(object sender, MouseEventArgs e) {
+            if(e.Button != MouseButtons.Left && e.Button != MouseButtons.Right) {
+                return;
+            }
+            ChangeTime(e.Button == MouseButtons.Right, !ModifierKeys.HasFlag(Keys.Control), !ModifierKeys.HasFlag(Keys.Shift));
+        }
+
+        private void ChangeTime(bool isPlus, bool changeHours, bool changeMinutes) {
             var hour = TimeOffset.Hours;
             var min = TimeOffset.Minutes;
             var sec = TimeOffset.Seconds;
-            if (e.Button == MouseButtons.Right) {
-                if ((int)Keyboard.GetKeyStates(Key.LeftCtrl) % 2 == 0 && (int)Keyboard.GetKeyStates(Key.LeftCtrl) % 2 == 0) {
+            if (isPlus) {
+                if (changeHours) {
                     hour++;
                 }
-                else if ((int)Keyboard.GetKeyStates(Key.LeftShift) % 2 == 0 && (int)Keyboard.GetKeyStates(Key.RightShift) % 2 == 0) {
+                else if (changeMinutes) {
                     min++;
                     if (min >= 60) {
                         hour++;
@@ -435,11 +526,11 @@ namespace TrainCrewTIDWindow {
                     showOffset = 40;
                 }
             }
-            else if (e.Button == MouseButtons.Left) {
-                if ((int)Keyboard.GetKeyStates(Key.LeftCtrl) % 2 == 0 && (int)Keyboard.GetKeyStates(Key.RightCtrl) % 2 == 0) {
+            else {
+                if (changeHours) {
                     hour += 23;
                 }
-                else if ((int)Keyboard.GetKeyStates(Key.LeftShift) % 2 == 0 && (int)Keyboard.GetKeyStates(Key.RightShift) % 2 == 0) {
+                else if (changeMinutes) {
                     if (min == 0) {
                         hour += 23;
                     }
@@ -457,14 +548,10 @@ namespace TrainCrewTIDWindow {
                     showOffset = 40;
                 }
             }
-            else {
-                return;
-            }
             TimeOffset = new TimeSpan(hour % 24, min % 60, sec % 60);
             if (showOffset > 0) {
                 labelClock.Text = $"+{TimeOffset.Hours}h{TimeOffset.Minutes}m{TimeOffset.Seconds}s";
             }
-            var key = Keyboard.GetKeyStates(Key.LeftCtrl);
         }
 
         private void labelTopMost_Click(object sender, EventArgs e) {
@@ -499,7 +586,9 @@ namespace TrainCrewTIDWindow {
 
             menuItemScale50.Text = "50%";
             menuItemScale75.Text = "75%";
+            menuItemScale90.Text = "90%";
             menuItemScale100.Text = "100%";
+            menuItemScale110.Text = "110%";
             menuItemScale125.Text = "125%";
             menuItemScale150.Text = "150%";
             menuItemScale175.Text = "175%";
@@ -513,8 +602,14 @@ namespace TrainCrewTIDWindow {
                 case 75:
                     menuItemScale75.Text = "75%（現在）";
                     break;
+                case 90:
+                    menuItemScale90.Text = "90%（現在）";
+                    break;
                 case 100:
                     menuItemScale100.Text = "100%（現在）";
+                    break;
+                case 110:
+                    menuItemScale110.Text = "110%（現在）";
                     break;
                 case 125:
                     menuItemScale125.Text = "125%（現在）";
@@ -540,88 +635,88 @@ namespace TrainCrewTIDWindow {
             if (scale > 0) {
                 labelScale.ForeColor = Color.White;
                 labelScale.Text = $"Scale：{scale}%";
-                pictureBox1.Cursor = System.Windows.Forms.Cursors.SizeAll;
+                pictureBox1.Cursor = Cursors.SizeAll;
             }
             else {
                 labelScale.ForeColor = Color.LightGreen;
                 labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalBitmap.Width * 100 + 0.5)}%";
-                pictureBox1.Cursor = System.Windows.Forms.Cursors.Default;
+                pictureBox1.Cursor = Cursors.Default;
             }
         }
 
 
 
-        private void menuItemScale50_Click(object sender, EventArgs e) {
-            SetScale(50);
-        }
 
-        private void menuItemScale75_Click(object sender, EventArgs e) {
-            SetScale(75);
-        }
-
-        private void menuItemScale100_Click(object sender, EventArgs e) {
-            SetScale(100);
-        }
-
-        private void menuItemScale125_Click(object sender, EventArgs e) {
-            SetScale(125);
-        }
-
-        private void menuItemScale150_Click(object sender, EventArgs e) {
-            SetScale(150);
-        }
-
-        private void menuItemScale175_Click(object sender, EventArgs e) {
-            SetScale(175);
-        }
-
-        private void menuItemScale200_Click(object sender, EventArgs e) {
-            SetScale(200);
-        }
-
-        private void menuItemScaleFit_Click(object sender, EventArgs e) {
-            SetScale(-1);
-        }
-
-        private void labelScale_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e) {
+        private void labelScale_MouseDown(object sender, MouseEventArgs e) {
             if(TIDScale > 0) {
                 if (e.Button == MouseButtons.Right) {
-                    SetScale(TIDScale + 25);
+                    switch (TIDScale) {
+                        case 75:
+                        case 110:
+                            SetScale(TIDScale + 15);
+                            break;
+                        case 90:
+                        case 100:
+                            SetScale(TIDScale + 10);
+                            break;
+                        default:
+                            SetScale(TIDScale + 25);
+                            break;
+                    }
                 }
                 else if (e.Button == MouseButtons.Left) {
-                    SetScale(TIDScale - 25);
+                    switch (TIDScale) {
+                        case 90:
+                        case 125:
+                            SetScale(TIDScale - 15);
+                            break;
+                        case 100:
+                        case 110:
+                            SetScale(TIDScale - 10);
+                            break;
+                        default:
+                            SetScale(TIDScale - 25);
+                            break;
+                    }
                 }
             }
         }
 
-        private void TIDWindow_KeyDown(object sender, System.Windows.Forms.KeyEventArgs e) {
+        private void TIDWindow_KeyDown(object sender, KeyEventArgs e) {
+            var code = e.KeyData & Keys.KeyCode;
+            var mod = e.KeyData & Keys.Modifiers;
             if (e.KeyData == (Keys.C | Keys.Control)) {
-                displayManager.CopyImage();
+                if(debugIndex >= 0) {
+                    var lineData = displayManager.LineSettings;
+                    var line = lineData[debugIndex % lineData.Count];
+                    if (line != null) {
+                        if(line.PointName != "") {
+                            Clipboard.SetText($"\n{line.TrackName}\tS\t列番位置x\t列番位置y\t{line.PointName}\t{(line.Reversed ? "True" : "False")}");
+                        }
+                        else {
+                            Clipboard.SetText($"\n{line.TrackName}\tS\t列番位置x\t列番位置y\t\t");
+                        }
+                    }
+                }
+                else {
+                    displayManager.CopyImage();
+                }
+            }
+            if(e.KeyData == Keys.Tab) {
+                SetTopMost(!TopMost);
             }
             
-            if(e.KeyData == Keys.Right || e.KeyData == Keys.D) {
-                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value + scrollDelta * 2, panel1.VerticalScroll.Value);
+            if(code == Keys.Right || code == Keys.D) {
+                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value + scrollDelta * (mod == Keys.Shift ? 1 : 3), panel1.VerticalScroll.Value);
             }
-            if (e.KeyData == Keys.Left || e.KeyData == Keys.A) {
-                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value - scrollDelta * 2, panel1.VerticalScroll.Value);
+            if (code == Keys.Left || code == Keys.A) {
+                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value - scrollDelta * (mod == Keys.Shift ? 1 : 3), panel1.VerticalScroll.Value);
             }
-            if (e.KeyData == Keys.Up || e.KeyData == Keys.W) {
-                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value, panel1.VerticalScroll.Value - scrollDelta * 2);
+            if (code == Keys.Up || code == Keys.W) {
+                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value, panel1.VerticalScroll.Value - scrollDelta * (mod == Keys.Shift ? 1 : 3));
             }
-            if (e.KeyData == Keys.Down || e.KeyData == Keys.S) {
-                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value, panel1.VerticalScroll.Value + scrollDelta * 2);
-            }
-            if (e.KeyData == (Keys.Right | Keys.Shift) || e.KeyData == (Keys.D | Keys.Shift)) {
-                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value + scrollDelta, panel1.VerticalScroll.Value);
-            }
-            if (e.KeyData == (Keys.Left | Keys.Shift) || e.KeyData == (Keys.A | Keys.Shift)) {
-                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value - scrollDelta, panel1.VerticalScroll.Value);
-            }
-            if (e.KeyData == (Keys.Up | Keys.Shift) || e.KeyData == (Keys.W | Keys.Shift)) {
-                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value, panel1.VerticalScroll.Value - scrollDelta);
-            }
-            if (e.KeyData == (Keys.Down | Keys.Shift) || e.KeyData == (Keys.S | Keys.Shift)) {
-                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value, panel1.VerticalScroll.Value + scrollDelta);
+            if (code == Keys.Down || code == Keys.S) {
+                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value, panel1.VerticalScroll.Value + scrollDelta * (mod == Keys.Shift ? 1 : 3));
             }
             if(e.KeyData == Keys.D1) {
                 panel1.AutoScrollPosition = new Point(0, panel1.VerticalScroll.Value);
@@ -680,16 +775,63 @@ namespace TrainCrewTIDWindow {
             if (e.KeyData == Keys.NumPad3) {
                 panel1.AutoScrollPosition = new Point(pictureBox1.Size.Width - panel1.Size.Width + 17, pictureBox1.Size.Height - panel1.Size.Height + 17);
             }
+            if (debugIndex >= 0) {
+                if (e.KeyData == Keys.Enter) {
+                    debugCount *= -1;
+                    labelStatus.ForeColor = debugCount >= 0 ? Color.White : Color.Orange;
+                }
+                if (e.KeyData == Keys.PageUp) {
+                    debugCount = debugCount >= 0 ? 0 : -10000;
+                    UpdateDebug();
+                }
+                if (e.KeyData == Keys.PageDown) {
+                    debugCount = debugCount >= 0 ? 0 : -10000;
+                    UpdateDebug(true);
+                }
+            }
+            else {
+                if (code == Keys.PageUp || code == Keys.PageDown) {
+                    ChangeTime(code == Keys.PageUp, (mod & Keys.Control) != Keys.Control, (mod & Keys.Shift) != Keys.Shift);
+                }
+            }
+            if (code == Keys.Oemplus || code == Keys.OemSemicolon) {
+                ChangeTime(code == Keys.OemSemicolon, (mod & Keys.Control) != Keys.Control, (mod & Keys.Shift) != Keys.Shift);
+            }
+
         }
 
-        private void PictureBox1_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e) {
+        private void PictureBox1_MouseWheel(object sender, MouseEventArgs e) {
             if (ModifierKeys.HasFlag(Keys.Control)) {
                 if(TIDScale > 0) {
                     if (e.Delta > 0) {
-                        SetScale(TIDScale + 25);
+                        switch (TIDScale) {
+                            case 75:
+                            case 110:
+                                SetScale(TIDScale + 15);
+                                break;
+                            case 90:
+                            case 100:
+                                SetScale(TIDScale + 10);
+                                break;
+                            default:
+                                SetScale(TIDScale + 25);
+                                break;
+                        }
                     }
                     else {
-                        SetScale(TIDScale - 25);
+                        switch (TIDScale) {
+                            case 90:
+                            case 125:
+                                SetScale(TIDScale - 15);
+                                break;
+                            case 100:
+                            case 110:
+                                SetScale(TIDScale - 10);
+                                break;
+                            default:
+                                SetScale(TIDScale - 25);
+                                break;
+                        }
                     }
                 }
             }
@@ -709,19 +851,19 @@ namespace TrainCrewTIDWindow {
             }
         }
 
-        private void PictureBox1_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e) {
+        private void PictureBox1_MouseDown(object sender, MouseEventArgs e) {
             if (e.Button == MouseButtons.Left) {
                 mouseLoc = e.Location;
             }
         }
 
-        private void PictureBox1_MouseMove(object sender, System.Windows.Forms.MouseEventArgs e) {
+        private void PictureBox1_MouseMove(object sender, MouseEventArgs e) {
             if (e.Button == MouseButtons.Left) {
                 panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value - e.Location.X + mouseLoc.X, panel1.VerticalScroll.Value - e.Location.Y + mouseLoc.Y);
             }
         }
 
-        private void PictureBox1_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e) {
+        private void PictureBox1_MouseUp(object sender, MouseEventArgs e) {
             if (e.Button == MouseButtons.Left) {
                 mouseLoc = Point.Empty;
             }

@@ -30,7 +30,9 @@
             menuItemScale = new ToolStripMenuItem();
             menuItemScale50 = new ToolStripMenuItem();
             menuItemScale75 = new ToolStripMenuItem();
+            menuItemScale90 = new ToolStripMenuItem();
             menuItemScale100 = new ToolStripMenuItem();
+            menuItemScale110 = new ToolStripMenuItem();
             menuItemScale125 = new ToolStripMenuItem();
             menuItemScale150 = new ToolStripMenuItem();
             menuItemScale175 = new ToolStripMenuItem();
@@ -55,29 +57,29 @@
             pictureBox1.Size = new Size(984, 537);
             pictureBox1.TabIndex = 0;
             pictureBox1.TabStop = false;
-            pictureBox1.MouseWheel += PictureBox1_MouseWheel;
             pictureBox1.MouseDown += PictureBox1_MouseDown;
-            pictureBox1.MouseUp += PictureBox1_MouseUp;
             pictureBox1.MouseMove += PictureBox1_MouseMove;
+            pictureBox1.MouseUp += PictureBox1_MouseUp;
+            pictureBox1.MouseWheel += PictureBox1_MouseWheel;
             // 
             // contextMenuStrip1
             // 
             contextMenuStrip1.Items.AddRange(new ToolStripItem[] { menuItemCopy, menuItemScale });
             contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new Size(150, 48);
+            contextMenuStrip1.Size = new Size(181, 70);
             // 
             // menuItemCopy
             // 
             menuItemCopy.Name = "menuItemCopy";
-            menuItemCopy.Size = new Size(149, 22);
+            menuItemCopy.Size = new Size(180, 22);
             menuItemCopy.Text = "TID画面をコピー";
             menuItemCopy.Click += menuItemCopy_Click;
             // 
             // menuItemScale
             // 
-            menuItemScale.DropDownItems.AddRange(new ToolStripItem[] { menuItemScale50, menuItemScale75, menuItemScale100, menuItemScale125, menuItemScale150, menuItemScale175, menuItemScale200, menuItemScaleFit });
+            menuItemScale.DropDownItems.AddRange(new ToolStripItem[] { menuItemScale50, menuItemScale75, menuItemScale90, menuItemScale100, menuItemScale110, menuItemScale125, menuItemScale150, menuItemScale175, menuItemScale200, menuItemScaleFit });
             menuItemScale.Name = "menuItemScale";
-            menuItemScale.Size = new Size(149, 22);
+            menuItemScale.Size = new Size(180, 22);
             menuItemScale.Text = "拡大率";
             // 
             // menuItemScale50
@@ -85,56 +87,60 @@
             menuItemScale50.Name = "menuItemScale50";
             menuItemScale50.Size = new Size(180, 22);
             menuItemScale50.Text = "50%";
-            menuItemScale50.Click += menuItemScale50_Click;
             // 
             // menuItemScale75
             // 
             menuItemScale75.Name = "menuItemScale75";
             menuItemScale75.Size = new Size(180, 22);
             menuItemScale75.Text = "75%";
-            menuItemScale75.Click += menuItemScale75_Click;
+            // 
+            // menuItemScale90
+            // 
+            menuItemScale90.Name = "menuItemScale90";
+            menuItemScale90.Size = new Size(180, 22);
+            menuItemScale90.Text = "90%";
             // 
             // menuItemScale100
             // 
             menuItemScale100.Name = "menuItemScale100";
             menuItemScale100.Size = new Size(180, 22);
             menuItemScale100.Text = "100%（現在）";
-            menuItemScale100.Click += menuItemScale100_Click;
+            // 
+            // menuItemScale110
+            // 
+            menuItemScale110.Name = "menuItemScale110";
+            menuItemScale110.Size = new Size(180, 22);
+            menuItemScale110.Text = "110%";
             // 
             // menuItemScale125
             // 
             menuItemScale125.Name = "menuItemScale125";
             menuItemScale125.Size = new Size(180, 22);
             menuItemScale125.Text = "125%";
-            menuItemScale125.Click += menuItemScale125_Click;
             // 
             // menuItemScale150
             // 
             menuItemScale150.Name = "menuItemScale150";
             menuItemScale150.Size = new Size(180, 22);
             menuItemScale150.Text = "150%";
-            menuItemScale150.Click += menuItemScale150_Click;
             // 
             // menuItemScale175
             // 
             menuItemScale175.Name = "menuItemScale175";
             menuItemScale175.Size = new Size(180, 22);
             menuItemScale175.Text = "175%";
-            menuItemScale175.Click += menuItemScale175_Click;
             // 
             // menuItemScale200
             // 
             menuItemScale200.Name = "menuItemScale200";
             menuItemScale200.Size = new Size(180, 22);
             menuItemScale200.Text = "200%";
-            menuItemScale200.Click += menuItemScale200_Click;
             // 
             // menuItemScaleFit
             // 
             menuItemScaleFit.Name = "menuItemScaleFit";
             menuItemScaleFit.Size = new Size(180, 22);
             menuItemScaleFit.Text = "フィット表示";
-            menuItemScaleFit.Click += menuItemScaleFit_Click;
             // 
             // panel1
             // 
@@ -247,5 +253,7 @@
         private ToolStripMenuItem menuItemScale200;
         private ToolStripMenuItem menuItemScaleFit;
         private Label labelScale;
+        private ToolStripMenuItem menuItemScale90;
+        private ToolStripMenuItem menuItemScale110;
     }
 }

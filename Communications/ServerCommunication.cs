@@ -87,7 +87,7 @@ namespace TrainCrewTIDWindow.Communications {
         /// <returns></returns>
         private async Task<bool> CheckUserAuthenticationAsync(CancellationToken cancellationToken) {
             try {
-                _window.LabelStatusText = "Status：サーバ認証待機中";
+                _window.LabelStatusText = "サーバ認証待機中";
                 error = false;
 
                 // 認証フローの開始
@@ -112,7 +112,7 @@ namespace TrainCrewTIDWindow.Communications {
             catch (OperationCanceledException) {
                 error = true;
 
-                _window.LabelStatusText = "Status：サーバ認証失敗（タイムアウト）";
+                _window.LabelStatusText = "サーバ認証失敗（タイムアウト）";
                 DialogResult result = MessageBox.Show($"サーバ認証中にタイムアウトしました。\n再認証しますか？", "サーバ認証失敗（タイムアウト） | TID - ダイヤ運転会",
                     MessageBoxButtons.YesNo, MessageBoxIcon.Error);
                 if (result == DialogResult.Yes) {
@@ -128,7 +128,7 @@ namespace TrainCrewTIDWindow.Communications {
                 error = true;
 
 
-                _window.LabelStatusText = "Status：サーバ認証失敗（拒否）";
+                _window.LabelStatusText = "サーバ認証失敗（拒否）";
 
                 TaskDialog.ShowDialog(new TaskDialogPage {
                     Caption = "サーバ認証失敗（拒否） | TID - ダイヤ運転会",
@@ -143,7 +143,7 @@ namespace TrainCrewTIDWindow.Communications {
                 error = true;
 
                 Debug.WriteLine(exception);
-                _window.LabelStatusText = "Status：サーバ認証失敗";
+                _window.LabelStatusText = "サーバ認証失敗";
                 DialogResult result =
                     MessageBox.Show($"サーバ認証に失敗しました。\n再認証しますか？\n\n{exception.Message}\n{exception.StackTrace})",
                         "サーバ認証失敗 | TID - ダイヤ運転会", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
@@ -240,13 +240,13 @@ namespace TrainCrewTIDWindow.Communications {
                         Debug.WriteLine("Reconnected successfully.");
                         connected = true;
                         ConnectionStatusChanged?.Invoke(connected);
-                        _window.LabelStatusText = "Status：サーバ接続成功";
+                        _window.LabelStatusText = "サーバ接続成功";
                         break;
                     }
                 }
                 catch (Exception ex) {
                     Debug.WriteLine($"Reconnect attempt failed: {ex.Message}");
-                    _window.LabelStatusText = "Status：サーバ再接続失敗。再試行中...";
+                    _window.LabelStatusText = "サーバ再接続失敗。再試行中...";
                 }
 
                 await Task.Delay(ReconnectIntervalMs);
@@ -394,7 +394,7 @@ namespace TrainCrewTIDWindow.Communications {
                 var trackCircuitList = data.TrackCircuitDatas;
                 DataUpdated?.Invoke(data);
                 error = false;
-                _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ正常受信"; }));
+                _window.Invoke(new Action(() => { _window.LabelStatusText = "データ正常受信"; }));
                 UpdatedTime = DateTime.Now;
             }
             catch (WebSocketException e) when (e.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
@@ -404,7 +404,7 @@ namespace TrainCrewTIDWindow.Communications {
                 Debug.WriteLine($"Server send failed: {e.Message}\nerrorCode: {e.WebSocketErrorCode}\n{e.StackTrace}");
                 if (!error) {
                     error = true;
-                    _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ受信失敗"; }));
+                    _window.Invoke(new Action(() => { _window.LabelStatusText = "データ受信失敗"; }));
                     TaskDialog.ShowDialog(new TaskDialogPage {
                         Caption = "データ受信失敗 | TID - ダイヤ運転会",
                         Heading = "データ受信失敗",
@@ -418,7 +418,7 @@ namespace TrainCrewTIDWindow.Communications {
                 Debug.WriteLine($"Server send failed: {e.Message}\n{e.StackTrace}");
                 if (!error) {
                     error = true;
-                    _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：タイムアウト"; }));
+                    _window.Invoke(new Action(() => { _window.LabelStatusText = "タイムアウト"; }));
                     TaskDialog.ShowDialog(new TaskDialogPage {
                         Caption = "タイムアウト | TID - ダイヤ運転会",
                         Heading = "タイムアウト",
@@ -433,7 +433,7 @@ namespace TrainCrewTIDWindow.Communications {
                 Debug.WriteLine($"Server send failed: {e.Message}\n{e.StackTrace}");
                 if (!error) {
                     error = true;
-                    _window.Invoke(new Action(() => { _window.LabelStatusText = "Status：データ受信失敗"; }));
+                    _window.Invoke(new Action(() => { _window.LabelStatusText = "データ受信失敗"; }));
                     TaskDialog.ShowDialog(new TaskDialogPage {
                         Caption = "未知のエラー | TID - ダイヤ運転会",
                         Heading = "未知のエラー",

@@ -146,6 +146,10 @@ namespace TrainCrewTIDWindow.Manager {
                 sr.ReadLine();
                 var line = sr.ReadLine();
                 while (line != null) {
+                    if (line.StartsWith('#')) {
+                        line = sr.ReadLine();
+                        continue;
+                    }
                     var texts = line.Split('\t');
                     line = sr.ReadLine();
 
@@ -170,6 +174,10 @@ namespace TrainCrewTIDWindow.Manager {
                 var line = sr.ReadLine();
                 var name = "";
                 while (line != null) {
+                    if (line.StartsWith('#')) {
+                        line = sr.ReadLine();
+                        continue;
+                    }
                     var texts = line.Split('\t');
                     line = sr.ReadLine();
                     var i = 1;
@@ -207,6 +215,10 @@ namespace TrainCrewTIDWindow.Manager {
                 var line = sr.ReadLine();
                 var name = "";
                 while (line != null) {
+                    if (line.StartsWith('#')) {
+                        line = sr.ReadLine();
+                        continue;
+                    }
                     var texts = line.Split('\t');
                     line = sr.ReadLine();
                     var i = 1;
@@ -357,6 +369,10 @@ namespace TrainCrewTIDWindow.Manager {
                 var line = sr.ReadLine();
                 var trackName = "";
                 while (line != null) {
+                    if (line.StartsWith('#')) {
+                        line = sr.ReadLine();
+                        continue;
+                    }
                     var texts = line.Split('\t');
                     line = sr.ReadLine();
                     var i = 1;
@@ -407,6 +423,10 @@ namespace TrainCrewTIDWindow.Manager {
                 var line = sr.ReadLine();
                 var trackName = "";
                 while (line != null) {
+                    if (line.StartsWith('#')) {
+                        line = sr.ReadLine();
+                        continue;
+                    }
                     var texts = line.Split('\t');
                     line = sr.ReadLine();
                     var i = 1;
@@ -507,9 +527,14 @@ namespace TrainCrewTIDWindow.Manager {
 
                 string train = track.Train ?? "";
 
+
                 var numHeader = Regex.Replace(train, @"[0-9a-zA-Z]", "");  // 列番の頭の文字（回、試など）
                 var isTrain = int.TryParse(Regex.Replace(train, @"[^0-9]", ""), out var numBody);  // 列番本体（数字部分）
                 var numFooter = Regex.Replace(train, @"[^a-zA-Z]", "");  // 列番の末尾の文字
+
+                if(isTrain && window.TrackManager.GetTrackForNum(train) != track.Name) {
+                    continue;
+                }
 
                 if (!Regex.IsMatch(numHeader, @"^([溝月レイルﾚｲﾙ]+|[回試臨]?)$") || !Regex.IsMatch(numFooter, @"^([ABCKST]?[XYZ]?)$")) {
                     continue;

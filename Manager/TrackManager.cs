@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Text.RegularExpressions;
 using TrainCrewTIDWindow.Models;
 
@@ -14,6 +13,8 @@ namespace TrainCrewTIDWindow.Manager
         /// サーバやTRAIN CREW本体から取得した軌道回路の情報
         /// </summary>
         private readonly Dictionary<string, TrackData> trackDataDict = [];
+
+        private readonly Dictionary<string, string> trainTCDict = [];
 
         /// <summary>
         /// TIDManagerオブジェクト
@@ -30,6 +31,22 @@ namespace TrainCrewTIDWindow.Manager
         /// サーバやTRAIN CREW本体から取得した軌道回路の情報
         /// </summary>
         public ReadOnlyDictionary<string, TrackData> TrackDataDict => trackDataDict.AsReadOnly();
+
+        public string? GetTrain(string trackName) {
+            foreach(var t in trainTCDict) {
+                if(t.Value == trackName) {
+                    return t.Key;
+                }
+            }
+            return null;
+        }
+
+        public string? GetTrackForNum(string trainNumber) {
+            if (trainTCDict.TryGetValue(trainNumber, out var v)) {
+                return v;
+            }
+            return null;
+        }
 
         /// <summary>
         /// DeeCountの初期値
@@ -60,7 +77,10 @@ namespace TrainCrewTIDWindow.Manager
         public bool UpdateTCData(List<TrackCircuitData> tcList) {
 
             var updatedTID = false;
+            var numOut = displayManager.NumSettingsOut.Where(n => n.PosX >= 0 && n.PosY >= 0).Select(n => n.TrackName).Distinct().ToArray();
+            var numIn = displayManager.NumSettingsIn.Where(n => n.PosX >= 0 && n.PosY >= 0).Select(n => n.TrackName).Distinct().ToArray();
             lock (trackDataDict) {
+                trainTCDict.Clear();
                 foreach (var tc in tcList) {
                     if (tc == null/* || !tc.On && !tc.Lock || tc.Last != "" && !Regex.IsMatch(tc.Last, @"^([溝月レイルﾚｲﾙ]+|[回試臨]?[\d]{3,4}[ABCKST]?[XYZ]?)$")*/) {
                         continue;
@@ -73,6 +93,17 @@ namespace TrainCrewTIDWindow.Manager
                     }
                     else {
                         updatedTID = true;
+                    }
+                    if (tc.On && int.TryParse(Regex.Replace(tc.Last, @"[^0-9]", ""), out var numBody)) {
+                        var list = numBody % 2 == 1 ? numOut : numIn;
+                        if (trainTCDict.Keys.Contains(tc.Last)) {
+                            if(Array.IndexOf(list, tc.Name) > Array.IndexOf(list, trainTCDict[tc.Last])) {
+                                trainTCDict[tc.Last] = tc.Name;
+                            }
+                        }
+                        else {
+                            trainTCDict.Add(tc.Last, tc.Name);
+                        }
                     }
                 }
             }
