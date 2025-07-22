@@ -77,8 +77,8 @@ namespace TrainCrewTIDWindow.Manager
         public bool UpdateTCData(List<TrackCircuitData> tcList) {
 
             var updatedTID = false;
-            var numOut = displayManager.NumSettingsOut.Where(n => n.PosX >= 0 && n.PosY >= 0).Select(n => n.TrackName).Distinct().ToArray();
-            var numIn = displayManager.NumSettingsIn.Where(n => n.PosX >= 0 && n.PosY >= 0).Select(n => n.TrackName).Distinct().ToArray();
+            var numDown = displayManager.NumSettingsDown.Where(n => !n.NotDraw).Select(n => n.TrackName).Distinct().ToArray();
+            var numUp = displayManager.NumSettingsUp.Where(n => !n.NotDraw).Select(n => n.TrackName).Distinct().ToArray();
             lock (trackDataDict) {
                 trainTCDict.Clear();
                 foreach (var tc in tcList) {
@@ -86,16 +86,18 @@ namespace TrainCrewTIDWindow.Manager
                         continue;
                     }
                     /*Debug.WriteLine($"track {tc.Name}: {tc.Last} on:{tc.On} lock:{tc.Lock}");*/
-                    if (!trackDataDict.TryAdd(tc.Name, new TrackData(tc.Name, displayManager, !tc.On ? null : tc.Last, tc.Lock, countStart))) {
+                    var td = new TrackData(tc.Name, displayManager, !tc.On ? null : tc.Last, tc.Lock, countStart);
+                    if (!trackDataDict.TryAdd(tc.Name, td)) {
                         if (tc.On || tc.Last == "") {
-                            updatedTID |= trackDataDict[tc.Name].SetStates(!tc.On ? null : tc.Last, tc.Lock, countStart);
+                            td = trackDataDict[tc.Name];
+                            updatedTID |= td.SetStates(!tc.On ? null : tc.Last, tc.Lock, countStart);
                         }
                     }
                     else {
                         updatedTID = true;
                     }
                     if (tc.On && int.TryParse(Regex.Replace(tc.Last, @"[^0-9]", ""), out var numBody)) {
-                        var list = numBody % 2 == 1 ? numOut : numIn;
+                        var list = numBody % 2 == 1 ? numDown : numUp;
                         if (trainTCDict.Keys.Contains(tc.Last)) {
                             if(Array.IndexOf(list, tc.Name) > Array.IndexOf(list, trainTCDict[tc.Last])) {
                                 trainTCDict[tc.Last] = tc.Name;
@@ -106,6 +108,26 @@ namespace TrainCrewTIDWindow.Manager
                         }
                     }
                 }
+
+                foreach(var t in trainTCDict) {
+                    var td = trackDataDict[t.Value];
+                    if (int.TryParse(Regex.Replace(t.Key, @"[^0-9]", ""), out var numBody)) {
+                        var list = numBody % 2 == 1 ? td.NumSettingsDown : td.NumSettingsUp;
+                        foreach (var n in list) {
+                            n.SetTrain(t.Key);
+                        }
+                    }
+                }
+
+                updatedTID |= displayManager.UpdateNumWindow();
+
+                foreach(var n in displayManager.NumSettingsDown) {
+                    updatedTID |= n.UpdateWindow();
+                }
+                foreach (var n in displayManager.NumSettingsUp) {
+                    updatedTID |= n.UpdateWindow();
+                }
+
             }
 
             foreach (var td in trackDataDict.ToArray()) {

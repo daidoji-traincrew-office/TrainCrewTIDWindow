@@ -1,0 +1,331 @@
+信号機	転轍機	定位False/反位True
+館浜下り場内5L	TH76_W27	
+	TH76_W26	
+	TH76_W25	
+	TH76_W24	
+	TH76_W23	
+	TH76_W22	
+	TH76_W21	
+館浜上り出発1R	TH76_W22	True
+	TH76_W26	False
+館浜上り出発2R	TH76_W23	True
+	TH76_W24	False
+	TH76_W25	False
+	TH76_W26	True
+館浜上り出発3R	TH76_W21	False
+	TH76_W23	False
+	TH76_W24	False
+	TH76_W25	False
+	TH76_W26	True
+館浜上り出発4R	TH76_W21	False
+	TH76_W24	True
+	TH76_W25	False
+	TH76_W26	True
+駒野上り場内1RD	TH75_W41	False
+	TH75_W43	True
+	TH75_W45	
+	TH75_W44	False
+	TH75_W47	
+駒野上り場内1RE	TH75_W41	False
+	TH75_W43	False
+駒野下り第二出発2L	TH75_W41	False
+駒野下り出発3L	TH75_W45	True
+	TH75_W44	False
+	TH75_W43	True
+	TH75_W41	True
+駒野下り出発4L	TH75_W45	False
+	TH75_W44	False
+	TH75_W43	True
+	TH75_W41	True
+駒野上り場内5RA	TH75_W46	True
+	TH75_W49	False
+駒野上り場内5RB	TH75_W46	False
+駒野上り出発7R	TH75_W49	True
+	TH75_W50	False
+駒野上り出発8R	TH75_W49	False
+	TH75_W50	False
+駒野下り場内9LB	TH75_W50	True
+	TH75_W49	
+駒野下り場内9LC	TH75_W50	False
+駒野入換11R	TH75_W41	True
+	TH75_W43	
+	TH75_W44	
+	TH75_W45	
+	TH75_W47	
+駒野入換12L	TH75_W41	False
+駒野入換13R	TH75_W46	
+駒野入換15L	TH75_W46	False
+	TH75_W48	
+	TH75_W47	
+	TH75_W45	False
+	TH75_W44	False
+駒野入換24R	TH75_W48	False
+	TH75_W46	False
+	TH75_W49	False
+駒野入換25R	TH75_W47	False
+	TH75_W48	True
+	TH75_W46	False
+	TH75_W49	False
+駒野入換26R	TH75_W47	True
+	TH75_W48	True
+	TH75_W46	False
+	TH75_W49	False
+駒野入換27R	TH75_W42	
+	TH75_W44	
+	TH75_W45	
+	TH75_W47	
+駒野入換28R	TH75_W42	False
+	TH75_W44	
+	TH75_W45	False
+駒野入換29R	TH75_W43	False
+	TH75_W45	
+	TH75_W44	False
+駒野入換34L	TH75_W42	False
+駒野入換35L	TH75_W45	
+	TH75_W44	False
+	TH75_W42	
+	TH75_W43	
+	TH75_W41	
+駒野入換36L	TH75_W44	
+	TH75_W45	False
+	TH75_W42	
+	TH75_W43	
+	TH75_W41	
+津崎上り場内1RA	TH71_W21	True
+津崎上り場内1RB	TH71_W21	False
+津崎下り出発2L	TH71_W22	False
+津崎下り出発3L	TH71_W22	True
+津崎上り出発4R	TH71_W23	True
+津崎上り出発5R	TH71_W23	False
+津崎下り場内6LC	TH71_W24	False
+津崎下り場内6LD	TH71_W24	True
+浜園上り場内1R	TH70_W21	False
+浜園上り出発3R	TH70_W21	False
+浜園上り出発4R	TH70_W21	True
+浜園下り場内5L	TH70_W21	False
+浜園入換11R	TH70_W21	False
+浜園入換12L	TH70_W21	True
+新野崎上り場内1RA	TH67_W32	True
+	TH67_W33	False
+新野崎上り場内1RB	TH67_W32	False
+	TH67_W33	False
+新野崎下り出発2L	TH67_W31	False
+新野崎下り出発3L	TH67_W31	True
+新野崎上り出発6R	TH67_W34	False
+	TH67_W35	True
+	TH67_W36	False
+新野崎上り出発7R	TH67_W34	True
+	TH67_W35	True
+	TH67_W36	False
+新野崎上り出発8R	TH67_W33	True
+	TH67_W35	False
+	TH67_W36	False
+新野崎上り出発9R	TH67_W33	False
+	TH67_W35	False
+	TH67_W36	False
+新野崎下り場内10LC	TH67_W35	False
+	TH67_W34	False
+新野崎下り場内10LD	TH67_W35	False
+	TH67_W34	True
+新野崎入換23R	TH67_W33	False
+	TH67_W36	False
+新野崎入換24R	TH67_W33	False
+	TH67_W35	False
+	TH67_W36	True
+新野崎入換25L	TH67_W36	True
+	TH67_W35	True
+	TH67_W34	
+江ノ原信号場上り場内1RA	TH66S_W51	False
+	TH66S_W52	False
+	TH66S_W53	False
+	TH66S_W55	True
+	TH66S_W54	False
+	TH66S_W57	True
+	TH66S_W56	False
+江ノ原信号場上り場内1RB	TH66S_W51	False
+	TH66S_W52	False
+	TH66S_W53	False
+	TH66S_W55	True
+	TH66S_W54	False
+	TH66S_W57	False
+	TH66S_W56	False
+江ノ原信号場上り場内1RC	TH66S_W51	False
+	TH66S_W52	False
+	TH66S_W53	False
+	TH66S_W55	False
+	TH66S_W54	False
+江ノ原信号場上り出発2R	TH66S_W54	True
+	TH66S_W55	False
+江ノ原信号場下り出発3L	TH66S_W57	True
+	TH66S_W56	False
+	TH66S_W55	True
+	TH66S_W54	False
+	TH66S_W53	True
+	TH66S_W52	False
+江ノ原信号場下り出発4L	TH66S_W56	False
+	TH66S_W57	False
+	TH66S_W55	True
+	TH66S_W54	False
+	TH66S_W53	True
+	TH66S_W52	False
+江ノ原信号場下り場内5LD	TH66S_W52	True
+	TH66S_W53	False
+	TH66S_W51	True
+江ノ原信号場下り場内5LE	TH66S_W52	False
+	TH66S_W53	False
+江ノ原信号場入換11R	TH66S_W51	False
+	TH66S_W54	False
+	TH66S_W55	False
+江ノ原信号場入換13R	TH66S_W54	False
+	TH66S_W55	False
+	TH66S_W56	False
+	TH66S_W57	
+江ノ原信号場入換15L	TH66S_W54	False
+	TH66S_W55	False
+	TH66S_W56	False
+	TH66S_W57	True
+江ノ原検車区入換16L	TH66S_W54	False
+	TH66S_W55	False
+	TH66S_W56	False
+	TH66S_W57	False
+大道寺上り場内1R	TH65_W41	
+	TH65_W42	False
+	TH65_W43	
+大道寺下り出発5L	TH65_W42	True
+大道寺下り出発6L	TH65_W42	False
+大道寺上り出発7R	TH65_W49	False
+	TH65_W50	False
+大道寺上り出発8R	TH65_W45	True
+	TH65_W47	False
+	TH65_W48	False
+	TH65_W49	True
+	TH65_W50	False
+大道寺上り出発9R	TH65_W45	False
+	TH65_W47	False
+	TH65_W48	False
+	TH65_W49	True
+	TH65_W50	False
+大道寺上り出発10R	TH65_W46	False
+	TH65_W48	True
+	TH65_W47	False
+	TH65_W49	True
+	TH65_W50	False
+大道寺下り場内11L	TH65_W42	False
+大道寺下り場内13LC	TH65_W50	False
+	TH65_W49	True
+	TH65_W48	False
+	TH65_W47	False
+	TH65_W45	False
+大道寺下り場内13LD	TH65_W50	False
+	TH65_W49	True
+	TH65_W48	True
+	TH65_W47	False
+	TH65_W46	False
+大道寺入換21R	TH65_W49	False
+	TH65_W50	
+大道寺入換22R	TH65_W45	True
+	TH65_W47	
+	TH65_W48	
+	TH65_W49	
+	TH65_W50	
+大道寺入換23R	TH65_W45	False
+	TH65_W47	
+	TH65_W48	
+	TH65_W49	
+	TH65_W50	
+大道寺入換24R	TH65_W46	False
+	TH65_W48	
+	TH65_W47	
+	TH65_W49	
+	TH65_W50	
+大道寺入換25R	TH65_W44	False
+	TH65_W46	True
+	TH65_W48	
+	TH65_W47	
+	TH65_W49	
+	TH65_W50	
+大道寺入換26R	TH65_W44	True
+	TH65_W46	True
+	TH65_W48	
+	TH65_W47	
+	TH65_W49	
+	TH65_W50	
+大道寺入換29L	TH65_W47	
+	TH65_W48	
+	TH65_W45	
+	TH65_W46	
+	TH65_W44	
+大道寺入換30R	TH65_W50	False
+大道寺入換31L	TH65_W50	False
+	TH65_W49	
+	TH65_W48	
+	TH65_W47	
+	TH65_W45	
+	TH65_W46	
+	TH65_W44	
+大道寺入換32L	TH65_W50	
+	TH65_W49	
+	TH65_W48	
+	TH65_W47	
+	TH65_W46	
+	TH65_W45	
+	TH65_W44	
+藤江下り出発12L	TH64_W21	True
+藤江上り場内12R	TH64_W21	True
+藤江下り出発13L	TH64_W21	False
+藤江上り場内13R	TH64_W21	False
+藤江下り場内14L	TH64_W22	True
+藤江上り出発14R	TH64_W22	True
+藤江下り場内15L	TH64_W22	False
+藤江上り出発15R	TH64_W22	False
+水越下り出発12L	TH63_W21	False
+水越上り場内12R	TH63_W21	False
+水越下り出発13L	TH63_W21	True
+水越上り場内13R	TH63_W21	True
+水越下り場内14L	TH63_W22	True
+水越上り出発14R	TH63_W22	True
+水越下り場内15L	TH63_W22	False
+水越上り出発15R	TH63_W22	False
+高見沢下り出発12L	TH62_W21	False
+高見沢上り場内12R	TH62_W21	False
+高見沢下り出発13L	TH62_W21	True
+高見沢上り場内13R	TH62_W21	True
+高見沢下り場内14L	TH62_W22	False
+高見沢上り出発14R	TH62_W22	False
+高見沢下り場内15L	TH62_W22	True
+高見沢上り出発15R	TH62_W22	True
+日野森上り場内2RA	TH61_W21	False
+	TH61_W22	True
+日野森上り場内2RB	TH61_W21	False
+	TH61_W22	False
+日野森下り出発3L	TH61_W22	True
+	TH61_W21	False
+日野森下り出発4L	TH61_W21	True
+西赤山下り場内13L	TH59_W21	False
+西赤山上り出発13R	TH59_W21	True
+赤山町上り場内2RA	TH58_W21	True
+	TH58_W22	False
+赤山町上り場内2RB	TH58_W21	False
+	TH58_W22	False
+	TH58_W23	False
+赤山町上り場内2RC	TH58_W21	False
+	TH58_W22	True
+赤山町下り出発3L	TH58_W21	True
+赤山町下り出発4L	TH58_W22	False
+	TH58_W21	False
+赤山町下り出発5L	TH58_W22	True
+	TH58_W21	False
+赤山町上り出発6R	TH58_W23	True
+	TH58_W25	False
+赤山町上り出発7R	TH58_W23	False
+	TH58_W25	False
+赤山町上り出発8R	TH58_W25	True
+赤山町下り場内9L	TH58_W25	
+	TH58_W23	
+	TH58_W22	
+赤山町入換31R	TH58_W23	False
+	TH58_W24	
+赤山町入換32L	TH58_W24	True
+	TH58_W23	False
+赤山町入換33L	TH58_W24	False
+	TH58_W23	False

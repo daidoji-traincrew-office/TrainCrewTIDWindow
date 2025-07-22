@@ -8,12 +8,12 @@ namespace TrainCrewTIDWindow.Models {
     /// </summary>
     /// <param name="name">軌道回路名</param>
     /// <param name="lineSettings">このトラックの線の位置やファイル名などのデータ</param>
-    /// <param name="numSettingsOut">このトラックの列車番号の位置などのデータ（下り列車用）</param>
-    /// <param name="numSettingsIn">このトラックの列車番号の位置などのデータ（上り列車用）</param>
+    /// <param name="numSettingsDown">このトラックの列車番号の位置などのデータ（下り列車用）</param>
+    /// <param name="numSettingsUp">このトラックの列車番号の位置などのデータ（上り列車用）</param>
     /// <param name="train">在線している列車番号</param>
     /// <param name="isReserved">進路が信号により予約されているか</param>
     /// <param name="count">在線消失の際実際に在線を消すまでの猶予（チャタリング対策）</param>
-    public class TrackData(string name, LineSetting[] lineSettings, NumberSetting[] numSettingsOut, NumberSetting[] numSettingsIn, string? train, bool isReserved, int count) {
+    public class TrackData(string name, LineSetting[] lineSettings, NumberSetting[] numSettingsDown, NumberSetting[] numSettingsUp, string? train, bool isReserved, int count) {
 
         /// <summary>
         /// 軌道回路名
@@ -36,22 +36,22 @@ namespace TrainCrewTIDWindow.Models {
         /// <summary>
         /// このトラックの列車番号の位置などのデータ（下り列車用）
         /// </summary>
-        private readonly NumberSetting[] numSettingsOut = numSettingsOut;
+        private readonly NumberSetting[] numSettingsDown = numSettingsDown;
 
         /// <summary>
         /// このトラックの列車番号の位置などのデータ（下り列車用）
         /// </summary>
-        public ReadOnlyCollection<NumberSetting> NumSettingsOut => Array.AsReadOnly(numSettingsOut);
+        public ReadOnlyCollection<NumberSetting> NumSettingsDown => Array.AsReadOnly(numSettingsDown);
 
         /// <summary>
         /// このトラックの列車番号の位置などのデータ（上り列車用）
         /// </summary>
-        private readonly NumberSetting[] numSettingsIn = numSettingsIn;
+        private readonly NumberSetting[] numSettingsUp = numSettingsUp;
 
         /// <summary>
         /// このトラックの列車番号の位置などのデータ（上り列車用）
         /// </summary>
-        public ReadOnlyCollection<NumberSetting> NumSettingsIn => Array.AsReadOnly(numSettingsIn);
+        public ReadOnlyCollection<NumberSetting> NumSettingsUp => Array.AsReadOnly(numSettingsUp);
 
         /// <summary>
         /// 在線している列車番号
@@ -87,22 +87,22 @@ namespace TrainCrewTIDWindow.Models {
         /// </summary>
         /// <param name="name">軌道回路名</param>
         /// <param name="lineSettings">このトラックの線の位置やファイル名などのデータ</param>
-        /// <param name="numSettingsOut">このトラックの列車番号の位置などのデータ（下り列車用）</param>
-        /// <param name="numSettingsIn">このトラックの列車番号の位置などのデータ（上り列車用）</param>
+        /// <param name="numSettingsDown">このトラックの列車番号の位置などのデータ（下り列車用）</param>
+        /// <param name="numSettingsUp">このトラックの列車番号の位置などのデータ（上り列車用）</param>
         /// <param name="train">在線している列車番号</param>
         /// <param name="isReserved">進路が信号により予約されているか</param>
-        public TrackData(string name, LineSetting[] lineSettingArray, NumberSetting[] numSettingOut, NumberSetting[] numSettingIn, string? train, bool isReserved) : this(name, lineSettingArray, numSettingOut, numSettingIn, train, isReserved, 0) { }
+        public TrackData(string name, LineSetting[] lineSettingArray, NumberSetting[] numSettingDown, NumberSetting[] numSettingUp, string? train, bool isReserved) : this(name, lineSettingArray, numSettingDown, numSettingUp, train, isReserved, 0) { }
 
         /// <summary>
         /// サーバやTRAIN CREW本体から取得した軌道回路の情報
         /// </summary>
         /// <param name="name">軌道回路名</param>
         /// <param name="lineSettings">このトラックの線の位置やファイル名などのデータ</param>
-        /// <param name="numSettingsOut">このトラックの列車番号の位置などのデータ（下り列車用）</param>
-        /// <param name="numSettingsIn">このトラックの列車番号の位置などのデータ（上り列車用）</param>
+        /// <param name="numSettingsDown">このトラックの列車番号の位置などのデータ（下り列車用）</param>
+        /// <param name="numSettingsUp">このトラックの列車番号の位置などのデータ（上り列車用）</param>
         /// <param name="train">在線している列車番号</param>
         /// <param name="count">在線消失の際実際に在線を消すまでの猶予（チャタリング対策）</param>
-        public TrackData(string name, LineSetting[] lineSettingArray, NumberSetting[] numSettingOut, NumberSetting[] numSettingIn, string? train, int count) : this(name, lineSettingArray, numSettingOut, numSettingIn, train, false, count) { }
+        public TrackData(string name, LineSetting[] lineSettingArray, NumberSetting[] numSettingDown, NumberSetting[] numSettingUp, string? train, int count) : this(name, lineSettingArray, numSettingDown, numSettingUp, train, false, count) { }
 
         /// <summary>
         /// サーバやTRAIN CREW本体から取得した軌道回路の情報
@@ -111,7 +111,7 @@ namespace TrainCrewTIDWindow.Models {
         /// <param name="displayManager">TIDManagerオブジェクト</param>
         /// <param name="train">在線している列車番号</param>
         /// <param name="count">在線消失の際実際に在線を消すまでの猶予（チャタリング対策）</param>
-        public TrackData(string name, TIDManager displayManager, string? train, int count) : this(name, displayManager.LineSettings.Where(d => d.TrackName == name).ToArray(), displayManager.NumSettingsOut.Where(d => d.TrackName == name).ToArray(), displayManager.NumSettingsIn.Where(d => d.TrackName == name).ToArray(), train, false, count) { }
+        public TrackData(string name, TIDManager displayManager, string? train, int count) : this(name, displayManager.LineSettings.Where(d => d.TrackName == name).ToArray(), displayManager.NumSettingsDown.Where(d => d.TrackName == name).ToArray(), displayManager.NumSettingsUp.Where(d => d.TrackName == name).ToArray(), train, false, count) { }
 
         /// <summary>
         /// サーバやTRAIN CREW本体から取得した軌道回路の情報
@@ -121,7 +121,7 @@ namespace TrainCrewTIDWindow.Models {
         /// <param name="train">在線している列車番号</param>
         /// <param name="isReserved">進路が信号により予約されているか</param>
         /// <param name="count">在線消失の際実際に在線を消すまでの猶予（チャタリング対策）</param>
-        public TrackData(string name, TIDManager displayManager, string? train, bool isReserved, int count) : this(name, displayManager.LineSettings.Where(d => d.TrackName == name).ToArray(), displayManager.NumSettingsOut.Where(d => d.TrackName == name).ToArray(), displayManager.NumSettingsIn.Where(d => d.TrackName == name).ToArray(), train, isReserved, count) { }
+        public TrackData(string name, TIDManager displayManager, string? train, bool isReserved, int count) : this(name, displayManager.LineSettings.Where(d => d.TrackName == name).ToArray(), displayManager.NumSettingsDown.Where(d => d.TrackName == name).ToArray(), displayManager.NumSettingsUp.Where(d => d.TrackName == name).ToArray(), train, isReserved, count) { }
 
         /// <summary>
         /// 在線情報を設定する

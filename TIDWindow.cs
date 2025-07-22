@@ -6,6 +6,8 @@ using TrainCrewTIDWindow.Manager;
 using TrainCrewTIDWindow.Models;
 using System.Diagnostics;
 using System.Text;
+using System.Drawing.Drawing2D;
+using TrainCrewTIDWindow.Settings;
 
 namespace TrainCrewTIDWindow {
 
@@ -31,6 +33,10 @@ namespace TrainCrewTIDWindow {
         /// 方向てこの状態
         /// </summary>
         private readonly Dictionary<string, LCR> directionDataDict = [];
+
+        private readonly Dictionary<string, List<SignalSwitchSetting>> signalSwitchDict = [];
+
+        private readonly Dictionary<string, SignalDirectionSetting> signalDirectionDict = [];
 
         /// <summary>
         /// TRAIN CREW本体接続用
@@ -101,13 +107,15 @@ namespace TrainCrewTIDWindow {
         /// </summary>
         private int debugCount = -99999;
 
+        private bool usingMagnifyingGlass = false;
+
         private OpenIddictClientService service;
 
         public string LabelStatusText {
             get => labelStatus.Text;
             set {
                 if(serverCommunication != null) {
-                    value = $"Status：{(ServerAddress.SignalAddress.Contains("dev") ? "Devサーバ" : "Prodサーバ")} {value}";
+                    value = $"Status：{(ServerAddress.SignalAddress.Contains("dev") ? "Dev" : "Prod")}サーバ {value}";
                 }
                 else {
                     value = $"Status：{value}";
@@ -136,6 +144,9 @@ namespace TrainCrewTIDWindow {
         public TIDWindow(OpenIddictClientService service) {
             this.service = service;
             InitializeComponent();
+            LogManager.AddInfoLog("起動");
+
+            pictureBox2.Parent = pictureBox1;
 
             var loaded = false;
 
@@ -288,12 +299,76 @@ namespace TrainCrewTIDWindow {
 
             switch (s) {
                 case "traincrew":
+                    try {
+                        using var sr = new StreamReader(".\\setting\\signal_switch.tsv");
+                        sr.ReadLine();
+                        var line = sr.ReadLine();
+                        var signalName = "";
+                        while (line != null) {
+                            if (line.StartsWith('#')) {
+                                line = sr.ReadLine();
+                                continue;
+                            }
+                            var texts = line.Split('\t');
+                            line = sr.ReadLine();
+
+                            if (texts.Length < 3 || texts[1] == "") {
+                                continue;
+                            }
+
+                            if (texts[0] != "") {
+                                signalName = texts[0];
+                            }
+                            if (signalName == "") {
+                                continue;
+                            }
+                            var sss = new SignalSwitchSetting(texts[1], texts[2] switch { "False" => NRC.Normal, "True" => NRC.Reversed, _ => NRC.Center });
+
+                            if (!signalSwitchDict.TryAdd(signalName, [ sss ])) {
+                                signalSwitchDict[signalName].Add(sss);
+                            }
+
+                        }
+                    }
+                    catch {
+                    }
+
+                    try {
+                        using var sr = new StreamReader(".\\setting\\signal_direction.tsv");
+                        sr.ReadLine();
+                        var line = sr.ReadLine();
+                        while (line != null) {
+                            if (line.StartsWith('#')) {
+                                line = sr.ReadLine();
+                                continue;
+                            }
+                            var texts = line.Split('\t');
+                            line = sr.ReadLine();
+
+                            if (texts.Length < 4 || texts.Any(t => t == "")) {
+                                continue;
+                            }
+
+
+                            var sds = new SignalDirectionSetting(texts[0], texts[1] == "R" ? LCR.Right : LCR.Left, texts[2], texts[3]);
+
+                            if (!signalDirectionDict.TryAdd(texts[0], sds)) {
+                                signalDirectionDict[texts[0]] = sds;
+                            }
+
+                        }
+                    }
+                    catch {
+                    }
+
                     TimeOffset = new(0, 0, 0);
                     tcCommunication.ConnectionStatusChanged += UpdateConnectionStatus;
                     tcCommunication.TCDataUpdated += UpdateTCData;
+                    LogManager.AddInfoLog("TRAIN CREWに接続します");
                     await TryConnectTrainCrew();
                     break;
                 case "debug":
+                    LogManager.AddInfoLog("デバッグモードを開始します");
                     debugIndex = 0;
                     break;
                 default:
@@ -302,6 +377,7 @@ namespace TrainCrewTIDWindow {
                     //デフォルトのサーバへの接続処理
                     serverCommunication = new(this, ServerAddress.SignalAddress, service);
                     serverCommunication.DataUpdated += UpdateServerData;
+                    LogManager.AddInfoLog($"{(ServerAddress.SignalAddress.Contains("dev") ? "Dev" : "Prod")}サーバに接続します");
                     await TryConnectServer();
                     break;
             }
@@ -313,7 +389,7 @@ namespace TrainCrewTIDWindow {
         /// <returns></returns>
         private async Task TryConnectTrainCrew() {
             //引数にはallの他、trackcircuit, signal, trainが使えます。
-            tcCommunication.Request = ["trackcircuit"];
+            tcCommunication.Request = ["trackcircuit", "signal"];
             await tcCommunication.TryConnectWebSocket();
         }
 
@@ -350,7 +426,44 @@ namespace TrainCrewTIDWindow {
                 }
             }
 
-            if (trackManager.UpdateTCData(tcList)) {
+            var sdl = tcData.signalDataList;
+            var updatedTID = false;
+            if (sdl != null) {
+                foreach (var s in sdl) {
+                    if (s.phase != Phase.R && s.phase != Phase.None) {
+                        if (signalSwitchDict.TryGetValue(s.Name, out var ssss)) {
+                            foreach (var sss in ssss) {
+                                if (!pointDataDict.TryAdd(sss.SwitchName, new PointData(sss.SwitchName, sss.State != NRC.Center, sss.State == NRC.Reversed))) {
+                                    pointDataDict[sss.SwitchName].SetStates(sss.State != NRC.Center, sss.State == NRC.Reversed);
+                                }
+                            }
+                        }
+
+                        if (signalDirectionDict.TryGetValue(s.Name, out var sds)) {
+
+                            lock (directionDataDict) {
+                                if (!directionDataDict.TryAdd(sds.Lever1Name, sds.Type)) {
+                                    updatedTID |= directionDataDict[sds.Lever1Name] != sds.Type;
+                                    directionDataDict[sds.Lever1Name] = sds.Type;
+                                }
+                                else {
+                                    updatedTID = true;
+                                }
+                                if (!directionDataDict.TryAdd(sds.Lever2Name, sds.Type)) {
+                                    updatedTID |= directionDataDict[sds.Lever2Name] != sds.Type;
+                                    directionDataDict[sds.Lever2Name] = sds.Type;
+                                }
+                                else {
+                                    updatedTID = true;
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            if (trackManager.UpdateTCData(tcList) || updatedTID) {
                 displayManager.UpdateTID();
             }
         }
@@ -442,6 +555,7 @@ namespace TrainCrewTIDWindow {
             if (delaySeconds > 10) {
                 if (!serverCommunication.Error) {
                     serverCommunication.Error = true;
+                    LogManager.AddWarningLog("サーバからの受信が10秒以上ありません");
                     LabelStatusText = $"データ受信不能(最終受信：{updatedTime?.ToString("H:mm:ss")})";
                     Debug.WriteLine($"データ受信不能: {delaySeconds}");
                     TaskDialog.ShowDialog(new TaskDialogPage {
@@ -453,6 +567,9 @@ namespace TrainCrewTIDWindow {
                 }
             }
             else if (delaySeconds > 1) {
+                if (!LabelStatusText.Contains("最終受信")) {
+                    LogManager.AddWarningLog("サーバからの受信が1秒以上ありません");
+                }
                 LabelStatusText = $"データ正常受信(最終受信：{updatedTime?.ToString("H:mm:ss")})";
                 Debug.WriteLine($"データ受信不能: {delaySeconds}");
             }
@@ -466,7 +583,7 @@ namespace TrainCrewTIDWindow {
                     var line = lineData[debugIndex % lineData.Count];
                     if (debugCount >= 0 || debugCount == -10000) {
                         if (line.PointName != "") {
-                            UpdatePointData(new List<SwitchData> { new() { Name = line.PointName, State = NRC.Center } });
+                            UpdatePointData([new() { Name = line.PointName, State = NRC.Center }]);
                         }
                         if (reversed) {
                             debugIndex = (debugIndex + lineData.Count * 2 - 1) % (lineData.Count * 2);
@@ -476,7 +593,7 @@ namespace TrainCrewTIDWindow {
                         }
                     }
                     line = lineData[debugIndex % lineData.Count];
-                    trackManager.UpdateTCData(new List<TrackCircuitData> { new TrackCircuitData() { Name = line.TrackName, Last = debugIndex < lineData.Count ? "1111" : "1112", On = true } });
+                    trackManager.UpdateTCData([new TrackCircuitData() { Name = line.TrackName, Last = debugIndex < lineData.Count ? "1111" : "1112", On = true }]);
                     if (line.PointName != "") {
                         UpdatePointData(new List<SwitchData> { new SwitchData() { Name = line.PointName, State = line.Reversed ? NRC.Reversed : NRC.Normal } });
                         LabelStatusText = $"デバッグモード（{(debugIndex < lineData.Count ? "下り" : "上り")}） track: {line.TrackName}  switch: {line.PointName} {(line.Reversed ? "R" : "N")}";
@@ -641,6 +758,7 @@ namespace TrainCrewTIDWindow {
                 labelScale.ForeColor = Color.LightGreen;
                 labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalBitmap.Width * 100 + 0.5)}%";
                 pictureBox1.Cursor = Cursors.Default;
+                
             }
         }
 
@@ -852,20 +970,122 @@ namespace TrainCrewTIDWindow {
         }
 
         private void PictureBox1_MouseDown(object sender, MouseEventArgs e) {
-            if (e.Button == MouseButtons.Left) {
+            if(e.Button == MouseButtons.Middle && pictureBox1.Width < displayManager.OriginalBitmap.Width) {
+                Debug.WriteLine($"middledown {e.X - panel1.HorizontalScroll.Value} {e.Y - panel1.VerticalScroll.Value}");
+                usingMagnifyingGlass = true;
+                var width = pictureBox1.Width - e.X + 120;
+                var height = pictureBox1.Height - e.Y + 120;
+                if (width <= 1 || height <= 1) {
+                    pictureBox2.Location = new Point(-300, -300);
+                    pictureBox2.Size = new Size(240, 240);
+                }
+                else {
+                    pictureBox2.Location = new Point(e.X - panel1.HorizontalScroll.Value - 120, e.Y - panel1.VerticalScroll.Value - 120);
+                    pictureBox2.Size = new Size(Math.Min(240, Math.Max(0, pictureBox1.Width - e.X + 120)), Math.Min(240, Math.Max(0, pictureBox1.Height - e.Y + 120)));
+                }
+
+                SetMagnifyingGlass(e.X, e.Y);
+                
+                Cursor.Hide();
+
+            }
+            else if(usingMagnifyingGlass) {
+                usingMagnifyingGlass = false;
+
+                pictureBox2.Location = new Point(-300, -300);
+                pictureBox2.Size = new Size(240, 240);
+                Cursor.Show();
+            }
+            if ((e.Button & MouseButtons.Left) == MouseButtons.Left) {
                 mouseLoc = e.Location;
             }
         }
 
         private void PictureBox1_MouseMove(object sender, MouseEventArgs e) {
-            if (e.Button == MouseButtons.Left) {
+            if (usingMagnifyingGlass) {
+
+                if (e.Button == MouseButtons.Middle) {
+                    var width = pictureBox1.Width - e.X + 120;
+                    var height = pictureBox1.Height - e.Y + 120;
+                    var mouseX = e.X - panel1.HorizontalScroll.Value;
+                    var mouseY = e.Y - panel1.VerticalScroll.Value;
+                    if (width <= 1 || height <= 1) {
+                        pictureBox2.Location = new Point(-300, -300);
+                        pictureBox2.Size = new Size(240, 240);
+                    }
+                    else {
+                        pictureBox2.Location = new Point(mouseX - 120, mouseY - 120);
+                        pictureBox2.Size = new Size(Math.Min(240, Math.Max(0, pictureBox1.Width - e.X + 120)), Math.Min(240, Math.Max(0, pictureBox1.Height - e.Y + 120)));
+                    }
+
+                    SetMagnifyingGlass(e.X, e.Y);
+
+
+                }
+                else {
+                    usingMagnifyingGlass = false;
+
+                    pictureBox2.Location = new Point(-300, -300);
+                    pictureBox2.Size = new Size(240, 240);
+                    Cursor.Show();
+                }
+
+
+            }
+            if ((e.Button & MouseButtons.Left) == MouseButtons.Left) {
                 panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value - e.Location.X + mouseLoc.X, panel1.VerticalScroll.Value - e.Location.Y + mouseLoc.Y);
             }
         }
 
         private void PictureBox1_MouseUp(object sender, MouseEventArgs e) {
-            if (e.Button == MouseButtons.Left) {
+            if (usingMagnifyingGlass) {
+                usingMagnifyingGlass = false;
+                Debug.WriteLine($"middleup {e.X - panel1.HorizontalScroll.Value} {e.Y - panel1.VerticalScroll.Value}");
+
+                pictureBox2.Location = new Point(-300, -300);
+                pictureBox2.Size = new Size(240, 240);
+                Cursor.Show();
+            }
+            if ((e.Button & MouseButtons.Left) == MouseButtons.Left) {
                 mouseLoc = Point.Empty;
+            }
+        }
+
+        public void SetMagnifyingGlass(int x, int y) {
+            if (usingMagnifyingGlass) {
+                lock (pictureBox2) {
+                    var posX = 120 - x * displayManager.OriginalBitmap.Width / pictureBox1.Width;
+                    var posY = 120 - y * displayManager.OriginalBitmap.Height / pictureBox1.Height;
+                    posX = posX > 125 ? 120 - x : (posX < 120 - displayManager.OriginalBitmap.Width ? pictureBox1.Width - x + 120 - displayManager.OriginalBitmap.Width : posX);
+                    posY = posY > 125 ? 120 - y : (posY < 120 - displayManager.OriginalBitmap.Height ? pictureBox1.Height - y + 120 - displayManager.OriginalBitmap.Height : posY);
+
+                    var b = new Bitmap(240, 240);
+                    var old = pictureBox2.Image;
+                    pictureBox2.Image = b;
+                    if (old != null) {
+                        old.Dispose();
+                    }
+                    using var g = Graphics.FromImage(pictureBox2.Image);
+                    GraphicsPath gp = new();
+                    gp.AddEllipse(g.VisibleClipBounds);
+                    g.Clip = new Region(gp);
+                    g.DrawImage(displayManager.OriginalBitmap, posX, posY);
+                    g.DrawEllipse(new Pen(Color.DarkGray, 2), 0, 0, 240, 240);
+                }
+            }
+        }
+
+        public void SetMagnifyingGlass() {
+
+            if (InvokeRequired) {
+                Invoke(() => {
+                    var cp = pictureBox1.PointToClient(Cursor.Position);
+                    SetMagnifyingGlass(cp.X, cp.Y);
+                });
+            }
+            else {
+                var cp = pictureBox1.PointToClient(Cursor.Position);
+                SetMagnifyingGlass(cp.X, cp.Y);
             }
         }
     }
