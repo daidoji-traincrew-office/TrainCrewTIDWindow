@@ -57,8 +57,6 @@
 駒野入換15L	TH75_W46	False
 	TH75_W48	
 	TH75_W47	
-	TH75_W45	False
-	TH75_W44	False
 駒野入換24R	TH75_W48	False
 	TH75_W46	False
 	TH75_W49	False
@@ -76,18 +74,18 @@
 	TH75_W47	
 駒野入換28R	TH75_W42	False
 	TH75_W44	
-	TH75_W45	False
+	TH75_W45	
 駒野入換29R	TH75_W43	False
 	TH75_W45	
-	TH75_W44	False
+	TH75_W44	
 駒野入換34L	TH75_W42	False
 駒野入換35L	TH75_W45	
-	TH75_W44	False
+	TH75_W44	
 	TH75_W42	
 	TH75_W43	
 	TH75_W41	
 駒野入換36L	TH75_W44	
-	TH75_W45	False
+	TH75_W45	
 	TH75_W42	
 	TH75_W43	
 	TH75_W41	
@@ -178,7 +176,7 @@
 	TH66S_W55	False
 江ノ原信号場入換13R	TH66S_W54	False
 	TH66S_W55	False
-	TH66S_W56	False
+	TH66S_W56	
 	TH66S_W57	
 江ノ原信号場入換15L	TH66S_W54	False
 	TH66S_W55	False

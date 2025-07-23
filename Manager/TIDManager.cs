@@ -688,7 +688,7 @@ namespace TrainCrewTIDWindow.Manager {
                             }
 
                             // 列番本体設置
-                            for (var i = 0; i < 4; i++) {
+                            for (var i = 0; i < 4 && i < numBodyStr.Length; i++) {
                                 var num = numBodyStr[numBodyStr.Length - 1 - i] - '0';
                                 AddNumImage(g, num, numWindow.PosX + 12 + (3 - i) * 6, numWindow.PosY, iaType);
                             }
