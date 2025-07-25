@@ -10,6 +10,8 @@ namespace TrainCrewTIDWindow.Manager {
 
         private static StringBuilder log = new();
 
+        public static bool Output { get; private set; } = false;
+
         public static void AddInfoLog(string text) {
             log.Append($"{DateTime.Now.ToString()} [Info] ");
             log.AppendLine(text);
@@ -34,6 +36,7 @@ namespace TrainCrewTIDWindow.Manager {
             using (StreamWriter w = new(".\\ErrorLog.txt", false, new UTF8Encoding(false))) {
                 w.Write(log);
             }
+            Output = true;
         }
     }
 }

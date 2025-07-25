@@ -38,6 +38,9 @@
             menuItemScale175 = new ToolStripMenuItem();
             menuItemScale200 = new ToolStripMenuItem();
             menuItemScaleFit = new ToolStripMenuItem();
+            menuItemMagnifyingGlass = new ToolStripMenuItem();
+            menuItemPushToZoom = new ToolStripMenuItem();
+            menuItemToggle = new ToolStripMenuItem();
             panel1 = new Panel();
             pictureBox2 = new PictureBox();
             labelStatus = new Label();
@@ -66,9 +69,9 @@
             // 
             // contextMenuStrip1
             // 
-            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { menuItemCopy, menuItemScale });
+            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { menuItemCopy, menuItemScale, menuItemMagnifyingGlass });
             contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new Size(150, 48);
+            contextMenuStrip1.Size = new Size(150, 70);
             // 
             // menuItemCopy
             // 
@@ -87,62 +90,85 @@
             // menuItemScale50
             // 
             menuItemScale50.Name = "menuItemScale50";
-            menuItemScale50.Size = new Size(150, 22);
+            menuItemScale50.Size = new Size(180, 22);
             menuItemScale50.Text = "50%";
             // 
             // menuItemScale75
             // 
             menuItemScale75.Name = "menuItemScale75";
-            menuItemScale75.Size = new Size(150, 22);
+            menuItemScale75.Size = new Size(180, 22);
             menuItemScale75.Text = "75%";
             // 
             // menuItemScale90
             // 
             menuItemScale90.Name = "menuItemScale90";
-            menuItemScale90.Size = new Size(150, 22);
+            menuItemScale90.Size = new Size(180, 22);
             menuItemScale90.Text = "90%";
             // 
             // menuItemScale100
             // 
             menuItemScale100.Name = "menuItemScale100";
-            menuItemScale100.Size = new Size(150, 22);
+            menuItemScale100.Size = new Size(180, 22);
             menuItemScale100.Text = "100%（現在）";
             // 
             // menuItemScale110
             // 
             menuItemScale110.Name = "menuItemScale110";
-            menuItemScale110.Size = new Size(150, 22);
+            menuItemScale110.Size = new Size(180, 22);
             menuItemScale110.Text = "110%";
             // 
             // menuItemScale125
             // 
             menuItemScale125.Name = "menuItemScale125";
-            menuItemScale125.Size = new Size(150, 22);
+            menuItemScale125.Size = new Size(180, 22);
             menuItemScale125.Text = "125%";
             // 
             // menuItemScale150
             // 
             menuItemScale150.Name = "menuItemScale150";
-            menuItemScale150.Size = new Size(150, 22);
+            menuItemScale150.Size = new Size(180, 22);
             menuItemScale150.Text = "150%";
             // 
             // menuItemScale175
             // 
             menuItemScale175.Name = "menuItemScale175";
-            menuItemScale175.Size = new Size(150, 22);
+            menuItemScale175.Size = new Size(180, 22);
             menuItemScale175.Text = "175%";
             // 
             // menuItemScale200
             // 
             menuItemScale200.Name = "menuItemScale200";
-            menuItemScale200.Size = new Size(150, 22);
+            menuItemScale200.Size = new Size(180, 22);
             menuItemScale200.Text = "200%";
             // 
             // menuItemScaleFit
             // 
             menuItemScaleFit.Name = "menuItemScaleFit";
-            menuItemScaleFit.Size = new Size(150, 22);
+            menuItemScaleFit.Size = new Size(180, 22);
             menuItemScaleFit.Text = "フィット表示";
+            // 
+            // menuItemMagnifyingGlass
+            // 
+            menuItemMagnifyingGlass.DropDownItems.AddRange(new ToolStripItem[] { menuItemPushToZoom, menuItemToggle });
+            menuItemMagnifyingGlass.Name = "menuItemMagnifyingGlass";
+            menuItemMagnifyingGlass.Size = new Size(149, 22);
+            menuItemMagnifyingGlass.Text = "拡大鏡モード";
+            // 
+            // menuItemPushToZoom
+            // 
+            menuItemPushToZoom.Checked = true;
+            menuItemPushToZoom.CheckState = CheckState.Indeterminate;
+            menuItemPushToZoom.Name = "menuItemPushToZoom";
+            menuItemPushToZoom.Size = new Size(231, 22);
+            menuItemPushToZoom.Text = "プッシュトゥズーム（押下中のみ）";
+            menuItemPushToZoom.Click += menuItemPushToZoom_Click;
+            // 
+            // menuItemToggle
+            // 
+            menuItemToggle.Name = "menuItemToggle";
+            menuItemToggle.Size = new Size(231, 22);
+            menuItemToggle.Text = "トグル（切替式）";
+            menuItemToggle.Click += menuItemToggle_Click;
             // 
             // panel1
             // 
@@ -164,6 +190,8 @@
             pictureBox2.Size = new Size(240, 240);
             pictureBox2.TabIndex = 6;
             pictureBox2.TabStop = false;
+            pictureBox2.MouseDown += PictureBox2_MouseDown;
+            pictureBox2.MouseMove += PictureBox2_MouseMove;
             // 
             // labelStatus
             // 
@@ -239,6 +267,7 @@
             TopMost = true;
             KeyDown += TIDWindow_KeyDown;
             Resize += TIDWindow_Resize;
+            FormClosing += TIDWindow_Closing;
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             contextMenuStrip1.ResumeLayout(false);
             panel1.ResumeLayout(false);
@@ -269,5 +298,8 @@
         private ToolStripMenuItem menuItemScale90;
         private ToolStripMenuItem menuItemScale110;
         private PictureBox pictureBox2;
+        private ToolStripMenuItem menuItemMagnifyingGlass;
+        private ToolStripMenuItem menuItemPushToZoom;
+        private ToolStripMenuItem menuItemToggle;
     }
 }

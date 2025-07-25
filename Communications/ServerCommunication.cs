@@ -365,6 +365,8 @@ namespace TrainCrewTIDWindow.Communications {
                 return false;
             }
             catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Forbidden) {
+                LogManager.AddExceptionLog(ex);
+                LogManager.OutputLog();
                 DialogResult dialogResult = MessageBox.Show(
                     "認証が拒否されました。\n再認証してください。",
                     "認証拒否 | TID - ダイヤ運転会", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
@@ -375,7 +377,9 @@ namespace TrainCrewTIDWindow.Communications {
 
                 return true;
             }
-            catch (InvalidOperationException) {
+            catch (InvalidOperationException ex) {
+                LogManager.AddExceptionLog(ex);
+                LogManager.OutputLog();
                 Debug.WriteLine("Maybe using disposed connection");
                 // 一旦接続を破棄して再初期化
                 await DisposeAndStopConnectionAsync(CancellationToken.None);
@@ -383,6 +387,8 @@ namespace TrainCrewTIDWindow.Communications {
                 return false;
             }
             catch (Exception ex) {
+                LogManager.AddExceptionLog(ex);
+                LogManager.OutputLog();
                 Debug.WriteLine($"Connection error: {ex.Message}");
                 throw;
             }
@@ -406,9 +412,13 @@ namespace TrainCrewTIDWindow.Communications {
                 UpdatedTime = DateTime.Now;
             }
             catch (WebSocketException e) when (e.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
+                LogManager.AddExceptionLog(e);
+                LogManager.OutputLog();
                 Debug.WriteLine($"Server send failed: {e.Message}\n{e.StackTrace}");
             }
             catch (WebSocketException e) {
+                LogManager.AddExceptionLog(e);
+                LogManager.OutputLog();
                 Debug.WriteLine($"Server send failed: {e.Message}\nerrorCode: {e.WebSocketErrorCode}\n{e.StackTrace}");
                 if (!error) {
                     error = true;
@@ -423,6 +433,8 @@ namespace TrainCrewTIDWindow.Communications {
                 }
             }
             catch (TimeoutException e) {
+                LogManager.AddExceptionLog(e);
+                LogManager.OutputLog();
                 Debug.WriteLine($"Server send failed: {e.Message}\n{e.StackTrace}");
                 if (!error) {
                     error = true;
@@ -435,9 +447,11 @@ namespace TrainCrewTIDWindow.Communications {
                     });
                 }
             }
-            catch (ObjectDisposedException) {
+            catch (ObjectDisposedException e) {
             }
             catch (Exception e) {
+                LogManager.AddExceptionLog(e);
+                LogManager.OutputLog();
                 Debug.WriteLine($"Server send failed: {e.Message}\n{e.StackTrace}");
                 if (!error) {
                     error = true;
@@ -446,7 +460,7 @@ namespace TrainCrewTIDWindow.Communications {
                         Caption = "未知のエラー | TID - ダイヤ運転会",
                         Heading = "未知のエラー",
                         Icon = TaskDialogIcon.Error,
-                        Text = "未知のエラーです。\nアプリケーションの再起動をお願いします。"
+                        Text = "未知のエラーです。\nTID製作者に状況を報告願います。"
                     });
                 }
             }

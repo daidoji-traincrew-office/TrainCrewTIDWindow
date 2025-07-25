@@ -59,6 +59,21 @@ namespace TrainCrewTIDWindow {
         private bool topMostSetting = true;
 
         /// <summary>
+        /// 拡大鏡を使用している状態であるか
+        /// </summary>
+        private bool usingMagnifyingGlass = false;
+
+        /// <summary>
+        /// 拡大鏡をトグル式で表示するか
+        /// </summary>
+        private bool toggleMagnifyingGlass = false;
+
+        /// <summary>
+        /// 拡大鏡の直径
+        /// </summary>
+        private int magnifyingGlassSize = 240;
+
+        /// <summary>
         /// 表示される時刻の時差を足す前
         /// </summary>
         public DateTime Clock {
@@ -107,14 +122,12 @@ namespace TrainCrewTIDWindow {
         /// </summary>
         private int debugCount = -99999;
 
-        private bool usingMagnifyingGlass = false;
-
         private OpenIddictClientService service;
 
         public string LabelStatusText {
             get => labelStatus.Text;
             set {
-                if(serverCommunication != null) {
+                if (serverCommunication != null) {
                     value = $"Status：{(ServerAddress.SignalAddress.Contains("dev") ? "Dev" : "Prod")}サーバ {value}";
                 }
                 else {
@@ -156,7 +169,7 @@ namespace TrainCrewTIDWindow {
 
             if (!loaded) {
                 using (StreamWriter w = new(".\\setting\\setting.txt", false, new UTF8Encoding(false))) {
-                    w.Write("source=select\ntopMost=true\nscale=100\ntimeOffset=14");
+                    w.Write("source=select\ntopMost=true\nscale=100\ntimeOffset=14\nzoomMode=pushtozoom\nzoomSize=240");
                 }
             }
 
@@ -207,7 +220,7 @@ namespace TrainCrewTIDWindow {
                             source = texts[1].Replace(" ", "").ToLower();
                             break;
                         case "topMost":
-                            topMostSetting = texts[1].ToLower() == "true";
+                            topMostSetting = texts[1].Replace(" ", "").ToLower() == "true";
                             break;
                         case "scale":
                             menuItemScale50.Text = "50%";
@@ -221,7 +234,7 @@ namespace TrainCrewTIDWindow {
                             menuItemScale200.Text = "200%";
                             menuItemScaleFit.Text = "フィット表示";
 
-                            if (texts[1].ToLower() == "fit") {
+                            if (texts[1].Replace(" ", "").ToLower() == "fit") {
                                 TIDScale = -1;
                                 menuItemScaleFit.Text = "フィット表示（現在）";
                                 break;
@@ -268,6 +281,18 @@ namespace TrainCrewTIDWindow {
                         case "timeOffset":
                             if (int.TryParse(texts[1], out var hours)) {
                                 TimeOffset = new TimeSpan(((hours % 24) + 24) % 24, 0, 0);
+                            }
+                            break;
+                        case "zoomMode":
+                            toggleMagnifyingGlass = texts[1].Replace(" ", "").ToLower() == "toggle";
+                            if (toggleMagnifyingGlass) {
+                                menuItemPushToZoom.CheckState = CheckState.Unchecked;
+                                menuItemToggle.CheckState = CheckState.Indeterminate;
+                            }
+                            break;
+                        case "zoomSize":
+                            if (int.TryParse(texts[1], out var size) && size >= 20) {
+                                magnifyingGlassSize = size;
                             }
                             break;
                     }
@@ -324,7 +349,7 @@ namespace TrainCrewTIDWindow {
                             }
                             var sss = new SignalSwitchSetting(texts[1], texts[2] switch { "False" => NRC.Normal, "True" => NRC.Reversed, _ => NRC.Center });
 
-                            if (!signalSwitchDict.TryAdd(signalName, [ sss ])) {
+                            if (!signalSwitchDict.TryAdd(signalName, [sss])) {
                                 signalSwitchDict[signalName].Add(sss);
                             }
 
@@ -463,7 +488,10 @@ namespace TrainCrewTIDWindow {
                 }
             }
 
-            if (trackManager.UpdateTCData(tcList) || updatedTID) {
+            updatedTID |= trackManager.UpdateTCData(tcList);
+            updatedTID |= trackManager.UpdateNumberWindow();
+
+            if (updatedTID) {
                 displayManager.UpdateTID();
             }
         }
@@ -480,7 +508,12 @@ namespace TrainCrewTIDWindow {
             var sList = data.SwitchDatas;
             var dList = data.DirectionDatas;
 
-            if (tcList != null && trackManager.UpdateTCData(tcList) || sList != null && UpdatePointData(sList) || dList != null && UpdateDirectionData(dList)) {
+            var updated = tcList != null && trackManager.UpdateTCData(tcList);
+            updated |= sList != null && UpdatePointData(sList);
+            updated |= dList != null && UpdateDirectionData(dList);
+            updated |= trackManager.UpdateNumberWindow();
+
+            if (updated) {
                 displayManager.UpdateTID();
             }
         }
@@ -611,7 +644,7 @@ namespace TrainCrewTIDWindow {
         }
 
         private void labelClock_MouseDown(object sender, MouseEventArgs e) {
-            if(e.Button != MouseButtons.Left && e.Button != MouseButtons.Right) {
+            if (e.Button != MouseButtons.Left && e.Button != MouseButtons.Right) {
                 return;
             }
             ChangeTime(e.Button == MouseButtons.Right, !ModifierKeys.HasFlag(Keys.Control), !ModifierKeys.HasFlag(Keys.Shift));
@@ -700,6 +733,7 @@ namespace TrainCrewTIDWindow {
             if (scale > 200) {
                 scale = 200;
             }
+            LogManager.AddInfoLog($"拡大率変更：{(scale > 0 ? $"{scale}%" : "fit")}");
 
             menuItemScale50.Text = "50%";
             menuItemScale75.Text = "75%";
@@ -758,7 +792,7 @@ namespace TrainCrewTIDWindow {
                 labelScale.ForeColor = Color.LightGreen;
                 labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalBitmap.Width * 100 + 0.5)}%";
                 pictureBox1.Cursor = Cursors.Default;
-                
+
             }
         }
 
@@ -766,7 +800,7 @@ namespace TrainCrewTIDWindow {
 
 
         private void labelScale_MouseDown(object sender, MouseEventArgs e) {
-            if(TIDScale > 0) {
+            if (TIDScale > 0) {
                 if (e.Button == MouseButtons.Right) {
                     switch (TIDScale) {
                         case 75:
@@ -804,11 +838,11 @@ namespace TrainCrewTIDWindow {
             var code = e.KeyData & Keys.KeyCode;
             var mod = e.KeyData & Keys.Modifiers;
             if (e.KeyData == (Keys.C | Keys.Control)) {
-                if(debugIndex >= 0) {
+                if (debugIndex >= 0) {
                     var lineData = displayManager.LineSettings;
                     var line = lineData[debugIndex % lineData.Count];
                     if (line != null) {
-                        if(line.PointName != "") {
+                        if (line.PointName != "") {
                             Clipboard.SetText($"\n{line.TrackName}\tS\t列番位置x\t列番位置y\t{line.PointName}\t{(line.Reversed ? "True" : "False")}");
                         }
                         else {
@@ -820,11 +854,11 @@ namespace TrainCrewTIDWindow {
                     displayManager.CopyImage();
                 }
             }
-            if(e.KeyData == Keys.Tab) {
+            if (e.KeyData == Keys.Tab) {
                 SetTopMost(!TopMost);
             }
-            
-            if(code == Keys.Right || code == Keys.D) {
+
+            if (code == Keys.Right || code == Keys.D) {
                 panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value + scrollDelta * (mod == Keys.Shift ? 1 : 3), panel1.VerticalScroll.Value);
             }
             if (code == Keys.Left || code == Keys.A) {
@@ -836,7 +870,7 @@ namespace TrainCrewTIDWindow {
             if (code == Keys.Down || code == Keys.S) {
                 panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value, panel1.VerticalScroll.Value + scrollDelta * (mod == Keys.Shift ? 1 : 3));
             }
-            if(e.KeyData == Keys.D1) {
+            if (e.KeyData == Keys.D1) {
                 panel1.AutoScrollPosition = new Point(0, panel1.VerticalScroll.Value);
             }
             if (e.KeyData == Keys.D2) {
@@ -920,7 +954,7 @@ namespace TrainCrewTIDWindow {
 
         private void PictureBox1_MouseWheel(object sender, MouseEventArgs e) {
             if (ModifierKeys.HasFlag(Keys.Control)) {
-                if(TIDScale > 0) {
+                if (TIDScale > 0) {
                     if (e.Delta > 0) {
                         switch (TIDScale) {
                             case 75:
@@ -963,33 +997,41 @@ namespace TrainCrewTIDWindow {
         }
 
         private void TIDWindow_Resize(object sender, EventArgs e) {
-            if(displayManager != null && TIDScale == -1) {
+            if (displayManager != null && TIDScale == -1) {
                 displayManager.ChangeScale();
                 labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalBitmap.Width * 100 + 0.5)}%";
             }
         }
 
         private void PictureBox1_MouseDown(object sender, MouseEventArgs e) {
-            if(e.Button == MouseButtons.Middle && pictureBox1.Width < displayManager.OriginalBitmap.Width) {
-                Debug.WriteLine($"middledown {e.X - panel1.HorizontalScroll.Value} {e.Y - panel1.VerticalScroll.Value}");
-                usingMagnifyingGlass = true;
-                var width = pictureBox1.Width - e.X + 120;
-                var height = pictureBox1.Height - e.Y + 120;
-                if (width <= 1 || height <= 1) {
+            if (e.Button == MouseButtons.Middle && pictureBox1.Width < displayManager.OriginalBitmap.Width) {
+                if (toggleMagnifyingGlass && usingMagnifyingGlass) {
+                    usingMagnifyingGlass = false;
+
                     pictureBox2.Location = new Point(-300, -300);
                     pictureBox2.Size = new Size(240, 240);
+                    Cursor.Show();
                 }
                 else {
-                    pictureBox2.Location = new Point(e.X - panel1.HorizontalScroll.Value - 120, e.Y - panel1.VerticalScroll.Value - 120);
-                    pictureBox2.Size = new Size(Math.Min(240, Math.Max(0, pictureBox1.Width - e.X + 120)), Math.Min(240, Math.Max(0, pictureBox1.Height - e.Y + 120)));
+                    usingMagnifyingGlass = true;
+                    var width = pictureBox1.Width - e.X + magnifyingGlassSize / 2;
+                    var height = pictureBox1.Height - e.Y + magnifyingGlassSize / 2;
+                    if (width <= 1 || height <= 1) {
+                        pictureBox2.Location = new Point(-300, -300);
+                        pictureBox2.Size = new Size(240, 240);
+                    }
+                    else {
+                        pictureBox2.Location = new Point(e.X - panel1.HorizontalScroll.Value - magnifyingGlassSize / 2, e.Y - panel1.VerticalScroll.Value - magnifyingGlassSize / 2);
+                        pictureBox2.Size = new Size(Math.Min(magnifyingGlassSize, Math.Max(0, pictureBox1.Width - e.X + magnifyingGlassSize / 2)), Math.Min(magnifyingGlassSize, Math.Max(0, pictureBox1.Height - e.Y + magnifyingGlassSize / 2)));
+                    }
+
+                    SetMagnifyingGlass(e.X, e.Y);
+
+                    Cursor.Hide();
                 }
 
-                SetMagnifyingGlass(e.X, e.Y);
-                
-                Cursor.Hide();
-
             }
-            else if(usingMagnifyingGlass) {
+            else if (usingMagnifyingGlass) {
                 usingMagnifyingGlass = false;
 
                 pictureBox2.Location = new Point(-300, -300);
@@ -1001,12 +1043,57 @@ namespace TrainCrewTIDWindow {
             }
         }
 
+        private void PictureBox2_MouseDown(object sender, MouseEventArgs e) {
+            if (e.Button == MouseButtons.Middle && pictureBox1.Width < displayManager.OriginalBitmap.Width) {
+                if (toggleMagnifyingGlass && usingMagnifyingGlass) {
+                    usingMagnifyingGlass = false;
+
+                    pictureBox2.Location = new Point(-300, -300);
+                    pictureBox2.Size = new Size(240, 240);
+                    Cursor.Show();
+                }
+            }
+            if ((e.Button & MouseButtons.Right) == MouseButtons.Right) {
+                usingMagnifyingGlass = false;
+
+                pictureBox2.Location = new Point(-300, -300);
+                pictureBox2.Size = new Size(240, 240);
+                Cursor.Show();
+            }
+        }
+
         private void PictureBox1_MouseMove(object sender, MouseEventArgs e) {
             if (usingMagnifyingGlass) {
+                if (!toggleMagnifyingGlass) {
+                    if (e.Button == MouseButtons.Middle) {
+                        var width = pictureBox1.Width - e.X + magnifyingGlassSize / 2;
+                        var height = pictureBox1.Height - e.Y + magnifyingGlassSize / 2;
+                        var mouseX = e.X - panel1.HorizontalScroll.Value;
+                        var mouseY = e.Y - panel1.VerticalScroll.Value;
+                        if (width <= 1 || height <= 1) {
+                            pictureBox2.Location = new Point(-300, -300);
+                            pictureBox2.Size = new Size(240, 240);
+                        }
+                        else {
+                            pictureBox2.Location = new Point(mouseX - magnifyingGlassSize / 2, mouseY - magnifyingGlassSize / 2);
+                            pictureBox2.Size = new Size(Math.Min(magnifyingGlassSize, Math.Max(0, pictureBox1.Width - e.X + magnifyingGlassSize / 2)), Math.Min(magnifyingGlassSize, Math.Max(0, pictureBox1.Height - e.Y + magnifyingGlassSize / 2)));
+                        }
 
-                if (e.Button == MouseButtons.Middle) {
-                    var width = pictureBox1.Width - e.X + 120;
-                    var height = pictureBox1.Height - e.Y + 120;
+                        SetMagnifyingGlass(e.X, e.Y);
+
+
+                    }
+                    else {
+                        usingMagnifyingGlass = false;
+
+                        pictureBox2.Location = new Point(-300, -300);
+                        pictureBox2.Size = new Size(240, 240);
+                        Cursor.Show();
+                    }
+                }
+                else {
+                    var width = pictureBox1.Width - e.X + magnifyingGlassSize / 2;
+                    var height = pictureBox1.Height - e.Y + magnifyingGlassSize / 2;
                     var mouseX = e.X - panel1.HorizontalScroll.Value;
                     var mouseY = e.Y - panel1.VerticalScroll.Value;
                     if (width <= 1 || height <= 1) {
@@ -1014,20 +1101,11 @@ namespace TrainCrewTIDWindow {
                         pictureBox2.Size = new Size(240, 240);
                     }
                     else {
-                        pictureBox2.Location = new Point(mouseX - 120, mouseY - 120);
-                        pictureBox2.Size = new Size(Math.Min(240, Math.Max(0, pictureBox1.Width - e.X + 120)), Math.Min(240, Math.Max(0, pictureBox1.Height - e.Y + 120)));
+                        pictureBox2.Location = new Point(mouseX - magnifyingGlassSize / 2, mouseY - magnifyingGlassSize / 2);
+                        pictureBox2.Size = new Size(Math.Min(magnifyingGlassSize, Math.Max(0, pictureBox1.Width - e.X + magnifyingGlassSize / 2)), Math.Min(magnifyingGlassSize, Math.Max(0, pictureBox1.Height - e.Y + magnifyingGlassSize / 2)));
                     }
 
                     SetMagnifyingGlass(e.X, e.Y);
-
-
-                }
-                else {
-                    usingMagnifyingGlass = false;
-
-                    pictureBox2.Location = new Point(-300, -300);
-                    pictureBox2.Size = new Size(240, 240);
-                    Cursor.Show();
                 }
 
 
@@ -1037,10 +1115,32 @@ namespace TrainCrewTIDWindow {
             }
         }
 
-        private void PictureBox1_MouseUp(object sender, MouseEventArgs e) {
+        private void PictureBox2_MouseMove(object sender, MouseEventArgs e) {
             if (usingMagnifyingGlass) {
+
+                if (toggleMagnifyingGlass) {
+                    var cp = pictureBox1.PointToClient(Cursor.Position);
+                    var width = pictureBox1.Width - cp.X + magnifyingGlassSize / 2;
+                    var height = pictureBox1.Height - cp.Y + magnifyingGlassSize / 2;
+                    var mouseX = cp.X - panel1.HorizontalScroll.Value;
+                    var mouseY = cp.Y - panel1.VerticalScroll.Value;
+                    if (width <= 1 || height <= 1) {
+                        pictureBox2.Location = new Point(-300, -300);
+                        pictureBox2.Size = new Size(240, 240);
+                    }
+                    else {
+                        pictureBox2.Location = new Point(mouseX - magnifyingGlassSize / 2, mouseY - magnifyingGlassSize / 2);
+                        pictureBox2.Size = new Size(Math.Min(magnifyingGlassSize, Math.Max(0, pictureBox1.Width - cp.X + magnifyingGlassSize / 2)), Math.Min(magnifyingGlassSize, Math.Max(0, pictureBox1.Height - cp.Y + magnifyingGlassSize / 2)));
+                    }
+
+                    SetMagnifyingGlass(cp.X, cp.Y);
+                }
+            }
+        }
+
+        private void PictureBox1_MouseUp(object sender, MouseEventArgs e) {
+            if (!toggleMagnifyingGlass && usingMagnifyingGlass) {
                 usingMagnifyingGlass = false;
-                Debug.WriteLine($"middleup {e.X - panel1.HorizontalScroll.Value} {e.Y - panel1.VerticalScroll.Value}");
 
                 pictureBox2.Location = new Point(-300, -300);
                 pictureBox2.Size = new Size(240, 240);
@@ -1054,23 +1154,21 @@ namespace TrainCrewTIDWindow {
         public void SetMagnifyingGlass(int x, int y) {
             if (usingMagnifyingGlass) {
                 lock (pictureBox2) {
-                    var posX = 120 - x * displayManager.OriginalBitmap.Width / pictureBox1.Width;
-                    var posY = 120 - y * displayManager.OriginalBitmap.Height / pictureBox1.Height;
-                    posX = posX > 125 ? 120 - x : (posX < 120 - displayManager.OriginalBitmap.Width ? pictureBox1.Width - x + 120 - displayManager.OriginalBitmap.Width : posX);
-                    posY = posY > 125 ? 120 - y : (posY < 120 - displayManager.OriginalBitmap.Height ? pictureBox1.Height - y + 120 - displayManager.OriginalBitmap.Height : posY);
+                    var posX = magnifyingGlassSize / 2 - x * displayManager.OriginalBitmap.Width / pictureBox1.Width;
+                    var posY = magnifyingGlassSize / 2 - y * displayManager.OriginalBitmap.Height / pictureBox1.Height;
+                    posX = posX > magnifyingGlassSize / 2 + 5 ? magnifyingGlassSize / 2 - x : (posX < magnifyingGlassSize / 2 - displayManager.OriginalBitmap.Width ? pictureBox1.Width - x + magnifyingGlassSize / 2 - displayManager.OriginalBitmap.Width : posX);
+                    posY = posY > magnifyingGlassSize / 2 + 5 ? magnifyingGlassSize / 2 - y : (posY < magnifyingGlassSize / 2 - displayManager.OriginalBitmap.Height ? pictureBox1.Height - y + magnifyingGlassSize / 2 - displayManager.OriginalBitmap.Height : posY);
 
-                    var b = new Bitmap(240, 240);
+                    var b = new Bitmap(magnifyingGlassSize, magnifyingGlassSize);
                     var old = pictureBox2.Image;
                     pictureBox2.Image = b;
-                    if (old != null) {
-                        old.Dispose();
-                    }
+                    old?.Dispose();
                     using var g = Graphics.FromImage(pictureBox2.Image);
                     GraphicsPath gp = new();
                     gp.AddEllipse(g.VisibleClipBounds);
                     g.Clip = new Region(gp);
                     g.DrawImage(displayManager.OriginalBitmap, posX, posY);
-                    g.DrawEllipse(new Pen(Color.DarkGray, 2), 0, 0, 240, 240);
+                    g.DrawEllipse(new Pen(Color.DarkGray, 2), 0, 0, magnifyingGlassSize, magnifyingGlassSize);
                 }
             }
         }
@@ -1086,6 +1184,30 @@ namespace TrainCrewTIDWindow {
             else {
                 var cp = pictureBox1.PointToClient(Cursor.Position);
                 SetMagnifyingGlass(cp.X, cp.Y);
+            }
+        }
+
+        private void menuItemPushToZoom_Click(object sender, EventArgs e) {
+            toggleMagnifyingGlass = false;
+            menuItemPushToZoom.CheckState = CheckState.Indeterminate;
+            menuItemToggle.CheckState = CheckState.Unchecked;
+        }
+
+        private void menuItemToggle_Click(object sender, EventArgs e) {
+            toggleMagnifyingGlass = true;
+            menuItemPushToZoom.CheckState = CheckState.Unchecked;
+            menuItemToggle.CheckState = CheckState.Indeterminate;
+        }
+
+        private void TIDWindow_Closing(object sender, EventArgs e) {
+            if (LogManager.Output) {
+                TaskDialog.ShowDialog(new TaskDialogPage {
+                    Caption = "エラーログ出力 | TID - ダイヤ運転会",
+                    Heading = "エラーログ出力",
+                    Icon = TaskDialogIcon.Information,
+                    Text =
+                        $"エラーログが出力されました。\n本ソフトの製作担当者にErrorLog.txtをお送りください。"
+                });
             }
         }
     }
