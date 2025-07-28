@@ -586,8 +586,8 @@ namespace TrainCrewTIDWindow {
             var delaySeconds = (Clock - (DateTime)updatedTime).TotalSeconds;
             updatedTime = updatedTime?.Add(TimeOffset);
             if (delaySeconds > 10) {
-                if (!serverCommunication.Error) {
-                    serverCommunication.Error = true;
+                if (!ServerCommunication.Error) {
+                    ServerCommunication.Error = true;
                     LogManager.AddWarningLog("サーバからの受信が10秒以上ありません");
                     LabelStatusText = $"データ受信不能(最終受信：{updatedTime?.ToString("H:mm:ss")})";
                     Debug.WriteLine($"データ受信不能: {delaySeconds}");

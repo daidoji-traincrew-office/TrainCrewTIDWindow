@@ -10,17 +10,21 @@ namespace TrainCrewTIDWindow.Manager {
 
         private static StringBuilder log = new();
 
+        private static bool updated = false;
+
         public static bool Output { get; private set; } = false;
 
         public static void AddInfoLog(string text) {
             log.Append($"{DateTime.Now.ToString()} [Info] ");
             log.AppendLine(text);
+            updated = true;
         }
 
 
         public static void AddWarningLog(string text) {
             log.Append($"{DateTime.Now.ToString()} [Warning] ");
             log.AppendLine(text);
+            updated = true;
         }
 
 
@@ -30,13 +34,17 @@ namespace TrainCrewTIDWindow.Manager {
             log.AppendLine($"source: {e.Source}");
             log.AppendLine(e.Message);
             log.AppendLine(e.StackTrace);
+            updated = true;
         }
 
         public static void OutputLog() {
-            using (StreamWriter w = new(".\\ErrorLog.txt", false, new UTF8Encoding(false))) {
-                w.Write(log);
+            if (updated) {
+                using (StreamWriter w = new(".\\ErrorLog.txt", false, new UTF8Encoding(false))) {
+                    w.Write(log);
+                }
+                Output = true;
+                updated = false;
             }
-            Output = true;
         }
     }
 }

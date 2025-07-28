@@ -1,6 +1,8 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Text.RegularExpressions;
+using TrainCrewTIDWindow.Communications;
 using TrainCrewTIDWindow.Models;
 using TrainCrewTIDWindow.Settings;
 
@@ -60,6 +62,11 @@ namespace TrainCrewTIDWindow.Manager {
         /// 列車番号以外の色
         /// </summary>
         private readonly Dictionary<string, Color> dicColor = [];
+
+        /// <summary>
+        /// 列車番号以外の色
+        /// </summary>
+        private readonly Dictionary<char, Point> dicAlphaIndex = [];
 
         /// <summary>
         /// 画像
@@ -174,6 +181,31 @@ namespace TrainCrewTIDWindow.Manager {
                     else {
                         dicColor.Add(texts[0], Color.FromArgb(int.Parse(texts[1]), int.Parse(texts[2]), int.Parse(texts[3])));
                     }
+                }
+            }
+            catch {
+            }
+
+            try {
+                using var sr = new StreamReader(".\\setting\\alpha_index.tsv");
+                sr.ReadLine();
+                var line = sr.ReadLine();
+                while (line != null) {
+                    if (line.StartsWith('#')) {
+                        line = sr.ReadLine();
+                        continue;
+                    }
+                    var texts = line.Split('\t');
+                    line = sr.ReadLine();
+
+                    if (texts.Length < 3 || texts.Any(t => t == "")) {
+                        continue;
+                    }
+                    if (texts[0].Length != 1) {
+                        continue;
+                    }
+
+                    dicAlphaIndex.Add(texts[0][0], new Point(int.Parse(texts[1]), int.Parse(texts[2])));
                 }
             }
             catch {
@@ -944,15 +976,15 @@ namespace TrainCrewTIDWindow.Manager {
 
                         // 列番の末尾の文字設置
                         if (numFooter.Length > 0) {
-                            var x = GetAlphaX(numFooter[0]);
-                            if (x < 55) {
-                                AddNumImage(g, x, 2, numWindow.PosX + 36, numWindow.PosY, iaType);
+                            var p = dicAlphaIndex[numFooter[0]];
+                            if (p.X < 55 && p.Y < 55) {
+                                AddNumImage(g, p.X, p.Y, numWindow.PosX + 36, numWindow.PosY, iaType);
                             }
                         }
                         if (numFooter.Length > 1) {
-                            var x = GetAlphaX(numFooter[1]);
-                            if (x < 55) {
-                                AddNumImage(g, x, 2, numWindow.PosX + 42, numWindow.PosY, iaType);
+                            var p = dicAlphaIndex[numFooter[1]];
+                            if (p.X < 55 && p.Y < 55) {
+                                AddNumImage(g, p.X, p.Y, numWindow.PosX + 42, numWindow.PosY, iaType);
                             }
                         }
 
@@ -1030,36 +1062,6 @@ namespace TrainCrewTIDWindow.Manager {
             window.SetMagnifyingGlass();
 
 
-        }
-
-        /// <summary>
-        /// 列番画像内のアルファベットの列座標を取得する
-        /// </summary>
-        /// <param name="alpha">アルファベット</param>
-        /// <returns>列の座標</returns>
-        public int GetAlphaX(char alpha) {
-            switch (alpha) {
-                case 'A':
-                    return 0;
-                case 'B':
-                    return 1;
-                case 'C':
-                    return 2;
-                case 'K':
-                    return 3;
-                case 'S':
-                    return 4;
-                case 'T':
-                    return 5;
-                case 'X':
-                    return 6;
-                case 'Y':
-                    return 7;
-                case 'Z':
-                    return 8;
-                default:
-                    return 9;
-            }
         }
 
 
@@ -1172,29 +1174,46 @@ namespace TrainCrewTIDWindow.Manager {
 
         public void ChangeScale() {
 
-            PrepareChangeScale();
+            try {
+                PrepareChangeScale();
 
-            lock (pictureBox) {
+                lock (pictureBox) {
 
-                var oldPic = pictureBox.Image;
-                if(oldPic != null) {
-                    if (window.TIDScale < 0) {
-                        var aspectRatio = (double)originalBitmap.Width / originalBitmap.Height;
-                        if (aspectRatio < (double)pictureBox.Width / pictureBox.Height) {
-                            var width = (int)(pictureBox.Height * aspectRatio);
-                            pictureBox.Image = new Bitmap(originalBitmap, width, pictureBox.Height);
-                            pictureBox.Width = width;
+                    var oldPic = pictureBox.Image;
+                    if (oldPic != null) {
+                        if (window.TIDScale < 0) {
+                            var aspectRatio = (double)originalBitmap.Width / originalBitmap.Height;
+                            if (aspectRatio < (double)pictureBox.Width / pictureBox.Height) {
+                                var width = (int)(pictureBox.Height * aspectRatio);
+                                pictureBox.Image = new Bitmap(originalBitmap, width, pictureBox.Height);
+                                pictureBox.Width = width;
+                            }
+                            else {
+                                var height = (int)(pictureBox.Width / aspectRatio);
+                                pictureBox.Image = new Bitmap(originalBitmap, pictureBox.Width, height);
+                                pictureBox.Height = height;
+                            }
                         }
                         else {
-                            var height = (int)(pictureBox.Width / aspectRatio);
-                            pictureBox.Image = new Bitmap(originalBitmap, pictureBox.Width, height);
-                            pictureBox.Height = height;
+                            pictureBox.Image = new Bitmap(originalBitmap, originalBitmap.Width * window.TIDScale / 100, originalBitmap.Height * window.TIDScale / 100);
                         }
+                        oldPic.Dispose();
                     }
-                    else {
-                        pictureBox.Image = new Bitmap(originalBitmap, originalBitmap.Width * window.TIDScale / 100, originalBitmap.Height * window.TIDScale / 100);
-                    }
-                    oldPic.Dispose();
+                }
+            }
+            catch(Exception e) {
+                LogManager.AddExceptionLog(e);
+                LogManager.OutputLog();
+                Debug.WriteLine($"Server send failed: {e.Message}\n{e.StackTrace}");
+                if (!ServerCommunication.Error) {
+                    ServerCommunication.Error = true;
+                    window.Invoke(new Action(() => { window.LabelStatusText = "データ受信失敗"; }));
+                    TaskDialog.ShowDialog(new TaskDialogPage {
+                        Caption = "描画エラー | TID - ダイヤ運転会",
+                        Heading = "描画エラー",
+                        Icon = TaskDialogIcon.Error,
+                        Text = "TID画面の描画に失敗しました。\nTID製作者に状況を報告願います。"
+                    });
                 }
             }
 

@@ -31,7 +31,7 @@ namespace TrainCrewTIDWindow.Communications {
         // 再接続間隔（ミリ秒）
         private const int ReconnectIntervalMs = 500; // 0.5秒
 
-        public bool Error {
+        public static bool Error {
             get { return error; }
             set { error = value; }
         }
