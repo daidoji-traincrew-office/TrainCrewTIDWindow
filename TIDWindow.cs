@@ -628,12 +628,13 @@ namespace TrainCrewTIDWindow {
                     line = lineData[debugIndex % lineData.Count];
                     trackManager.UpdateTCData([new TrackCircuitData() { Name = line.TrackName, Last = debugIndex < lineData.Count ? "1111" : "1112", On = true }]);
                     if (line.PointName != "") {
-                        UpdatePointData(new List<SwitchData> { new SwitchData() { Name = line.PointName, State = line.Reversed ? NRC.Reversed : NRC.Normal } });
+                        UpdatePointData([new SwitchData() { Name = line.PointName, State = line.Reversed ? NRC.Reversed : NRC.Normal }]);
                         LabelStatusText = $"デバッグモード（{(debugIndex < lineData.Count ? "下り" : "上り")}） track: {line.TrackName}  switch: {line.PointName} {(line.Reversed ? "R" : "N")}";
                     }
                     else {
                         LabelStatusText = $"デバッグモード（{(debugIndex < lineData.Count ? "下り" : "上り")}） track: {line.TrackName}";
                     }
+                    trackManager.UpdateNumberWindow();
                     displayManager.UpdateTID();
                     debugCount = debugCount == -10000 ? -100 : 100;
                 }
@@ -838,21 +839,7 @@ namespace TrainCrewTIDWindow {
             var code = e.KeyData & Keys.KeyCode;
             var mod = e.KeyData & Keys.Modifiers;
             if (e.KeyData == (Keys.C | Keys.Control)) {
-                if (debugIndex >= 0) {
-                    var lineData = displayManager.LineSettings;
-                    var line = lineData[debugIndex % lineData.Count];
-                    if (line != null) {
-                        if (line.PointName != "") {
-                            Clipboard.SetText($"\n{line.TrackName}\tS\t列番位置x\t列番位置y\t{line.PointName}\t{(line.Reversed ? "True" : "False")}");
-                        }
-                        else {
-                            Clipboard.SetText($"\n{line.TrackName}\tS\t列番位置x\t列番位置y\t\t");
-                        }
-                    }
-                }
-                else {
-                    displayManager.CopyImage();
-                }
+                displayManager.CopyImage();
             }
             if (e.KeyData == Keys.Tab) {
                 SetTopMost(!TopMost);
@@ -939,6 +926,18 @@ namespace TrainCrewTIDWindow {
                 if (e.KeyData == Keys.PageDown) {
                     debugCount = debugCount >= 0 ? 0 : -10000;
                     UpdateDebug(true);
+                }
+                if (e.KeyData == (Keys.C | Keys.Control | Keys.Shift)) {
+                    var lineData = displayManager.LineSettings;
+                    var line = lineData[debugIndex % lineData.Count];
+                    if (line != null) {
+                        if (line.PointName != "") {
+                            Clipboard.SetText($"\n{line.TrackName}\tS\t列番位置x\t列番位置y\t{line.PointName}\t{(line.Reversed ? "True" : "False")}");
+                        }
+                        else {
+                            Clipboard.SetText($"\n{line.TrackName}\tS\t列番位置x\t列番位置y\t\t");
+                        }
+                    }
                 }
             }
             else {
@@ -1153,6 +1152,7 @@ namespace TrainCrewTIDWindow {
 
         public void SetMagnifyingGlass(int x, int y) {
             if (usingMagnifyingGlass) {
+                lock(displayManager.OriginalBitmap)
                 lock (pictureBox2) {
                     var posX = magnifyingGlassSize / 2 - x * displayManager.OriginalBitmap.Width / pictureBox1.Width;
                     var posY = magnifyingGlassSize / 2 - y * displayManager.OriginalBitmap.Height / pictureBox1.Height;

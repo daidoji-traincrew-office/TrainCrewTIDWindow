@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Data;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using TrainCrewTIDWindow.Models;
 using TrainCrewTIDWindow.Settings;
@@ -88,7 +89,7 @@ namespace TrainCrewTIDWindow.Manager
             lock (trackDataDict) {
                 trainTCDict.Clear();
                 foreach (var tc in tcList) {
-                    if (tc == null/* || !tc.On && !tc.Lock || tc.Last != "" && !Regex.IsMatch(tc.Last, @"^([溝月レイルﾚｲﾙ]+|[回試臨]?[\d]{3,4}[ABCKST]?[XYZ]?)$")*/) {
+                    if (tc == null/* || !tc.On && !tc.Lock || tc.Last != "" && !Regex.IsMatch(tc.Last, @"^([溝月レイルﾚｲﾙVague]+|[回試臨]?[\d]{3,4}[ABCKST]?[XYZ]?)$")*/) {
                         continue;
                     }
                     /*Debug.WriteLine($"track {tc.Name}: {tc.Last} on:{tc.On} lock:{tc.Lock}");*/
@@ -186,34 +187,46 @@ namespace TrainCrewTIDWindow.Manager
                     if (c.Track != t && !tracks.Contains(c.Track)) {
                         return;
                     }
+                    var locked = c.TargetTracks.All(target => target.Switches.All(s => pointDataDict.ContainsKey(s.SwitchName) && pointDataDict[s.SwitchName].IsLocked));
                     foreach (var target in c.TargetTracks) {
 
                         var v = true;
-                        var locked = true;
-                        foreach (var s in target.Switches) {
-                            if (pointDataDict.ContainsKey(s.SwitchName)) {
-                                var p = pointDataDict[s.SwitchName];
-                                locked &= p.IsLocked;
-                                if (p.IsLocked && p.IsReversed != s.Reversed) {
-                                    v = false;
-                                    break;
+                        /*var locked = true;*/
+                        if (locked) {
+                            foreach (var s in target.Switches) {
+                                if (pointDataDict.ContainsKey(s.SwitchName)) {
+                                    var p = pointDataDict[s.SwitchName];
+                                    /*locked &= p.IsLocked;*/
+                                    if (p.IsLocked && p.IsReversed != s.Reversed) {
+                                        v = false;
+                                        break;
+                                    }
                                 }
                             }
-                        }
-                        if (!v) {
-                            continue;
-                        }
-                        if (locked && target.Track != t && !tracks.Contains(target.Track)) {
+                            if (!v) {
+                                continue;
+                            }
+                            if (locked && target.Track != t && !tracks.Contains(target.Track)) {
+                                break;
+                            }
+                            var nextT = t == c.Track || t != target.Track ? target.Track : c.Track;
+                            onTracks.Add(nextT);
+                            tracks.Remove(nextT);
+                            foreach (var c2 in connections.Where(c2 => c2 != c && c2.ContainsTrack(nextT))) {
+                                DecideConnection(c2, nextT);
+                            }
                             break;
                         }
-                        var nextT = t == c.Track ? target.Track : c.Track;
-                        onTracks.Add(nextT);
-                        tracks.Remove(nextT);
-                        foreach (var c2 in connections.Where(c2 => c2 != c && c2.ContainsTrack(nextT))) {
-                            DecideConnection(c2, nextT);
-                        }
-                        if (locked) {
-                            break;
+                        else {
+                            if (target.Track != t && !tracks.Contains(target.Track)) {
+                                break;
+                            }
+                            var nextT = t == c.Track || t != target.Track ? target.Track : c.Track;
+                            onTracks.Add(nextT);
+                            tracks.Remove(nextT);
+                            foreach (var c2 in connections.Where(c2 => c2 != c && c2.ContainsTrack(nextT))) {
+                                DecideConnection(c2, nextT);
+                            }
                         }
                     }
                 }
@@ -228,7 +241,7 @@ namespace TrainCrewTIDWindow.Manager
                     onTracks.Add(track);
                     tracks.Remove(track);
 
-                    foreach(var c in connections.Where(c => c.ContainsTrack(track))) {
+                    foreach(var c in connections.Where(c => c.ContainsTrack(track)/*c.Track == track*/)) {
                         DecideConnection(c, track);
                     }
 

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TrainCrewTIDWindow.Models;
+﻿using System.Collections.ObjectModel;
 
 namespace TrainCrewTIDWindow.Settings {
     public class TrackConnectionSetting(string track, List<TargetTrack> targets) {
