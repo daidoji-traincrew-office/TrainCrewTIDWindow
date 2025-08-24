@@ -245,7 +245,7 @@ namespace TrainCrewTIDWindow.Manager
                         DecideConnection(c, track);
                     }
 
-                    IEnumerable<NumberSetting>? list = null;
+                    IEnumerable<NumberWindowSetting>? list = null;
                     var window = "";
                     var l = (numBody % 2 == 1 ? numDown : numUp).ToArray();
                     foreach (var t in onTracks) {

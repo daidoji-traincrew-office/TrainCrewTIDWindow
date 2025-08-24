@@ -388,7 +388,7 @@ namespace TrainCrewTIDWindow.Communications {
             }
             catch (Exception ex) {
                 LogManager.AddExceptionLog(ex);
-                LogManager.OutputLog();
+                LogManager.OutputLog(true);
                 Debug.WriteLine($"Connection error: {ex.Message}");
                 throw;
             }
@@ -423,13 +423,18 @@ namespace TrainCrewTIDWindow.Communications {
                 if (!error) {
                     error = true;
                     _window.Invoke(new Action(() => { _window.LabelStatusText = "データ受信失敗"; }));
-                    TaskDialog.ShowDialog(new TaskDialogPage {
-                        Caption = "データ受信失敗 | TID - ダイヤ運転会",
-                        Heading = "データ受信失敗",
-                        Icon = TaskDialogIcon.Error,
-                        Text =
-                            $"データの受信に失敗しました。\n復旧を試みますが、しばらく経っても復旧しない場合はアプリケーションの再起動をお願いします。\nerrorcode:{e.WebSocketErrorCode}"
-                    });
+                    if (!_window.Silent) {
+                        TaskDialog.ShowDialog(new TaskDialogPage {
+                            Caption = "データ受信失敗 | TID - ダイヤ運転会",
+                            Heading = "データ受信失敗",
+                            Icon = TaskDialogIcon.Error,
+                            Text =
+                                $"データの受信に失敗しました。\n復旧を試みますが、しばらく経っても復旧しない場合はアプリケーションの再起動をお願いします。\nerrorcode:{e.WebSocketErrorCode}"
+                        });
+                    }
+                    else {
+                        _window.PlayWarningSound();
+                    }
                 }
             }
             catch (TimeoutException e) {
@@ -439,29 +444,39 @@ namespace TrainCrewTIDWindow.Communications {
                 if (!error) {
                     error = true;
                     _window.Invoke(new Action(() => { _window.LabelStatusText = "タイムアウト"; }));
-                    TaskDialog.ShowDialog(new TaskDialogPage {
-                        Caption = "タイムアウト | TID - ダイヤ運転会",
-                        Heading = "タイムアウト",
-                        Icon = TaskDialogIcon.Error,
-                        Text = "サーバとの通信がタイムアウトしました。\n大変恐れ入りますが、アプリケーションの再起動をお願いします。"
-                    });
+                    if (!_window.Silent) {
+                        TaskDialog.ShowDialog(new TaskDialogPage {
+                            Caption = "タイムアウト | TID - ダイヤ運転会",
+                            Heading = "タイムアウト",
+                            Icon = TaskDialogIcon.Error,
+                            Text = "サーバとの通信がタイムアウトしました。\n復旧を試みますが、しばらく経っても復旧しない場合はアプリケーションの再起動をお願いします。"
+                        });
+                    }
+                    else {
+                        _window.PlayWarningSound();
+                    }
                 }
             }
             catch (ObjectDisposedException e) {
             }
             catch (Exception e) {
                 LogManager.AddExceptionLog(e);
-                LogManager.OutputLog();
+                LogManager.OutputLog(true);
                 Debug.WriteLine($"Server send failed: {e.Message}\n{e.StackTrace}");
                 if (!error) {
                     error = true;
-                    _window.Invoke(new Action(() => { _window.LabelStatusText = "データ受信失敗"; }));
-                    TaskDialog.ShowDialog(new TaskDialogPage {
-                        Caption = "未知のエラー | TID - ダイヤ運転会",
-                        Heading = "未知のエラー",
-                        Icon = TaskDialogIcon.Error,
-                        Text = "未知のエラーです。\nTID製作者に状況を報告願います。"
-                    });
+                    _window.Invoke(new Action(() => { _window.LabelStatusText = "未知のエラー"; }));
+                    if (!_window.Silent) {
+                        TaskDialog.ShowDialog(new TaskDialogPage {
+                            Caption = "未知のエラー | TID - ダイヤ運転会",
+                            Heading = "未知のエラー",
+                            Icon = TaskDialogIcon.Error,
+                            Text = "未知のエラーです。\nTID製作者に状況を報告願います。"
+                        });
+                    }
+                    else {
+                        _window.PlayWarningSound();
+                    }
                 }
             }
         }

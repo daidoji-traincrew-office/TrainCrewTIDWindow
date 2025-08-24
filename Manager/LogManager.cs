@@ -14,6 +14,8 @@ namespace TrainCrewTIDWindow.Manager {
 
         public static bool Output { get; private set; } = false;
 
+        public static bool NeededWarning { get; private set; } = false;
+
         public static void AddInfoLog(string text) {
             log.Append($"{DateTime.Now.ToString()} [Info] ");
             log.AppendLine(text);
@@ -37,13 +39,14 @@ namespace TrainCrewTIDWindow.Manager {
             updated = true;
         }
 
-        public static void OutputLog() {
+        public static void OutputLog(bool neededWarning = false) {
             if (updated) {
                 using (StreamWriter w = new(".\\ErrorLog.txt", false, new UTF8Encoding(false))) {
                     w.Write(log);
                 }
                 Output = true;
                 updated = false;
+                NeededWarning |= neededWarning;
             }
         }
     }

@@ -29,12 +29,12 @@ namespace TrainCrewTIDWindow.Manager {
         /// <summary>
         /// 各トラックの列車番号の位置などのデータ（下り列車用）
         /// </summary>
-        private readonly List<NumberSetting> numSettingsDown;
+        private readonly List<NumberWindowSetting> numSettingsDown;
 
         /// <summary>
         /// 各トラックの列車番号の位置などのデータ（上り列車用）
         /// </summary>
-        private readonly List<NumberSetting> numSettingsUp;
+        private readonly List<NumberWindowSetting> numSettingsUp;
 
         private readonly Dictionary<Point, NumberWindowData> numberWindowDict = [];
 
@@ -61,12 +61,17 @@ namespace TrainCrewTIDWindow.Manager {
         /// <summary>
         /// 列車番号以外の色
         /// </summary>
-        private readonly Dictionary<string, Color> dicColor = [];
+        private readonly Dictionary<string, Color> colorDict = [];
 
         /// <summary>
-        /// 列車番号以外の色
+        /// 列車番号の文字の画像内座標とサイズ
         /// </summary>
-        private readonly Dictionary<char, Point> dicAlphaIndex = [];
+        private readonly Dictionary<char, NumberImageSetting> alphaIndexDict = [];
+
+        /// <summary>
+        /// 特殊な列車番号の画像内座標とサイズ
+        /// </summary>
+        private readonly List<NumberImageSetting> numIndexList = [];
 
         /// <summary>
         /// 画像
@@ -127,12 +132,12 @@ namespace TrainCrewTIDWindow.Manager {
         /// <summary>
         /// 各トラックの列車番号の位置などのデータ（下り列車用）
         /// </summary>
-        public ReadOnlyCollection<NumberSetting> NumSettingsDown => numSettingsDown.AsReadOnly();
+        public ReadOnlyCollection<NumberWindowSetting> NumSettingsDown => numSettingsDown.AsReadOnly();
 
         /// <summary>
         /// 各トラックの列車番号の位置などのデータ（上り列車用）
         /// </summary>
-        public ReadOnlyCollection<NumberSetting> NumSettingsUp => numSettingsUp.AsReadOnly();
+        public ReadOnlyCollection<NumberWindowSetting> NumSettingsUp => numSettingsUp.AsReadOnly();
 
         public ReadOnlyCollection<TrackConnectionSetting> TrackConnections => trackConnections.AsReadOnly();
 
@@ -179,7 +184,7 @@ namespace TrainCrewTIDWindow.Manager {
                         numColor.Add(texts[0], Color.FromArgb(int.Parse(texts[1]), int.Parse(texts[2]), int.Parse(texts[3])));
                     }
                     else {
-                        dicColor.Add(texts[0], Color.FromArgb(int.Parse(texts[1]), int.Parse(texts[2]), int.Parse(texts[3])));
+                        colorDict.Add(texts[0], Color.FromArgb(int.Parse(texts[1]), int.Parse(texts[2]), int.Parse(texts[3])));
                     }
                 }
             }
@@ -198,14 +203,16 @@ namespace TrainCrewTIDWindow.Manager {
                     var texts = line.Split('\t');
                     line = sr.ReadLine();
 
-                    if (texts.Length < 3 || texts.Any(t => t == "")) {
+                    if (texts.Length < 4 || texts.Any(t => t == "")) {
                         continue;
                     }
                     if (texts[0].Length != 1) {
-                        continue;
+                        numIndexList.Add(new(texts[0], int.Parse(texts[1]), int.Parse(texts[2]), int.Parse(texts[3])));
+                    }
+                    else {
+                        alphaIndexDict.Add(texts[0][0], new(texts[0], int.Parse(texts[1]), int.Parse(texts[2]), int.Parse(texts[3])));
                     }
 
-                    dicAlphaIndex.Add(texts[0][0], new Point(int.Parse(texts[1]), int.Parse(texts[2])));
                 }
             }
             catch {
@@ -507,7 +514,7 @@ namespace TrainCrewTIDWindow.Manager {
         /// </summary>
         /// <param name="fileName">ファイル名</param>
         /// <returns>読み込んだデータのリスト</returns>
-        private List<NumberSetting> LoadNumberSetting(string fileName) {
+        private List<NumberWindowSetting> LoadNumberSetting(string fileName) {
             return LoadNumberSetting(fileName, []);
         }
 
@@ -517,15 +524,15 @@ namespace TrainCrewTIDWindow.Manager {
         /// <param name="fileName">ファイル名</param>
         /// <param name="dict">列番表示位置の辞書</param>
         /// <returns>読み込んだデータのリスト</returns>
-        private List<NumberSetting> LoadNumberSetting(string fileName, Dictionary<Point, NumberWindowData> dict) {
-            List<NumberSetting> list = [];
+        private List<NumberWindowSetting> LoadNumberSetting(string fileName, Dictionary<Point, NumberWindowData> dict) {
+            List<NumberWindowSetting> list = [];
 
             try {
                 using var sr = new StreamReader($".\\setting\\{fileName}");
                 sr.ReadLine();
                 var line = sr.ReadLine();
                 var trackName = "";
-                NumberSetting? numSet = null;
+                NumberWindowSetting? numSet = null;
                 while (line != null) {
                     if (line.StartsWith('#')) {
                         line = sr.ReadLine();
@@ -569,10 +576,10 @@ namespace TrainCrewTIDWindow.Manager {
 
                     if (!emptyName) {
                         if (i > 5) {
-                            numSet = new NumberSetting(trackName, nwd, texts[4], texts[5] == bool.TrueString);
+                            numSet = new NumberWindowSetting(trackName, nwd, texts[4], texts[5] == bool.TrueString);
                         }
                         else {
-                            numSet = new NumberSetting(trackName, nwd);
+                            numSet = new NumberWindowSetting(trackName, nwd);
                         }
                         list.Add(numSet);
                     }
@@ -653,9 +660,9 @@ namespace TrainCrewTIDWindow.Manager {
                 }
 
 
-                if (!Regex.IsMatch(numHeader, @"^([溝月レイルﾚｲﾙ]+|[回試臨]?)$") || !Regex.IsMatch(numFooter, @"^(Vague|([ABCKST]?[XYZ]?))$")) {
+                /*if (!Regex.IsMatch(numHeader, @"^([溝月レイルﾚｲﾙ]+|[回試臨]?)$") || !Regex.IsMatch(numFooter, @"^(Vague|([ABCKST]?[XYZ]?))$")) {
                     continue;
-                }
+                }*/
 
                 rule = "";
                 /*foreach (var numData in isTrain ? (numBody % 2 == 1 ? track.NumSettingsDown : track.NumSettingsUp) : track.NumSettingsDown.Union(track.NumSettingsUp)) {
@@ -858,28 +865,57 @@ namespace TrainCrewTIDWindow.Manager {
                     // 0埋め列番への警告色として不明色に
                     if (isTrain && numBodyStr[0] == '0') {
                         iaType = new ImageAttributes();
-                        if (dicColor.TryGetValue("UNKNOWN", out var newColor)) {
+                        if (colorDict.TryGetValue("UNKNOWN", out var newColor)) {
                             iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = newColor }]);
                         }
                     }
                     // 列番被りへの警告色として不明色に
                     if (isTrain && duplicatingTrains.Contains(numWindow.Train)) {
                         iaType = new ImageAttributes();
-                        if (dicColor.TryGetValue("UNKNOWN", out var newColor)) {
+                        if (colorDict.TryGetValue("UNKNOWN", out var newColor)) {
                             iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = newColor }]);
                         }
                     }
-                    if (isTrain) {
+
+                    var numIndex = numIndexList.FirstOrDefault(i => i.Text == numWindow.Train && i.Width == 5);
+                    if(numIndex != null) {
+                        //色を取得
+                        var colorKey = numColor.Keys.FirstOrDefault(numWindow.Train.Contains);
+                        if (colorKey != null && numColor.TryGetValue(colorKey, out var newColor)) {
+                            iaType = new ImageAttributes();
+                            iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = newColor }]);
+                        }
+                        // 色が見つからなければとりあえず不明色に
+                        if (iaType == null) {
+                            iaType = new ImageAttributes();
+                            if (colorDict.TryGetValue("UNKNOWN", out newColor)) {
+                                iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = newColor }]);
+                            }
+                        }
+
+                        // 列番設置
+                        AddNumImage(g, numIndex.Width, numIndex.X, numIndex.Y, numWindow.PosX, numWindow.PosY, iaType);
+                        // 下線設置
+                        AddImage(g, numLineS, numWindow.PosX, numWindow.PosY + 10, iaType);
+
+
+
+
+
+                    }
+                    else if (isTrain) {
                         iaType ??= new ImageAttributes();
                         var umban = numBody / 3000 * 100 + numBody % 100;
 
                         // 運番を偶数にする・矢印設置
                         if (umban % 2 != 0) {
                             umban -= 1;
-                            AddNumImage(g, 8, 0, numWindow.PosX, numWindow.PosY, iaType);
+                            var index = alphaIndexDict['←'];
+                            AddNumImage(g, index.X, index.Y, numWindow.PosX, numWindow.PosY, iaType);
                         }
                         else {
-                            AddNumImage(g, 9, 0, numWindow.PosX + 24, numWindow.PosY, iaType);
+                            var index = alphaIndexDict['→'];
+                            AddNumImage(g, index.X, index.Y, numWindow.PosX + 24, numWindow.PosY, iaType);
                         }
 
                         // 運番設置
@@ -898,7 +934,7 @@ namespace TrainCrewTIDWindow.Manager {
                         AddImage(g, numLineS, numWindow.PosX, numWindow.PosY + 10);
 
                     }
-                    else if (numHeader.StartsWith("溝月")) {
+                    /*else if (numHeader.StartsWith("溝月")) {
                         // みぞつき色
                         if (numColor.TryGetValue("溝月", out var newColor)) {
                             iaType = new ImageAttributes();
@@ -907,7 +943,7 @@ namespace TrainCrewTIDWindow.Manager {
                         // みぞつき色が見つからなければとりあえず不明色に
                         if (iaType == null) {
                             iaType = new ImageAttributes();
-                            if (dicColor.TryGetValue("UNKNOWN", out newColor)) {
+                            if (colorDict.TryGetValue("UNKNOWN", out newColor)) {
                                 iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = newColor }]);
                             }
                         }
@@ -927,7 +963,7 @@ namespace TrainCrewTIDWindow.Manager {
                         // 皿具色が見つからなければとりあえず不明色に
                         if (iaType == null) {
                             iaType = new ImageAttributes();
-                            if (dicColor.TryGetValue("UNKNOWN", out newColor)) {
+                            if (colorDict.TryGetValue("UNKNOWN", out newColor)) {
                                 iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = newColor }]);
                             }
                         }
@@ -937,7 +973,7 @@ namespace TrainCrewTIDWindow.Manager {
                         // 下線設置
                         AddImage(g, numLineS, numWindow.PosX, numWindow.PosY + 10, iaType);
 
-                    }
+                    }*/
                 }
                 // 列番
                 else {
@@ -955,28 +991,54 @@ namespace TrainCrewTIDWindow.Manager {
                     // 0埋め列番への警告色として不明色に
                     if (isTrain && numBodyStr[0] == '0') {
                         iaType = new ImageAttributes();
-                        if (dicColor.TryGetValue("UNKNOWN", out var newColor)) {
+                        if (colorDict.TryGetValue("UNKNOWN", out var newColor)) {
                             iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = newColor }]);
                         }
                     }
                     // 列番被りへの警告色として不明色に
                     if (isTrain && duplicatingTrains.Contains(numWindow.Train)) {
                         iaType = new ImageAttributes();
-                        if (dicColor.TryGetValue("UNKNOWN", out var newColor)) {
+                        if (colorDict.TryGetValue("UNKNOWN", out var newColor)) {
                             iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = newColor }]);
                         }
                     }
                     // 種別色無しかつ数字なしであれば不明色に
                     if (iaType == null) {
                         iaType = new ImageAttributes();
-                        if (!isTrain && dicColor.TryGetValue("UNKNOWN", out var newColor)) {
+                        if (!isTrain && colorDict.TryGetValue("UNKNOWN", out var newColor)) {
                             iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = newColor }]);
                         }
                     }
 
-                    if (isTrain) {
+
+
+
+
+
+                    var numIndex = numIndexList.FirstOrDefault(i => i.Text == numWindow.Train && i.Width == 7);
+                    if (numIndex != null) {
+
+                        // 列番設置
+                        AddNumImage(g, numIndex.Width, numIndex.X, numIndex.Y, numWindow.PosX, numWindow.PosY, iaType);
+                        // 下線設置
+                        if (numWindow.Size == NumberSize.L) {
+                            AddImage(g, numLineL, numWindow.PosX, numWindow.PosY + 10, iaType);
+                        }
+                        else {
+                            AddImage(g, numLineM, numWindow.PosX, numWindow.PosY + 10, iaType);
+                        }
+
+
+
+
+                    }
+                    else if (isTrain) {
                         // 列番の頭の文字設置
-                        switch (numHeader) {
+                        if(numHeader.Length > 0 && alphaIndexDict.TryGetValue(numHeader[0], out var nh)) {
+                            AddNumImage(g, nh.Width, nh.X, nh.Y, numWindow.PosX, numWindow.PosY, iaType);
+                        }
+
+                        /*switch (numHeader) {
                             case "回":
                                 AddNumImage(g, 2, 0, 0, numWindow.PosX, numWindow.PosY, iaType);
                                 break;
@@ -986,7 +1048,7 @@ namespace TrainCrewTIDWindow.Manager {
                             case "臨":
                                 AddNumImage(g, 2, 4, 0, numWindow.PosX, numWindow.PosY, iaType);
                                 break;
-                        }
+                        }*/
 
                         // 列番本体設置
                         for (var i = 0; i < 4 && i < numBodyStr.Length; i++) {
@@ -997,13 +1059,13 @@ namespace TrainCrewTIDWindow.Manager {
 
                         // 列番の末尾の文字設置
                         if (numFooter.Length > 0) {
-                            var p = dicAlphaIndex[numFooter[0]];
+                            var p = alphaIndexDict[numFooter[0]];
                             if (p.X < 55 && p.Y < 55) {
                                 AddNumImage(g, p.X, p.Y, numWindow.PosX + 36, numWindow.PosY, iaType);
                             }
                         }
                         if (numFooter.Length > 1) {
-                            var p = dicAlphaIndex[numFooter[1]];
+                            var p = alphaIndexDict[numFooter[1]];
                             if (p.X < 55 && p.Y < 55) {
                                 AddNumImage(g, p.X, p.Y, numWindow.PosX + 42, numWindow.PosY, iaType);
                             }
@@ -1011,14 +1073,19 @@ namespace TrainCrewTIDWindow.Manager {
 
 
                         // 遅延時分表示（未実装のため必ず0・白色）
-
-                        /*var cm = new ColorMap();
-                        cm.OldColor = Color.White;
-                        cm.NewColor = Color.FromArgb(255, 0, 0);*/
+                        var delayMinute = 0;
                         var iaDelay = new ImageAttributes();
-                        /*iaDelay.SetRemapTable([cm]);*/
+                        if (delayMinute >= 10 && colorDict.TryGetValue("delayTime10", out var newColor)) {
+                            iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = newColor }]);
+                        }
+                        else if (delayMinute >= 5 && colorDict.TryGetValue("delayTime5", out newColor)) {
+                            iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = newColor }]);
+                        }
+                        else if (delayMinute >= 1 && colorDict.TryGetValue("delayTime1", out newColor)) {
+                            iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = newColor }]);
+                        }
                         if (numWindow.Size == NumberSize.L) {
-                            AddNumImage(g, 0, numWindow.PosX + 54, numWindow.PosY, iaDelay);
+                            AddNumImage(g, delayMinute, numWindow.PosX + 54, numWindow.PosY, iaDelay);
                         }
 
                         if (numWindow.Size == NumberSize.L) {
@@ -1029,16 +1096,16 @@ namespace TrainCrewTIDWindow.Manager {
                         }
 
                     }
-                    else if (numHeader.StartsWith("溝月")) {
+                    /*else if (numHeader.StartsWith("溝月")) {
 
                         // 溝月ﾚｲﾙ設置
                         AddNumImage(g, 7, 0, 3, numWindow.PosX, numWindow.PosY, iaType);
-                        /*if (numWindow.Size == NumberSize.L) {
+                        *//*if (numWindow.Size == NumberSize.L) {
                             AddNumImage(g, 7, 0, 3, numWindow.PosX, numWindow.PosY, iaType);
                         }
                         else {
                             AddNumImage(g, 5, 0, 4, numWindow.PosX, numWindow.PosY, iaType);
-                        }*/
+                        }*//*
                         // 下線設置
                         if (numWindow.Size == NumberSize.L) {
                             AddImage(g, numLineL, numWindow.PosX, numWindow.PosY + 10, iaType);
@@ -1051,12 +1118,12 @@ namespace TrainCrewTIDWindow.Manager {
 
                         // ベーグ設置
                         AddNumImage(g, 7, 0, 5, numWindow.PosX, numWindow.PosY, iaType);
-                        /*if (numWindow.Size == NumberSize.L) {
+                        *//*if (numWindow.Size == NumberSize.L) {
                             AddNumImage(g, 7, 0, 5, numWindow.PosX, numWindow.PosY, iaType);
                         }
                         else {
                             AddNumImage(g, 5, 0, 6, numWindow.PosX, numWindow.PosY, iaType);
-                        }*/
+                        }*//*
                         // 下線設置
                         if (numWindow.Size == NumberSize.L) {
                             AddImage(g, numLineL, numWindow.PosX, numWindow.PosY + 10, iaType);
@@ -1064,7 +1131,7 @@ namespace TrainCrewTIDWindow.Manager {
                         else {
                             AddImage(g, numLineM, numWindow.PosX, numWindow.PosY + 10, iaType);
                         }
-                    }
+                    }*/
                 }
             }
 
@@ -1172,7 +1239,7 @@ namespace TrainCrewTIDWindow.Manager {
         /// <param name="y">貼り付けるy座標</param>
         /// <param name="ia">色の置き換えを指定したImageAttributes</param>
         private void AddNumImage(Graphics g, int num, int x, int y, ImageAttributes ia) {
-            AddNumImage(g, num, 1, x, y, ia);
+            AddNumImage(g, num, 0, x, y, ia);
         }
 
         /// <summary>
@@ -1210,7 +1277,7 @@ namespace TrainCrewTIDWindow.Manager {
         /// <param name="x">貼り付けるx座標</param>
         /// <param name="y">貼り付けるy座標</param>
         private void AddNumImage(Graphics g, int num, int x, int y) {
-            AddNumImage(g, num, 1, x, y);
+            AddNumImage(g, num, 0, x, y);
         }
 
         public void ChangeScale() {
@@ -1245,7 +1312,7 @@ namespace TrainCrewTIDWindow.Manager {
             }
             catch(Exception e) {
                 LogManager.AddExceptionLog(e);
-                LogManager.OutputLog();
+                LogManager.OutputLog(true);
                 Debug.WriteLine($"Server send failed: {e.Message}\n{e.StackTrace}");
                 if (!ServerCommunication.Error) {
                     ServerCommunication.Error = true;

@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Drawing.Drawing2D;
 using TrainCrewTIDWindow.Settings;
+using System.Media;
 
 namespace TrainCrewTIDWindow {
 
@@ -122,6 +123,19 @@ namespace TrainCrewTIDWindow {
         /// </summary>
         private int debugCount = -99999;
 
+        private SoundPlayer? warningSound = null;
+
+        public void PlayWarningSound() {
+            if (warningSound != null) {
+                warningSound.Play();
+            }
+            else {
+                SystemSounds.Hand.Play();
+            }
+        }
+
+        public bool Silent { get; private set; } = false;
+
         private OpenIddictClientService service;
 
         public string LabelStatusText {
@@ -169,9 +183,14 @@ namespace TrainCrewTIDWindow {
 
             if (!loaded) {
                 using (StreamWriter w = new(".\\setting\\setting.txt", false, new UTF8Encoding(false))) {
-                    w.Write("source=select\ntopMost=true\nscale=100\ntimeOffset=14\nzoomMode=pushtozoom\nzoomSize=240");
+                    w.Write("source=select\ntopMost=true\nscale=100\ntimeOffset=14\nzoomMode=pushtozoom\nzoomSize=240\nsilent=false");
                 }
             }
+
+            if (File.Exists(".\\sound\\warning.wav")) {
+                warningSound = new SoundPlayer(".\\sound\\warning.wav");
+            }
+
 
             displayManager = new TIDManager(pictureBox1, this);
 
@@ -197,6 +216,31 @@ namespace TrainCrewTIDWindow {
             menuItemScale175.Click += (sender, e) => { SetScale(175); };
             menuItemScale200.Click += (sender, e) => { SetScale(200); };
             menuItemScaleFit.Click += (sender, e) => { SetScale(-1); };
+
+            menuItemHour0.Click += (sender, e) => { SetHourQuick(0); };
+            menuItemHour1.Click += (sender, e) => { SetHourQuick(1); };
+            menuItemHour2.Click += (sender, e) => { SetHourQuick(2); };
+            menuItemHour3.Click += (sender, e) => { SetHourQuick(3); };
+            menuItemHour4.Click += (sender, e) => { SetHourQuick(4); };
+            menuItemHour5.Click += (sender, e) => { SetHourQuick(5); };
+            menuItemHour6.Click += (sender, e) => { SetHourQuick(6); };
+            menuItemHour7.Click += (sender, e) => { SetHourQuick(7); };
+            menuItemHour8.Click += (sender, e) => { SetHourQuick(8); };
+            menuItemHour9.Click += (sender, e) => { SetHourQuick(9); };
+            menuItemHour10.Click += (sender, e) => { SetHourQuick(10); };
+            menuItemHour11.Click += (sender, e) => { SetHourQuick(11); };
+            menuItemHour12.Click += (sender, e) => { SetHourQuick(12); };
+            menuItemHour13.Click += (sender, e) => { SetHourQuick(13); };
+            menuItemHour14.Click += (sender, e) => { SetHourQuick(14); };
+            menuItemHour15.Click += (sender, e) => { SetHourQuick(15); };
+            menuItemHour16.Click += (sender, e) => { SetHourQuick(16); };
+            menuItemHour17.Click += (sender, e) => { SetHourQuick(17); };
+            menuItemHour18.Click += (sender, e) => { SetHourQuick(18); };
+            menuItemHour19.Click += (sender, e) => { SetHourQuick(19); };
+            menuItemHour20.Click += (sender, e) => { SetHourQuick(20); };
+            menuItemHour21.Click += (sender, e) => { SetHourQuick(21); };
+            menuItemHour22.Click += (sender, e) => { SetHourQuick(22); };
+            menuItemHour23.Click += (sender, e) => { SetHourQuick(23); };
         }
 
         private bool LoadSetting(string path) {
@@ -223,58 +267,58 @@ namespace TrainCrewTIDWindow {
                             topMostSetting = texts[1].Replace(" ", "").ToLower() == "true";
                             break;
                         case "scale":
-                            menuItemScale50.Text = "50%";
-                            menuItemScale75.Text = "75%";
-                            menuItemScale90.Text = "90%";
-                            menuItemScale100.Text = "100%";
-                            menuItemScale110.Text = "110%";
-                            menuItemScale125.Text = "125%";
-                            menuItemScale150.Text = "150%";
-                            menuItemScale175.Text = "175%";
-                            menuItemScale200.Text = "200%";
-                            menuItemScaleFit.Text = "フィット表示";
+                            menuItemScale50.CheckState = CheckState.Unchecked;
+                            menuItemScale75.CheckState = CheckState.Unchecked;
+                            menuItemScale90.CheckState = CheckState.Unchecked;
+                            menuItemScale100.CheckState = CheckState.Unchecked;
+                            menuItemScale110.CheckState = CheckState.Unchecked;
+                            menuItemScale125.CheckState = CheckState.Unchecked;
+                            menuItemScale150.CheckState = CheckState.Unchecked;
+                            menuItemScale175.CheckState = CheckState.Unchecked;
+                            menuItemScale200.CheckState = CheckState.Unchecked;
+                            menuItemScaleFit.CheckState = CheckState.Unchecked;
 
                             if (texts[1].Replace(" ", "").ToLower() == "fit") {
                                 TIDScale = -1;
-                                menuItemScaleFit.Text = "フィット表示（現在）";
+                                menuItemScaleFit.CheckState = CheckState.Indeterminate;
                                 break;
                             }
                             switch (texts[1]) {
                                 case "50":
                                     TIDScale = 50;
-                                    menuItemScale50.Text = "50%（現在）";
+                                    menuItemScale50.CheckState = CheckState.Indeterminate;
                                     break;
                                 case "75":
                                     TIDScale = 75;
-                                    menuItemScale75.Text = "75%（現在）";
+                                    menuItemScale75.CheckState = CheckState.Indeterminate;
                                     break;
                                 case "90":
                                     TIDScale = 90;
-                                    menuItemScale90.Text = "90%（現在）";
+                                    menuItemScale90.CheckState = CheckState.Indeterminate;
                                     break;
                                 case "100":
                                     TIDScale = 100;
-                                    menuItemScale100.Text = "100%（現在）";
+                                    menuItemScale100.CheckState = CheckState.Indeterminate;
                                     break;
                                 case "110":
                                     TIDScale = 110;
-                                    menuItemScale110.Text = "110%（現在）";
+                                    menuItemScale110.CheckState = CheckState.Indeterminate;
                                     break;
                                 case "125":
                                     TIDScale = 125;
-                                    menuItemScale125.Text = "125%（現在）";
+                                    menuItemScale125.CheckState = CheckState.Indeterminate;
                                     break;
                                 case "150":
                                     TIDScale = 150;
-                                    menuItemScale150.Text = "150%（現在）";
+                                    menuItemScale150.CheckState = CheckState.Indeterminate;
                                     break;
                                 case "175":
                                     TIDScale = 175;
-                                    menuItemScale175.Text = "175%（現在）";
+                                    menuItemScale175.CheckState = CheckState.Indeterminate;
                                     break;
                                 case "200":
                                     TIDScale = 200;
-                                    menuItemScale200.Text = "200%（現在）";
+                                    menuItemScale200.CheckState = CheckState.Indeterminate;
                                     break;
                             }
                             break;
@@ -294,6 +338,9 @@ namespace TrainCrewTIDWindow {
                             if (int.TryParse(texts[1], out var size) && size >= 20) {
                                 magnifyingGlassSize = size;
                             }
+                            break;
+                        case "silent":
+                            SetSilent(texts[1].Replace(" ", "").ToLower() == "true");
                             break;
                     }
                 }
@@ -320,7 +367,6 @@ namespace TrainCrewTIDWindow {
             }
 
             SetTopMost(topMostSetting);
-
 
             switch (s) {
                 case "traincrew":
@@ -591,12 +637,17 @@ namespace TrainCrewTIDWindow {
                     LogManager.AddWarningLog("サーバからの受信が10秒以上ありません");
                     LabelStatusText = $"データ受信不能(最終受信：{updatedTime?.ToString("H:mm:ss")})";
                     Debug.WriteLine($"データ受信不能: {delaySeconds}");
-                    TaskDialog.ShowDialog(new TaskDialogPage {
-                        Caption = "データ受信不能 | TID - ダイヤ運転会",
-                        Heading = "データ受信不能",
-                        Icon = TaskDialogIcon.Error,
-                        Text = "サーバ側からのデータ受信が10秒以上ありませんでした。\n復旧を試みますが、しばらく経っても復旧しない場合はアプリケーションの再起動をおすすめします。"
-                    });
+                    if (!Silent) {
+                        TaskDialog.ShowDialog(new TaskDialogPage {
+                            Caption = "データ受信不能 | TID - ダイヤ運転会",
+                            Heading = "データ受信不能",
+                            Icon = TaskDialogIcon.Error,
+                            Text = "サーバ側からのデータ受信が10秒以上ありませんでした。\n復旧を試みますが、しばらく経っても復旧しない場合はアプリケーションの再起動をおすすめします。"
+                        });
+                    }
+                    else {
+                        PlayWarningSound();
+                    }
                 }
             }
             else if (delaySeconds > 1) {
@@ -711,6 +762,7 @@ namespace TrainCrewTIDWindow {
 
         private void SetTopMost(bool topMost) {
             TopMost = topMost;
+            menuItemTopMost.CheckState = topMost ? CheckState.Checked : CheckState.Unchecked;
             labelTopMost.Text = $"最前面：{(topMost ? "ON" : "OFF")}";
             labelTopMost.ForeColor = topMost ? Color.Yellow : Color.Gray;
         }
@@ -721,6 +773,25 @@ namespace TrainCrewTIDWindow {
 
         private void labelTopMost_Leave(object sender, EventArgs e) {
             labelTopMost.BackColor = Color.FromArgb(30, 30, 30);
+        }
+
+        private void labelSilent_Hover(object sender, EventArgs e) {
+            labelSilent.BackColor = Color.FromArgb(55, 55, 55);
+        }
+
+        private void labelSilent_Leave(object sender, EventArgs e) {
+            labelSilent.BackColor = Color.FromArgb(30, 30, 30);
+        }
+
+        private void labelSilent_Click(object sender, EventArgs e) {
+            SetSilent(!Silent);
+        }
+
+        private void SetSilent(bool silent) {
+            Silent = silent;
+            menuItemSilent.CheckState = silent ? CheckState.Checked : CheckState.Unchecked;
+            labelSilent.Text = $"サイレント：{(silent ? "ON" : "OFF")}";
+            labelSilent.ForeColor = silent ? Color.Gray : Color.White;
         }
 
         private void menuItemCopy_Click(object sender, EventArgs e) {
@@ -736,47 +807,47 @@ namespace TrainCrewTIDWindow {
             }
             LogManager.AddInfoLog($"拡大率変更：{(scale > 0 ? $"{scale}%" : "fit")}");
 
-            menuItemScale50.Text = "50%";
-            menuItemScale75.Text = "75%";
-            menuItemScale90.Text = "90%";
-            menuItemScale100.Text = "100%";
-            menuItemScale110.Text = "110%";
-            menuItemScale125.Text = "125%";
-            menuItemScale150.Text = "150%";
-            menuItemScale175.Text = "175%";
-            menuItemScale200.Text = "200%";
-            menuItemScaleFit.Text = "フィット表示";
+            menuItemScale50.CheckState = CheckState.Unchecked;
+            menuItemScale75.CheckState = CheckState.Unchecked;
+            menuItemScale90.CheckState = CheckState.Unchecked;
+            menuItemScale100.CheckState = CheckState.Unchecked;
+            menuItemScale110.CheckState = CheckState.Unchecked;
+            menuItemScale125.CheckState = CheckState.Unchecked;
+            menuItemScale150.CheckState = CheckState.Unchecked;
+            menuItemScale175.CheckState = CheckState.Unchecked;
+            menuItemScale200.CheckState = CheckState.Unchecked;
+            menuItemScaleFit.CheckState = CheckState.Unchecked;
 
             switch (scale) {
                 case 50:
-                    menuItemScale50.Text = "50%（現在）";
+                    menuItemScale50.CheckState = CheckState.Indeterminate;
                     break;
                 case 75:
-                    menuItemScale75.Text = "75%（現在）";
+                    menuItemScale75.CheckState = CheckState.Indeterminate;
                     break;
                 case 90:
-                    menuItemScale90.Text = "90%（現在）";
+                    menuItemScale90.CheckState = CheckState.Indeterminate;
                     break;
                 case 100:
-                    menuItemScale100.Text = "100%（現在）";
+                    menuItemScale100.CheckState = CheckState.Indeterminate;
                     break;
                 case 110:
-                    menuItemScale110.Text = "110%（現在）";
+                    menuItemScale110.CheckState = CheckState.Indeterminate;
                     break;
                 case 125:
-                    menuItemScale125.Text = "125%（現在）";
+                    menuItemScale125.CheckState = CheckState.Indeterminate;
                     break;
                 case 150:
-                    menuItemScale150.Text = "150%（現在）";
+                    menuItemScale150.CheckState = CheckState.Indeterminate;
                     break;
                 case 175:
-                    menuItemScale175.Text = "175%（現在）";
+                    menuItemScale175.CheckState = CheckState.Indeterminate;
                     break;
                 case 200:
-                    menuItemScale200.Text = "200%（現在）";
+                    menuItemScale200.CheckState = CheckState.Indeterminate;
                     break;
                 case -1:
-                    menuItemScaleFit.Text = "フィット表示（現在）";
+                    menuItemScaleFit.CheckState = CheckState.Indeterminate;
                     break;
 
             }
@@ -795,6 +866,10 @@ namespace TrainCrewTIDWindow {
                 pictureBox1.Cursor = Cursors.Default;
 
             }
+        }
+
+        private void SetHourQuick(int hour) {
+            TimeOffset = new TimeSpan((hour + 24 - Clock.Hour) % 24, TimeOffset.Minutes, TimeOffset.Seconds);
         }
 
 
@@ -1152,24 +1227,24 @@ namespace TrainCrewTIDWindow {
 
         public void SetMagnifyingGlass(int x, int y) {
             if (usingMagnifyingGlass) {
-                lock(displayManager.OriginalBitmap)
-                lock (pictureBox2) {
-                    var posX = magnifyingGlassSize / 2 - x * displayManager.OriginalBitmap.Width / pictureBox1.Width;
-                    var posY = magnifyingGlassSize / 2 - y * displayManager.OriginalBitmap.Height / pictureBox1.Height;
-                    posX = posX > magnifyingGlassSize / 2 + 5 ? magnifyingGlassSize / 2 - x : (posX < magnifyingGlassSize / 2 - displayManager.OriginalBitmap.Width ? pictureBox1.Width - x + magnifyingGlassSize / 2 - displayManager.OriginalBitmap.Width : posX);
-                    posY = posY > magnifyingGlassSize / 2 + 5 ? magnifyingGlassSize / 2 - y : (posY < magnifyingGlassSize / 2 - displayManager.OriginalBitmap.Height ? pictureBox1.Height - y + magnifyingGlassSize / 2 - displayManager.OriginalBitmap.Height : posY);
+                lock (displayManager.OriginalBitmap)
+                    lock (pictureBox2) {
+                        var posX = magnifyingGlassSize / 2 - x * displayManager.OriginalBitmap.Width / pictureBox1.Width;
+                        var posY = magnifyingGlassSize / 2 - y * displayManager.OriginalBitmap.Height / pictureBox1.Height;
+                        posX = posX > magnifyingGlassSize / 2 + 5 ? magnifyingGlassSize / 2 - x : (posX < magnifyingGlassSize / 2 - displayManager.OriginalBitmap.Width ? pictureBox1.Width - x + magnifyingGlassSize / 2 - displayManager.OriginalBitmap.Width : posX);
+                        posY = posY > magnifyingGlassSize / 2 + 5 ? magnifyingGlassSize / 2 - y : (posY < magnifyingGlassSize / 2 - displayManager.OriginalBitmap.Height ? pictureBox1.Height - y + magnifyingGlassSize / 2 - displayManager.OriginalBitmap.Height : posY);
 
-                    var b = new Bitmap(magnifyingGlassSize, magnifyingGlassSize);
-                    var old = pictureBox2.Image;
-                    pictureBox2.Image = b;
-                    old?.Dispose();
-                    using var g = Graphics.FromImage(pictureBox2.Image);
-                    GraphicsPath gp = new();
-                    gp.AddEllipse(g.VisibleClipBounds);
-                    g.Clip = new Region(gp);
-                    g.DrawImage(displayManager.OriginalBitmap, posX, posY);
-                    g.DrawEllipse(new Pen(Color.DarkGray, 2), 0, 0, magnifyingGlassSize, magnifyingGlassSize);
-                }
+                        var b = new Bitmap(magnifyingGlassSize, magnifyingGlassSize);
+                        var old = pictureBox2.Image;
+                        pictureBox2.Image = b;
+                        old?.Dispose();
+                        using var g = Graphics.FromImage(pictureBox2.Image);
+                        GraphicsPath gp = new();
+                        gp.AddEllipse(g.VisibleClipBounds);
+                        g.Clip = new Region(gp);
+                        g.DrawImage(displayManager.OriginalBitmap, posX, posY);
+                        g.DrawEllipse(new Pen(Color.DarkGray, 2), 0, 0, magnifyingGlassSize, magnifyingGlassSize);
+                    }
             }
         }
 
@@ -1200,15 +1275,23 @@ namespace TrainCrewTIDWindow {
         }
 
         private void TIDWindow_Closing(object sender, EventArgs e) {
-            if (LogManager.Output) {
+            if (LogManager.Output && LogManager.NeededWarning) {
                 TaskDialog.ShowDialog(new TaskDialogPage {
                     Caption = "エラーログ出力 | TID - ダイヤ運転会",
                     Heading = "エラーログ出力",
                     Icon = TaskDialogIcon.Information,
                     Text =
-                        $"エラーログが出力されました。\n本ソフトの製作担当者にErrorLog.txtをお送りください。"
+                        $"エラーログが出力されました。\n本ソフトの製作担当者にお問い合わせのうえ、\n必要な場合はErrorLog.txtをお送りください。\n（ErrorLog.txtは次回起動後に削除される場合があります）"
                 });
             }
+        }
+
+        private void menuItemSilent_Click(object sender, EventArgs e) {
+            SetSilent(!Silent);
+        }
+
+        private void menuItemTopMost_Click(object sender, EventArgs e) {
+            SetTopMost(!TopMost);
         }
     }
 }

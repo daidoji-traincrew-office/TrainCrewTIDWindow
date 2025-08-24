@@ -10,7 +10,7 @@ namespace TrainCrewTIDWindow.Settings {
     /// <param name="nwd">列番表示枠</param>
     /// <param name="pointName">表示条件となる転轍器の名称</param>
     /// <param name="reversed">転轍器の状態（反位であるか）</param>
-    public class NumberSetting(string trackName, NumberWindowData nwd, string pointName, bool reversed) {
+    public class NumberWindowSetting(string trackName, NumberWindowData nwd, string pointName, bool reversed) {
 
         /// <summary>
         /// 軌道回路名
@@ -47,7 +47,7 @@ namespace TrainCrewTIDWindow.Settings {
         /// </summary>
         /// <param name="trackName">軌道回路名</param>
         /// <param name="nwd">列番表示枠</param>
-        public NumberSetting(string trackName, NumberWindowData nwd) : this(trackName, nwd, "", false) { }
+        public NumberWindowSetting(string trackName, NumberWindowData nwd) : this(trackName, nwd, "", false) { }
 
         public void AddNumberWindow(NumberWindowData nwd) {
             windowDataList.Add(nwd);
