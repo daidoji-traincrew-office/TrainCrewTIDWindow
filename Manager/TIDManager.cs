@@ -380,8 +380,18 @@ namespace TrainCrewTIDWindow.Manager {
             pictureBox.Height = backgroundDefault.Height;
 
             window.MaximumSize = new Size(backgroundDefault.Width + 16, backgroundDefault.Height + 39 + 24);*/
-            window.Size = new Size(Math.Max(backgroundDefault.Width * window.TIDScale / 100, backgroundDefault.Width) + 16, Math.Max(backgroundDefault.Height * window.TIDScale / 100, backgroundDefault.Height) + 39 + 24);
+            window./*Client*/Size = new Size(Math.Max(backgroundDefault.Width * window.TIDScale / 100, backgroundDefault.Width) + 16, Math.Max(backgroundDefault.Height * window.TIDScale / 100, backgroundDefault.Height) + 39 + 24);
+            /*window.ClientSize = new Size(Math.Max(backgroundDefault.Width * window.TIDScale / 100, backgroundDefault.Width) + 16 - 16, Math.Max(backgroundDefault.Height * window.TIDScale / 100, backgroundDefault.Height) + 39 + 24 - 39);*/
             window.TopMost = true;
+
+            /*if (window.ClientSize.Width + 16 >= window.MaximumSize.Width && window.ClientSize.Height + 39 < window.MaximumSize.Height) {
+                window.MaximumSize = new Size(Math.Max(width, backgroundDefault.Width) + 16 + 17, Math.Max(height, backgroundDefault.Height) + 39 + 24);
+                window.*//*Client*//*Size = new Size(Math.Max(backgroundDefault.Width * window.TIDScale / 100, backgroundDefault.Width) + 16 + 17, Math.Max(backgroundDefault.Height * window.TIDScale / 100, backgroundDefault.Height) + 39 + 24);
+            }
+            else if (window.ClientSize.Width + 16 < window.MaximumSize.Width && window.ClientSize.Height + 39 >= window.MaximumSize.Height) {
+                window.MaximumSize = new Size(Math.Max(width, backgroundDefault.Width) + 16, Math.Max(height, backgroundDefault.Height) + 39 + 24 + 17);
+                window.*//*Client*//*Size = new Size(Math.Max(backgroundDefault.Width * window.TIDScale / 100, backgroundDefault.Width) + 16, Math.Max(backgroundDefault.Height * window.TIDScale / 100, backgroundDefault.Height) + 39 + 24 + 17);
+            }*/
 
             // 試験表示
             {
@@ -449,8 +459,7 @@ namespace TrainCrewTIDWindow.Manager {
             }
             originalBitmap = new Bitmap(pictureBox.Image);
             ChangeScale();
-
-
+            window.DetectResize = true;
 
         }
 
@@ -1329,6 +1338,8 @@ namespace TrainCrewTIDWindow.Manager {
         }
 
         private void PrepareChangeScale() {
+            var dr = window.DetectResize;
+            window.DetectResize = false;
             int width, height;
             lock (originalBitmap) {
                 width = originalBitmap.Width * window.TIDScale / 100;
@@ -1338,6 +1349,24 @@ namespace TrainCrewTIDWindow.Manager {
                     width = originalBitmap.Width * 2;
                     height = originalBitmap.Height * 2;
                 }
+
+                /*var maxWidth = Math.Max(width, originalBitmap.Width) + 16;
+                var maxHeight = Math.Max(height, originalBitmap.Height) + 39 + 24;
+
+                var cs = window.ClientSize;
+                Debug.WriteLine($"size {window.Size.Width} {window.ClientSize.Width} {maxWidth} {window.Size.Height} {window.ClientSize.Height} {maxHeight}");
+                if (window.Size.Width + 16 >= maxWidth && window.Size.Height + 39 >= maxHeight) {
+                    window.MaximumSize = new Size(maxWidth, maxHeight);
+                }
+                else if (window.Size.Width + 16 >= maxWidth && window.Size.Height + 39 < maxHeight) {
+                    window.MaximumSize = new Size(maxWidth + 17, maxHeight);
+                }
+                else if (window.Size.Width + 16 < maxWidth && window.Size.Height + 39 >= maxHeight) {
+                    window.MaximumSize = new Size(maxWidth, maxHeight + 17);
+                }
+                window.MaximumSize = new Size(maxWidth, maxHeight);
+
+                window.ClientSize = cs;*/
 
                 window.MaximumSize = new Size(Math.Max(width, originalBitmap.Width) + 16, Math.Max(height, originalBitmap.Height) + 39 + 24);
 
@@ -1356,6 +1385,7 @@ namespace TrainCrewTIDWindow.Manager {
                     pictureBox.Height = /*height > originalBitmap.Height ?*/ height /*: originalBitmap.Height*/;
                 }
             }
+            window.DetectResize = dr;
 
         }
 

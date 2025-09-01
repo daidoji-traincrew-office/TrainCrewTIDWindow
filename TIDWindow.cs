@@ -9,6 +9,7 @@ using System.Text;
 using System.Drawing.Drawing2D;
 using TrainCrewTIDWindow.Settings;
 using System.Media;
+using System.Windows.Media.Media3D;
 
 namespace TrainCrewTIDWindow {
 
@@ -124,6 +125,12 @@ namespace TrainCrewTIDWindow {
         private int debugCount = -99999;
 
         private SoundPlayer? warningSound = null;
+
+        private bool windowMinimized = false;
+
+        public bool DetectResize {
+            get; set;
+        } = false;
 
         public void PlayWarningSound() {
             if (warningSound != null) {
@@ -614,6 +621,17 @@ namespace TrainCrewTIDWindow {
         }
 
         private void UpdateClock() {
+            if (WindowState == FormWindowState.Maximized) {
+                DetectResize = false;
+                var width = Width;
+                var height = Height;
+                var loc = new Point(Location.X, Location.Y + 8);
+                WindowState = FormWindowState.Normal;
+                Width = width;
+                Height = height;
+                Location = loc;
+                DetectResize = true;
+            }
             if (showOffset > 0) {
                 showOffset--;
             }
@@ -1071,9 +1089,49 @@ namespace TrainCrewTIDWindow {
         }
 
         private void TIDWindow_Resize(object sender, EventArgs e) {
-            if (displayManager != null && TIDScale == -1) {
-                displayManager.ChangeScale();
-                labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalBitmap.Width * 100 + 0.5)}%";
+            if (displayManager != null && DetectResize) {
+                DetectResize = false;
+                if (TIDScale == -1) {
+                    displayManager.ChangeScale();
+                    labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalBitmap.Width * 100 + 0.5)}%";
+                    DetectResize = true;
+                    return;
+                }
+                /*lock (displayManager.OriginalBitmap) {
+                    Debug.WriteLine($"resize {Size.Width} {ClientSize.Width} {MaximumSize.Width} {Size.Height} {ClientSize.Height} {MaximumSize.Height}");
+                    var cs = ClientSize;
+                    var width = displayManager.OriginalBitmap.Width * TIDScale / 100;
+                    var height = displayManager.OriginalBitmap.Height * TIDScale / 100;
+                    var maxWidth = Math.Max(width, displayManager.OriginalBitmap.Width) + 16;
+                    var maxHeight = Math.Max(height, displayManager.OriginalBitmap.Height) + 39 + 24;
+
+                    if (ClientSize.Width + 16 >= maxWidth && ClientSize.Height + 39 < maxHeight) {
+                        MaximumSize = new Size(maxWidth + 17, maxHeight);
+                        ClientSize = cs;
+                    }
+                    else if (ClientSize.Width + 16 < maxWidth && ClientSize.Height + 39 >= maxHeight) {
+                        MaximumSize = new Size(maxWidth, maxHeight + 17);
+                        ClientSize = cs;
+                    }
+                    else if (ClientSize.Width + 16 >= maxWidth && ClientSize.Height + 39 >= maxHeight) {
+                        Debug.WriteLine($"resize max");
+                        *//*Size = new Size(maxWidth, maxHeight);*//*
+                        MaximumSize = new Size(maxWidth, maxHeight);
+                        *//*ClientSize = new Size(Math.Max(displayManager.OriginalBitmap.Width * TIDScale / 100, displayManager.OriginalBitmap.Width), Math.Max(displayManager.OriginalBitmap.Height * TIDScale / 100, displayManager.OriginalBitmap.Height) + 24);*//*
+                    }
+                    Debug.WriteLine($"resized {Size.Width} {ClientSize.Width} {MaximumSize.Width} {Size.Height} {ClientSize.Height} {MaximumSize.Height}");
+                }*/
+                DetectResize = true;
+            }
+        }
+        private void TIDWindow_SizeChanged(object sender, EventArgs e) {
+            if (WindowState == FormWindowState.Minimized) {
+                if (!windowMinimized) {
+                    LogManager.AddInfoLog("ウィンドウが最小化されました");
+                }
+            }
+            else if (windowMinimized) {
+                LogManager.AddInfoLog("ウィンドウの最小化が解除されました");
             }
         }
 

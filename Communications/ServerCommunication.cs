@@ -217,7 +217,7 @@ namespace TrainCrewTIDWindow.Communications {
                 Debug.WriteLine(error == null
                     ? "Connection closed normally."
                     : $"Connection closed with error: {error.Message}");
-                LogManager.AddWarningLog("接続が切断されました。再接続を試行します。");
+                LogManager.AddWarningLog("接続が切断されました。再接続を試行します");
 
                 connected = false;
                 ConnectionStatusChanged?.Invoke(connected);
@@ -243,14 +243,14 @@ namespace TrainCrewTIDWindow.Communications {
                         Debug.WriteLine("Reconnected successfully.");
                         connected = true;
                         ConnectionStatusChanged?.Invoke(connected);
-                        LogManager.AddInfoLog("再接続に成功しました。");
+                        LogManager.AddInfoLog("再接続に成功しました");
                         _window.LabelStatusText = "サーバ接続成功";
                         break;
                     }
                 }
                 catch (Exception ex) {
                     Debug.WriteLine($"Reconnect attempt failed: {ex.Message}");
-                    LogManager.AddWarningLog("再接続に失敗しました。再試行します。");
+                    LogManager.AddWarningLog("再接続に失敗しました。再試行します");
                     _window.LabelStatusText = "サーバ再接続失敗。再試行中...";
                 }
 
@@ -315,13 +315,13 @@ namespace TrainCrewTIDWindow.Communications {
         /// </summary>
         private async Task<bool> HandleTokenRefreshFailure() {
             Debug.WriteLine("Refresh token is invalid or expired.");
-            LogManager.AddWarningLog("トークンが切れました。");
+            LogManager.AddWarningLog("トークンが切れました");
 
             DialogResult dialogResult = MessageBox.Show(
                 "トークンが切れました。\n再認証してください。\n※いいえを選択した場合、再認証にはアプリケーション再起動が必要です。",
                 "認証失敗 | TID - ダイヤ運転会", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
             if (dialogResult == DialogResult.Yes) {
-                LogManager.AddInfoLog("再認証を行います。");
+                LogManager.AddInfoLog("再認証を行います");
                 var r = await Authorize();
                 return r;
             }
@@ -376,6 +376,12 @@ namespace TrainCrewTIDWindow.Communications {
                 }
 
                 return true;
+            }
+            catch (HttpRequestException ex) {
+                LogManager.AddExceptionLog(ex);
+                LogManager.OutputLog(true);
+                Debug.WriteLine($"Connection error: {ex.Message}");
+                throw;
             }
             catch (InvalidOperationException ex) {
                 LogManager.AddExceptionLog(ex);

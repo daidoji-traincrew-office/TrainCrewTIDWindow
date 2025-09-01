@@ -30,6 +30,17 @@ namespace TrainCrewTIDWindow.Manager {
         }
 
 
+        public static void AddExceptionLog(HttpRequestException e) {
+            log.Append($"{DateTime.Now.ToString()} [Error] ");
+            log.AppendLine(e.GetType().FullName);
+            log.AppendLine($"status: {e.StatusCode}");
+            log.AppendLine($"source: {e.Source}");
+            log.AppendLine(e.Message);
+            log.AppendLine(e.StackTrace);
+            updated = true;
+        }
+
+
         public static void AddExceptionLog(Exception e) {
             log.Append($"{DateTime.Now.ToString()} [Error] ");
             log.AppendLine(e.GetType().FullName);
