@@ -9,11 +9,13 @@ using System.Text;
 using System.Drawing.Drawing2D;
 using TrainCrewTIDWindow.Settings;
 using System.Media;
-using System.Windows.Media.Media3D;
 
 namespace TrainCrewTIDWindow {
 
     public partial class TIDWindow : Form, IWinFormsShell {
+
+        private const string DEBUG_NUMBER_DOWN = "1111";
+        private const string DEBUG_NUMBER_UP = "1112";
 
 
         /// <summary>
@@ -35,6 +37,20 @@ namespace TrainCrewTIDWindow {
         /// 方向てこの状態
         /// </summary>
         private readonly Dictionary<string, LCR> directionDataDict = [];
+
+        /// <summary>
+        /// 列車情報
+        /// </summary>
+        private readonly Dictionary<string, TrainData> trainDataDict = [];
+
+        /// <summary>
+        /// 右クリックメニューの列車ボタン
+        /// </summary>
+        private readonly Dictionary<string, ToolStripMenuItem> trainMenuDict = [];
+
+
+
+
 
         private readonly Dictionary<string, List<SignalSwitchSetting>> signalSwitchDict = [];
 
@@ -84,6 +100,14 @@ namespace TrainCrewTIDWindow {
         }
 
         /// <summary>
+        /// 現実の時刻
+        /// </summary>
+        public DateTime RealTime {
+            get;
+            set;
+        } = DateTime.Now;
+
+        /// <summary>
         /// 現実との時差
         /// </summary>
         public TimeSpan TimeOffset {
@@ -127,6 +151,17 @@ namespace TrainCrewTIDWindow {
         private SoundPlayer? warningSound = null;
 
         private bool windowMinimized = false;
+
+        private float flashInterval = 0.5f;
+
+        private float flashState = 0f;
+
+        public int MarkupType {
+            get;
+            private set;
+        } = 0;
+
+        public bool FlashState => flashInterval <= 0 || flashState > flashInterval;
 
         public bool DetectResize {
             get; set;
@@ -173,6 +208,8 @@ namespace TrainCrewTIDWindow {
 
         public ReadOnlyDictionary<string, LCR> DirectionDataDict => directionDataDict.AsReadOnly();
 
+        public ReadOnlyDictionary<string, TrainData> TrainDataDict => trainDataDict.AsReadOnly();
+
         public TrackManager TrackManager => trackManager;
 
         public TIDWindow(OpenIddictClientService service) {
@@ -190,7 +227,7 @@ namespace TrainCrewTIDWindow {
 
             if (!loaded) {
                 using (StreamWriter w = new(".\\setting\\setting.txt", false, new UTF8Encoding(false))) {
-                    w.Write("source=select\ntopMost=true\nscale=100\ntimeOffset=14\nzoomMode=pushtozoom\nzoomSize=240\nsilent=false");
+                    w.Write("source=select\ntopMost=true\nscale=100\ntimeOffset=14\nzoomMode=pushtozoom\nzoomSize=240\nsilent=false\nflashInterval=0.5\nmarkupType=0");
                 }
             }
 
@@ -349,6 +386,16 @@ namespace TrainCrewTIDWindow {
                         case "silent":
                             SetSilent(texts[1].Replace(" ", "").ToLower() == "true");
                             break;
+                        case "flashInterval":
+                            if (float.TryParse(texts[1], out var interval) && interval >= 0) {
+                                flashInterval = interval;
+                            }
+                            break;
+                        case "markupType":
+                            if (int.TryParse(texts[1], out var mt) && mt >= 0) {
+                                SetMarkupType(mt);
+                            }
+                            break;
                     }
                 }
             }
@@ -363,7 +410,7 @@ namespace TrainCrewTIDWindow {
 
             var s = source;
 
-            if (s == "select") {
+            if (s == "select" || s == "sct" || s == "sel" || s == "sl") {
                 DialogResult result = MessageBox.Show($"TIDをサーバに接続しますか？\n（いいえを選択するとTRAIN CREW本体に接続します）", "接続先選択 | TID", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (result == DialogResult.Yes) {
                     s = "server";
@@ -377,6 +424,8 @@ namespace TrainCrewTIDWindow {
 
             switch (s) {
                 case "traincrew":
+                case "tc":
+                case "t":
                     try {
                         using var sr = new StreamReader(".\\setting\\signal_switch.tsv");
                         sr.ReadLine();
@@ -446,8 +495,40 @@ namespace TrainCrewTIDWindow {
                     await TryConnectTrainCrew();
                     break;
                 case "debug":
+                case "dbg":
+                case "d":
                     LogManager.AddInfoLog("デバッグモードを開始します");
                     debugIndex = 0;
+
+                    menuItemTrainMarkup.Enabled = true;
+
+                    var td1 = new TrainData(DEBUG_NUMBER_DOWN, 0);
+                    trainDataDict.Add(DEBUG_NUMBER_DOWN, td1);
+                    var menu1 = new ToolStripMenuItem();
+                    trainMenuDict.Add(DEBUG_NUMBER_DOWN, menu1);
+                    menuItemTrainMarkup.DropDownItems.Add(menu1);
+                    menu1.Name = DEBUG_NUMBER_DOWN;
+                    menu1.Size = new Size(110, 22);
+                    menu1.Text = DEBUG_NUMBER_DOWN;
+                    menu1.Click += (sender, e) => {
+                        td1.Markup = !td1.Markup;
+                        menu1.CheckState = td1.Markup ? CheckState.Checked : CheckState.Unchecked;
+                    };
+
+                    if(DEBUG_NUMBER_DOWN != DEBUG_NUMBER_UP) {
+                        var td2 = new TrainData(DEBUG_NUMBER_UP, 0);
+                        trainDataDict.Add(DEBUG_NUMBER_UP, td2);
+                        var menu2 = new ToolStripMenuItem();
+                        trainMenuDict.Add(DEBUG_NUMBER_UP, menu2);
+                        menuItemTrainMarkup.DropDownItems.Add(menu2);
+                        menu2.Name = DEBUG_NUMBER_UP;
+                        menu2.Size = new Size(110, 22);
+                        menu2.Text = DEBUG_NUMBER_UP;
+                        menu2.Click += (sender, e) => {
+                            td2.Markup = !td2.Markup;
+                            menu2.CheckState = td2.Markup ? CheckState.Checked : CheckState.Unchecked;
+                        };
+                    }
                     break;
                 default:
                     /*trackManager.CountStart = 0;*/
@@ -541,6 +622,7 @@ namespace TrainCrewTIDWindow {
                 }
             }
 
+            updatedTID |= UpdateTrainData(tcList);
             updatedTID |= trackManager.UpdateTCData(tcList);
             updatedTID |= trackManager.UpdateNumberWindow();
 
@@ -560,8 +642,10 @@ namespace TrainCrewTIDWindow {
             var tcList = data.TrackCircuitDatas;
             var sList = data.SwitchDatas;
             var dList = data.DirectionDatas;
+            var trainList = data.TrainStateDatas;
 
-            var updated = tcList != null && trackManager.UpdateTCData(tcList);
+            var updated = tcList != null && UpdateTrainData(tcList, trainList);
+            updated |= tcList != null && trackManager.UpdateTCData(tcList);
             updated |= sList != null && UpdatePointData(sList);
             updated |= dList != null && UpdateDirectionData(dList);
             updated |= trackManager.UpdateNumberWindow();
@@ -603,6 +687,142 @@ namespace TrainCrewTIDWindow {
             return updatedTID;
         }
 
+        private bool UpdateTrainData(List<TrackCircuitData> tcData, List<TrainStateData>? trainData = null) {
+            var updatedTID = false;
+            lock (trainDataDict) {
+                if (trainData != null) {
+                    foreach (var t in trainData) {
+                        var td = new TrainData(t.TrainNumber, t.Delay);
+                        if (!trainDataDict.TryAdd(t.TrainNumber, td)) {
+                            updatedTID |= trainDataDict[t.TrainNumber].SetStates(t.Delay);
+                        }
+                        else {
+                            menuItemTrainMarkup.Enabled = true;
+                            var menu = new ToolStripMenuItem();
+                            trainMenuDict.Add(t.TrainNumber, menu);
+                            if (InvokeRequired) {
+                                Invoke(() => {
+                                    for (var i = 0; i <= menuItemTrainMarkup.DropDownItems.Count; i++) {
+                                        if (menuItemTrainMarkup.DropDownItems.Count == i) {
+                                            menuItemTrainMarkup.DropDownItems.Add(menu);
+                                            break;
+                                        }
+                                        if (menuItemTrainMarkup.DropDownItems[i].Name?.CompareTo(t.TrainNumber) >= 0) {
+                                            menuItemTrainMarkup.DropDownItems.Insert(i, menu);
+                                            break;
+                                        }
+                                    }
+                                    menu.Name = t.TrainNumber;
+                                    menu.Size = new Size(110, 22);
+                                    menu.Text = t.TrainNumber;
+                                    menu.Click += (sender, e) => {
+                                        td.Markup = !td.Markup;
+                                        menu.CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
+                                    };
+                                });
+                            }
+                            else {
+                                for (var i = 0; i <= menuItemTrainMarkup.DropDownItems.Count; i++) {
+                                    if (menuItemTrainMarkup.DropDownItems.Count == i) {
+                                        menuItemTrainMarkup.DropDownItems.Add(menu);
+                                        break;
+                                    }
+                                    if (menuItemTrainMarkup.DropDownItems[i].Name?.CompareTo(t.TrainNumber) >= 0) {
+                                        menuItemTrainMarkup.DropDownItems.Insert(i, menu);
+                                        break;
+                                    }
+                                }
+                                menu.Name = t.TrainNumber;
+                                menu.Size = new Size(110, 22);
+                                menu.Text = t.TrainNumber;
+                                menu.Click += (sender, e) => {
+                                    td.Markup = !td.Markup;
+                                    menu.CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
+                                };
+                            }
+                            updatedTID = true;
+                        }
+                    }
+                }
+                foreach (var tc in tcData) {
+                    if (!tc.On || tc.Last == "") {
+                        continue;
+                    }
+                    var td = new TrainData(tc.Last, 0);
+                    if (!trainDataDict.TryAdd(tc.Last, td)) {
+                        updatedTID |= trainDataDict[tc.Last].SetStates(-1);
+                    }
+                    else {
+                        menuItemTrainMarkup.Enabled = true;
+                        var menu = new ToolStripMenuItem();
+                        trainMenuDict.Add(tc.Last, menu);
+                        if (InvokeRequired) {
+                            Invoke(() => {
+                                for (var i = 0; i <= menuItemTrainMarkup.DropDownItems.Count; i++) {
+                                    if (menuItemTrainMarkup.DropDownItems.Count == i) {
+                                        menuItemTrainMarkup.DropDownItems.Add(menu);
+                                        break;
+                                    }
+                                    if (menuItemTrainMarkup.DropDownItems[i].Name?.CompareTo(tc.Last) >= 0) {
+                                        menuItemTrainMarkup.DropDownItems.Insert(i, menu);
+                                        break;
+                                    }
+                                }
+                                menu.Name = tc.Last;
+                                menu.Size = new Size(110, 22);
+                                menu.Text = tc.Last;
+                                menu.Click += (sender, e) => {
+                                    td.Markup = !td.Markup;
+                                    menu.CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
+                                };
+                            });
+                        }
+                        else {
+                            for (var i = 0; i <= menuItemTrainMarkup.DropDownItems.Count; i++) {
+                                if (menuItemTrainMarkup.DropDownItems.Count == i) {
+                                    menuItemTrainMarkup.DropDownItems.Add(menu);
+                                    break;
+                                }
+                                if (menuItemTrainMarkup.DropDownItems[i].Name?.CompareTo(tc.Last) >= 0) {
+                                    menuItemTrainMarkup.DropDownItems.Insert(i, menu);
+                                    break;
+                                }
+                            }
+                            menu.Name = tc.Last;
+                            menu.Size = new Size(110, 22);
+                            menu.Text = tc.Last;
+                            menu.Click += (sender, e) => {
+                                td.Markup = !td.Markup;
+                                menu.CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
+                            };
+                        }
+                        updatedTID = true;
+                    }
+
+                }
+
+                foreach (var k in trainDataDict.Keys.ToArray()) {
+                    if (trainDataDict[k].UpdateTrack()) {
+                        trainDataDict.Remove(k);
+                        var menu = trainMenuDict[k];
+                        trainMenuDict.Remove(k);
+                        if (InvokeRequired) {
+                            Invoke(() => {
+                                menuItemTrainMarkup.DropDownItems.Remove(menu);
+                                menuItemTrainMarkup.Enabled = menuItemTrainMarkup.HasDropDownItems;
+                            });
+                        }
+                        else {
+                            menuItemTrainMarkup.DropDownItems.Remove(menu);
+                            menuItemTrainMarkup.Enabled = menuItemTrainMarkup.HasDropDownItems;
+                        }
+                    }
+                }
+
+            }
+            return updatedTID;
+        }
+
         private async void ClockUpdateLoop() {
             try {
                 while (true) {
@@ -635,11 +855,51 @@ namespace TrainCrewTIDWindow {
             if (showOffset > 0) {
                 showOffset--;
             }
+
+            var oldFlashState = FlashState;
+            var now = DateTime.Now;
+            var deltaSeconds = (now - RealTime).TotalSeconds;
+            RealTime = now;
+            if (flashInterval > 0) {
+                flashState -= (float)deltaSeconds;
+                while (flashState <= 0) {
+                    flashState += flashInterval * 2;
+                }
+            }
             UpdateDebug();
+
+            if (/*debugIndex < 0 && */displayManager.Started && (oldFlashState != FlashState)) {
+                displayManager.UpdateTID();
+            }
+
+
+            if (usingMagnifyingGlass) {
+                var cp1 = pictureBox1.PointToClient(Cursor.Position);
+                var cp2 = PointToClient(Cursor.Position);
+
+                if (toggleMagnifyingGlass && (cp1.X < 0 || cp1.Y < 0 || cp1.X > pictureBox1.Width || cp1.Y > pictureBox1.Height || cp2.X < 0 || cp2.Y < 0 || cp2.X > ClientSize.Width || cp2.Y > ClientSize.Height)) {
+                    var width = pictureBox1.Width - cp1.X + magnifyingGlassSize / 2;
+                    var height = pictureBox1.Height - cp1.Y + magnifyingGlassSize / 2;
+                    var mouseX = cp1.X/* - panel1.HorizontalScroll.Value*/;
+                    var mouseY = cp1.Y/* - panel1.VerticalScroll.Value*/;
+                    if (width <= 1 || height <= 1) {
+                        pictureBox2.Location = new Point(-300, -300);
+                        pictureBox2.Size = new Size(240, 240);
+                    }
+                    else {
+                        pictureBox2.Location = new Point(mouseX - magnifyingGlassSize / 2, mouseY - magnifyingGlassSize / 2);
+                        pictureBox2.Size = new Size(Math.Min(magnifyingGlassSize, Math.Max(0, pictureBox1.Width - cp1.X + magnifyingGlassSize / 2)), Math.Min(magnifyingGlassSize, Math.Max(0, pictureBox1.Height - cp1.Y + magnifyingGlassSize / 2)));
+                    }
+
+                    SetMagnifyingGlass(cp1.X, cp1.Y);
+                }
+            }
+
+
             if (debugIndex < 0 && serverCommunication == null) {
                 return;
             }
-            Clock = DateTime.Now;
+            Clock = RealTime;
             if (showOffset <= 0) {
                 labelClock.Text = (Clock + TimeOffset).ToString("H:mm:ss");
             }
@@ -695,7 +955,7 @@ namespace TrainCrewTIDWindow {
                         }
                     }
                     line = lineData[debugIndex % lineData.Count];
-                    trackManager.UpdateTCData([new TrackCircuitData() { Name = line.TrackName, Last = debugIndex < lineData.Count ? "1111" : "1112", On = true }]);
+                    trackManager.UpdateTCData([new TrackCircuitData() { Name = line.TrackName, Last = debugIndex < lineData.Count ? DEBUG_NUMBER_DOWN : DEBUG_NUMBER_UP, On = true }]);
                     if (line.PointName != "") {
                         UpdatePointData([new SwitchData() { Name = line.PointName, State = line.Reversed ? NRC.Reversed : NRC.Normal }]);
                         LabelStatusText = $"デバッグモード（{(debugIndex < lineData.Count ? "下り" : "上り")}） track: {line.TrackName}  switch: {line.PointName} {(line.Reversed ? "R" : "N")}";
@@ -812,6 +1072,14 @@ namespace TrainCrewTIDWindow {
             labelSilent.ForeColor = silent ? Color.Gray : Color.White;
         }
 
+        private void SetMarkupType(int type) {
+
+            MarkupType = type < 3 ? (type >= 0 ? type : 0) : 2;
+            menuItemMarkupType1.CheckState = type == 0 ? CheckState.Indeterminate : CheckState.Unchecked;
+            menuItemMarkupType2.CheckState = type == 1 ? CheckState.Indeterminate : CheckState.Unchecked;
+            menuItemMarkupType3.CheckState = type == 2 ? CheckState.Indeterminate : CheckState.Unchecked;
+        }
+
         private void menuItemCopy_Click(object sender, EventArgs e) {
             displayManager.CopyImage();
         }
@@ -839,6 +1107,11 @@ namespace TrainCrewTIDWindow {
             switch (scale) {
                 case 50:
                     menuItemScale50.CheckState = CheckState.Indeterminate;
+                    var mi = new ToolStripMenuItem();
+                    menuItemScale.DropDownItems.Add(mi);
+                    mi.Name = "mi";
+                    mi.Size = new Size(129, 22);
+                    mi.Text = "popopo";
                     break;
                 case 75:
                     menuItemScale75.CheckState = CheckState.Indeterminate;
@@ -1153,7 +1426,7 @@ namespace TrainCrewTIDWindow {
                         pictureBox2.Size = new Size(240, 240);
                     }
                     else {
-                        pictureBox2.Location = new Point(e.X - panel1.HorizontalScroll.Value - magnifyingGlassSize / 2, e.Y - panel1.VerticalScroll.Value - magnifyingGlassSize / 2);
+                        pictureBox2.Location = new Point(e.X /*- panel1.HorizontalScroll.Value*/ - magnifyingGlassSize / 2, e.Y /*- panel1.VerticalScroll.Value*/ - magnifyingGlassSize / 2);
                         pictureBox2.Size = new Size(Math.Min(magnifyingGlassSize, Math.Max(0, pictureBox1.Width - e.X + magnifyingGlassSize / 2)), Math.Min(magnifyingGlassSize, Math.Max(0, pictureBox1.Height - e.Y + magnifyingGlassSize / 2)));
                     }
 
@@ -1200,8 +1473,8 @@ namespace TrainCrewTIDWindow {
                     if (e.Button == MouseButtons.Middle) {
                         var width = pictureBox1.Width - e.X + magnifyingGlassSize / 2;
                         var height = pictureBox1.Height - e.Y + magnifyingGlassSize / 2;
-                        var mouseX = e.X - panel1.HorizontalScroll.Value;
-                        var mouseY = e.Y - panel1.VerticalScroll.Value;
+                        var mouseX = e.X/* - panel1.HorizontalScroll.Value*/;
+                        var mouseY = e.Y/* - panel1.VerticalScroll.Value*/;
                         if (width <= 1 || height <= 1) {
                             pictureBox2.Location = new Point(-300, -300);
                             pictureBox2.Size = new Size(240, 240);
@@ -1226,8 +1499,8 @@ namespace TrainCrewTIDWindow {
                 else {
                     var width = pictureBox1.Width - e.X + magnifyingGlassSize / 2;
                     var height = pictureBox1.Height - e.Y + magnifyingGlassSize / 2;
-                    var mouseX = e.X - panel1.HorizontalScroll.Value;
-                    var mouseY = e.Y - panel1.VerticalScroll.Value;
+                    var mouseX = e.X/* - panel1.HorizontalScroll.Value*/;
+                    var mouseY = e.Y/* - panel1.VerticalScroll.Value*/;
                     if (width <= 1 || height <= 1) {
                         pictureBox2.Location = new Point(-300, -300);
                         pictureBox2.Size = new Size(240, 240);
@@ -1254,8 +1527,8 @@ namespace TrainCrewTIDWindow {
                     var cp = pictureBox1.PointToClient(Cursor.Position);
                     var width = pictureBox1.Width - cp.X + magnifyingGlassSize / 2;
                     var height = pictureBox1.Height - cp.Y + magnifyingGlassSize / 2;
-                    var mouseX = cp.X - panel1.HorizontalScroll.Value;
-                    var mouseY = cp.Y - panel1.VerticalScroll.Value;
+                    var mouseX = cp.X/* - panel1.HorizontalScroll.Value*/;
+                    var mouseY = cp.Y/* - panel1.VerticalScroll.Value*/;
                     if (width <= 1 || height <= 1) {
                         pictureBox2.Location = new Point(-300, -300);
                         pictureBox2.Size = new Size(240, 240);
@@ -1350,6 +1623,18 @@ namespace TrainCrewTIDWindow {
 
         private void menuItemTopMost_Click(object sender, EventArgs e) {
             SetTopMost(!TopMost);
+        }
+
+        private void menuItemMarkupType1_Click(object sender, EventArgs e) {
+            SetMarkupType(0);
+        }
+
+        private void menuItemMarkupType2_Click(object sender, EventArgs e) {
+            SetMarkupType(1);
+        }
+
+        private void menuItemMarkupType3_Click(object sender, EventArgs e) {
+            SetMarkupType(2);
         }
     }
 }

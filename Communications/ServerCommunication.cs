@@ -463,7 +463,7 @@ namespace TrainCrewTIDWindow.Communications {
                     }
                 }
             }
-            catch (ObjectDisposedException e) {
+            catch (ObjectDisposedException) {
             }
             catch (Exception e) {
                 LogManager.AddExceptionLog(e);

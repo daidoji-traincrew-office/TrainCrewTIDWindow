@@ -89,10 +89,9 @@ namespace TrainCrewTIDWindow.Manager
             lock (trackDataDict) {
                 trainTCDict.Clear();
                 foreach (var tc in tcList) {
-                    if (tc == null/* || !tc.On && !tc.Lock || tc.Last != "" && !Regex.IsMatch(tc.Last, @"^([溝月レイルﾚｲﾙVague]+|[回試臨]?[\d]{3,4}[ABCKST]?[XYZ]?)$")*/) {
+                    if (tc == null) {
                         continue;
                     }
-                    /*Debug.WriteLine($"track {tc.Name}: {tc.Last} on:{tc.On} lock:{tc.Lock}");*/
                     var td = new TrackData(tc.Name, displayManager, !tc.On ? null : tc.Last, tc.Lock, countStart);
                     if (!trackDataDict.TryAdd(tc.Name, td)) {
                         if (tc.On || tc.Last == "") {
@@ -103,38 +102,9 @@ namespace TrainCrewTIDWindow.Manager
                     else {
                         updatedTID = true;
                     }
-
-                    /*if (tc.On && int.TryParse(Regex.Replace(tc.Last, @"[^0-9]", ""), out var numBody)) {
-                        var list = numBody % 2 == 1 ? numDown : numUp;
-                        if (trainTCDict.ContainsKey(tc.Last)) {
-                            if(Array.IndexOf(list, tc.Name) > Array.IndexOf(list, trainTCDict[tc.Last])) {
-                                trainTCDict[tc.Last] = tc.Name;
-                            }
-                        }
-                        else {
-                            trainTCDict.Add(tc.Last, tc.Name);
-                        }
-                    }*/
                 }
 
-                /*foreach(var t in trainTCDict) {
-                    var td = trackDataDict[t.Value];
-                    if (int.TryParse(Regex.Replace(t.Key, @"[^0-9]", ""), out var numBody)) {
-                        var list = numBody % 2 == 1 ? td.NumSettingsDown : td.NumSettingsUp;
-                        foreach (var n in list) {
-                            n.SetTrain(t.Key);
-                        }
-                    }
-                }*/
-
-                /*updatedTID |= displayManager.UpdateNumWindow();
-
-                foreach(var n in displayManager.NumSettingsDown) {
-                    updatedTID |= n.UpdateWindow();
-                }
-                foreach (var n in displayManager.NumSettingsUp) {
-                    updatedTID |= n.UpdateWindow();
-                }*/
+                
 
             }
 
@@ -142,14 +112,6 @@ namespace TrainCrewTIDWindow.Manager
                 updatedTID |= td.Value.UpdateTrack();
             }
 
-
-
-
-
-            //ログ爆弾注意
-            /*if(trackDataDict.Keys.Any(t => trackDataDict[t].DeeCount == countStart - 2) && trackDataDict.Keys.All(t => trackDataDict[t].DeeCount >= countStart - 1)) {
-                JsonDebugLogManager.OutputJsonTexts();
-            }*/
 
             return updatedTID;
         }
