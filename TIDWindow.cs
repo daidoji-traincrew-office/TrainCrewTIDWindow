@@ -41,7 +41,7 @@ namespace TrainCrewTIDWindow {
         /// <summary>
         /// 列車情報
         /// </summary>
-        private readonly Dictionary<string, TrainData> trainDataDict = [];
+        private readonly Dictionary<string, TrainData> trainDataDict = new Dictionary<string, TrainData>() { { "9999", new TrainData("9999", 0, true) } };
 
         /// <summary>
         /// 右クリックメニューの列車ボタン
@@ -163,6 +163,21 @@ namespace TrainCrewTIDWindow {
 
         public bool FlashState => flashInterval <= 0 || flashState > flashInterval;
 
+        public bool MarkupDuplication {
+            get;
+            private set;
+        } = false;
+
+        public bool MarkupFillZero {
+            get;
+            private set;
+        } = false;
+
+        public bool MarkupNotTrain {
+            get;
+            private set;
+        } = false;
+
         public bool DetectResize {
             get; set;
         } = false;
@@ -227,7 +242,7 @@ namespace TrainCrewTIDWindow {
 
             if (!loaded) {
                 using (StreamWriter w = new(".\\setting\\setting.txt", false, new UTF8Encoding(false))) {
-                    w.Write("source=select\ntopMost=true\nscale=100\ntimeOffset=14\nzoomMode=pushtozoom\nzoomSize=240\nsilent=false\nflashInterval=0.5\nmarkupType=0");
+                    w.Write("source=select\ntopMost=true\nscale=100\ntimeOffset=14\nzoomMode=pushtozoom\nzoomSize=240\nsilent=false\nflashInterval=0.5\nmarkupType=0\nmarkupDuplication=false\nmarkupFillZero=false\nmarkupNotTrain=false\nmarkup9999=false");
                 }
             }
 
@@ -285,6 +300,8 @@ namespace TrainCrewTIDWindow {
             menuItemHour21.Click += (sender, e) => { SetHourQuick(21); };
             menuItemHour22.Click += (sender, e) => { SetHourQuick(22); };
             menuItemHour23.Click += (sender, e) => { SetHourQuick(23); };
+
+            trainMenuDict.Add("9999", menuItemMarkup9999);
         }
 
         private bool LoadSetting(string path) {
@@ -396,6 +413,23 @@ namespace TrainCrewTIDWindow {
                                 SetMarkupType(mt);
                             }
                             break;
+                        case "markupDuplication":
+                            MarkupDuplication = texts[1].Replace(" ", "").ToLower() == "true";
+                            menuItemMarkupDuplication.CheckState = MarkupDuplication ? CheckState.Checked : CheckState.Unchecked;
+                            break;
+                        case "markupFillZero":
+                            MarkupFillZero = texts[1].Replace(" ", "").ToLower() == "true";
+                            menuItemMarkupFillZero.CheckState = MarkupFillZero ? CheckState.Checked : CheckState.Unchecked;
+                            break;
+                        case "markupNotTrain":
+                            MarkupNotTrain = texts[1].Replace(" ", "").ToLower() == "true";
+                            menuItemMarkupNotTrain.CheckState = MarkupNotTrain ? CheckState.Checked : CheckState.Unchecked;
+                            break;
+                        case "markup9999":
+                            var v = texts[1].Replace(" ", "").ToLower() == "true";
+                            trainDataDict["9999"].Markup = v;
+                            menuItemMarkup9999.CheckState = v ? CheckState.Checked : CheckState.Unchecked;
+                            break;
                     }
                 }
             }
@@ -500,23 +534,23 @@ namespace TrainCrewTIDWindow {
                     LogManager.AddInfoLog("デバッグモードを開始します");
                     debugIndex = 0;
 
-                    menuItemTrainMarkup.Enabled = true;
+                    if (DEBUG_NUMBER_DOWN != "9999") {
+                        var td1 = new TrainData(DEBUG_NUMBER_DOWN, 2);
+                        trainDataDict.Add(DEBUG_NUMBER_DOWN, td1);
+                        var menu1 = new ToolStripMenuItem();
+                        trainMenuDict.Add(DEBUG_NUMBER_DOWN, menu1);
+                        menuItemTrainMarkup.DropDownItems.Add(menu1);
+                        menu1.Name = DEBUG_NUMBER_DOWN;
+                        menu1.Size = new Size(110, 22);
+                        menu1.Text = DEBUG_NUMBER_DOWN;
+                        menu1.Click += (sender, e) => {
+                            td1.Markup = !td1.Markup;
+                            menu1.CheckState = td1.Markup ? CheckState.Checked : CheckState.Unchecked;
+                        };
+                    }
 
-                    var td1 = new TrainData(DEBUG_NUMBER_DOWN, 0);
-                    trainDataDict.Add(DEBUG_NUMBER_DOWN, td1);
-                    var menu1 = new ToolStripMenuItem();
-                    trainMenuDict.Add(DEBUG_NUMBER_DOWN, menu1);
-                    menuItemTrainMarkup.DropDownItems.Add(menu1);
-                    menu1.Name = DEBUG_NUMBER_DOWN;
-                    menu1.Size = new Size(110, 22);
-                    menu1.Text = DEBUG_NUMBER_DOWN;
-                    menu1.Click += (sender, e) => {
-                        td1.Markup = !td1.Markup;
-                        menu1.CheckState = td1.Markup ? CheckState.Checked : CheckState.Unchecked;
-                    };
-
-                    if(DEBUG_NUMBER_DOWN != DEBUG_NUMBER_UP) {
-                        var td2 = new TrainData(DEBUG_NUMBER_UP, 0);
+                    if (DEBUG_NUMBER_UP != "9999" && DEBUG_NUMBER_DOWN != DEBUG_NUMBER_UP) {
+                        var td2 = new TrainData(DEBUG_NUMBER_UP, 2);
                         trainDataDict.Add(DEBUG_NUMBER_UP, td2);
                         var menu2 = new ToolStripMenuItem();
                         trainMenuDict.Add(DEBUG_NUMBER_UP, menu2);
@@ -697,12 +731,11 @@ namespace TrainCrewTIDWindow {
                             updatedTID |= trainDataDict[t.TrainNumber].SetStates(t.Delay);
                         }
                         else {
-                            menuItemTrainMarkup.Enabled = true;
                             var menu = new ToolStripMenuItem();
                             trainMenuDict.Add(t.TrainNumber, menu);
                             if (InvokeRequired) {
                                 Invoke(() => {
-                                    for (var i = 0; i <= menuItemTrainMarkup.DropDownItems.Count; i++) {
+                                    for (var i = 5; i <= menuItemTrainMarkup.DropDownItems.Count; i++) {
                                         if (menuItemTrainMarkup.DropDownItems.Count == i) {
                                             menuItemTrainMarkup.DropDownItems.Add(menu);
                                             break;
@@ -722,7 +755,7 @@ namespace TrainCrewTIDWindow {
                                 });
                             }
                             else {
-                                for (var i = 0; i <= menuItemTrainMarkup.DropDownItems.Count; i++) {
+                                for (var i = 5; i <= menuItemTrainMarkup.DropDownItems.Count; i++) {
                                     if (menuItemTrainMarkup.DropDownItems.Count == i) {
                                         menuItemTrainMarkup.DropDownItems.Add(menu);
                                         break;
@@ -753,12 +786,11 @@ namespace TrainCrewTIDWindow {
                         updatedTID |= trainDataDict[tc.Last].SetStates(-1);
                     }
                     else {
-                        menuItemTrainMarkup.Enabled = true;
                         var menu = new ToolStripMenuItem();
                         trainMenuDict.Add(tc.Last, menu);
                         if (InvokeRequired) {
                             Invoke(() => {
-                                for (var i = 0; i <= menuItemTrainMarkup.DropDownItems.Count; i++) {
+                                for (var i = 5; i <= menuItemTrainMarkup.DropDownItems.Count; i++) {
                                     if (menuItemTrainMarkup.DropDownItems.Count == i) {
                                         menuItemTrainMarkup.DropDownItems.Add(menu);
                                         break;
@@ -778,7 +810,7 @@ namespace TrainCrewTIDWindow {
                             });
                         }
                         else {
-                            for (var i = 0; i <= menuItemTrainMarkup.DropDownItems.Count; i++) {
+                            for (var i = 5; i <= menuItemTrainMarkup.DropDownItems.Count; i++) {
                                 if (menuItemTrainMarkup.DropDownItems.Count == i) {
                                     menuItemTrainMarkup.DropDownItems.Add(menu);
                                     break;
@@ -814,7 +846,6 @@ namespace TrainCrewTIDWindow {
                         }
                         else {
                             menuItemTrainMarkup.DropDownItems.Remove(menu);
-                            menuItemTrainMarkup.Enabled = menuItemTrainMarkup.HasDropDownItems;
                         }
                     }
                 }
@@ -1635,6 +1666,27 @@ namespace TrainCrewTIDWindow {
 
         private void menuItemMarkupType3_Click(object sender, EventArgs e) {
             SetMarkupType(2);
+        }
+
+        private void menuItemMarkupDuplication_Click(object sender, EventArgs e) {
+            MarkupDuplication = !MarkupDuplication;
+            menuItemMarkupDuplication.CheckState = MarkupDuplication ? CheckState.Checked : CheckState.Unchecked;
+        }
+
+        private void menuItemMarkupFillZero_Click(object sender, EventArgs e) {
+            MarkupFillZero = !MarkupFillZero;
+            menuItemMarkupFillZero.CheckState = MarkupFillZero ? CheckState.Checked : CheckState.Unchecked;
+        }
+
+        private void menuItemMarkup9999_Click(object sender, EventArgs e) {
+            var td = trainDataDict["9999"];
+            td.Markup = !td.Markup;
+            menuItemMarkup9999.CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
+        }
+
+        private void menuItemMarkupNotTrain_Click(object sender, EventArgs e) {
+            MarkupNotTrain = !MarkupNotTrain;
+            menuItemMarkupNotTrain.CheckState = MarkupNotTrain ? CheckState.Checked : CheckState.Unchecked;
         }
     }
 }

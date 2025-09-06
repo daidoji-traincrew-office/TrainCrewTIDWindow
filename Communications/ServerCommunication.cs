@@ -377,6 +377,12 @@ namespace TrainCrewTIDWindow.Communications {
 
                 return true;
             }
+            catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.BadGateway) {
+                LogManager.AddExceptionLog(ex);
+                LogManager.OutputLog();
+                Debug.WriteLine($"Connection error: {ex.Message}");
+                throw;
+            }
             catch (HttpRequestException ex) {
                 LogManager.AddExceptionLog(ex);
                 LogManager.OutputLog(true);

@@ -1,6 +1,6 @@
 ﻿
 namespace TrainCrewTIDWindow.Models {
-    public class TrainData(string number, int delayMinutes) {
+    public class TrainData(string number, int delayMinutes, bool fixedTrain = false) {
 
         public string Number {
             get;
@@ -16,6 +16,11 @@ namespace TrainCrewTIDWindow.Models {
             get;
             set;
         } = false;
+
+        public bool Fixed {
+            get;
+            init;
+        } = fixedTrain;
 
         /// <summary>
         /// 在線消失の際実際に在線を消すまでの猶予（チャタリング対策）
@@ -35,10 +40,13 @@ namespace TrainCrewTIDWindow.Models {
         }
 
         /// <summary>
-        /// 表示期限が切れた列車を消す
+        /// 表示期限の更新
         /// </summary>
         /// <returns>列車が消失したか</returns>
         public bool UpdateTrack() {
+            if (Fixed) {
+                return false;
+            }
             if (DeeCount > 0 && --DeeCount <= 0) {
                 DeeCount = 0;
                 return true;

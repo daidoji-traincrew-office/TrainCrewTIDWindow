@@ -689,22 +689,28 @@ namespace TrainCrewTIDWindow.Manager {
                 var numBodyStr = Regex.Replace(numWindow.Train, @"[^0-9]", "");
                 var isTrain = int.TryParse(numBodyStr, out var numBody);  // 列番本体（数字部分）
                 var numFooter = Regex.Replace(numWindow.Train, @"[^a-zA-Z]", "");  // 列番の末尾の文字
+                var fillZero = false;
+                var duplicating = false;
+
                 // 運番
                 if (numWindow.Size == NumberSize.S) {
-                    ImageAttributes? iaType = new ImageAttributes();
+                    ImageAttributes iaType = new ImageAttributes();
                     Color? color = null;
                     // 0埋め列番への警告色として不明色に
                     if (isTrain && numBodyStr[0] == '0') {
+                        fillZero = true;
                         if (colorDict.ContainsKey("UNKNOWN")) {
                             color = colorDict["UNKNOWN"];
                         }
                     }
                     // 列番被りへの警告色として不明色に
                     if (isTrain && duplicatingTrains.Contains(numWindow.Train)) {
+                        duplicating = true;
                         if (colorDict.ContainsKey("UNKNOWN")) {
                             color = colorDict["UNKNOWN"];
                         }
                     }
+                    var markUp = trainData != null && trainData.Markup || window.MarkupFillZero && fillZero || window.MarkupDuplication && duplicating || window.MarkupNotTrain && !isTrain;
 
                     var numIndex = numIndexList.FirstOrDefault(i => i.Text == numWindow.Train && i.Width == 5);
                     if(numIndex != null) {
@@ -724,22 +730,29 @@ namespace TrainCrewTIDWindow.Manager {
                         }
 
                         
-                        if (trainData == null) {
+                        if (trainData == null && !markUp) {
                             iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = (Color)color }]);
                         }
-                        else if (trainData.Markup && window.MarkupType > 0 && (window.MarkupType == 2 || window.FlashState)) {
+                        else if (markUp && window.MarkupType > 0 && (window.MarkupType == 2 || window.FlashState)) {
                             iaType.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = (Color)color }, new ColorMap { OldColor = Color.White, NewColor = Color.Black }]);
                         }
-                        else if (trainData.Markup && window.MarkupType == 0 && !window.FlashState) {
+                        else if (markUp && window.MarkupType == 0 && !window.FlashState) {
                             iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = Color.FromArgb(40, 40, 40) }]);
                         }
                         else {
                             iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = (Color)color }]);
                         }
+                        var iaLine = new ImageAttributes();
+                        if (!markUp || trainData == null || window.MarkupType == 0 || (window.MarkupType != 2 && !window.FlashState)) {
+                            iaLine.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = (Color)color }]);
+                        }
+                        else {
+                            iaLine.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = (Color)color }, new ColorMap { OldColor = Color.White, NewColor = (Color)color }]);
+                        }
 
 
                         // 下線設置
-                        AddImage(g, numLineS, numWindow.PosX, numWindow.PosY, iaType);
+                        AddImage(g, numLineS, numWindow.PosX, numWindow.PosY, iaLine);
                         // 列番設置
                         AddNumImage(g, numIndex.Width, numIndex.X, numIndex.Y, numWindow.PosX, numWindow.PosY, iaType);
 
@@ -764,24 +777,24 @@ namespace TrainCrewTIDWindow.Manager {
                             delayColor = colorDict["delayTime1"];
                         }
 
-                        if (trainData == null || !trainData.Markup || window.MarkupType == 0 || (window.MarkupType != 2 && !window.FlashState)) {
+                        color ??= Color.White;
+                        if (!markUp || trainData == null || window.MarkupType == 0 || (window.MarkupType != 2 && !window.FlashState)) {
                             iaDelay.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = delayColor }]);
                         }
                         else {
-                            iaDelay.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = Color.White }, new ColorMap { OldColor = Color.White, NewColor = Color.Black }]);
+                            iaDelay.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = (Color)color }, new ColorMap { OldColor = Color.White, NewColor = delayColor }]);
                         }
 
 
                         AddImage(g, numLineS, numWindow.PosX, numWindow.PosY, iaDelay);
 
-                        color ??= Color.White;
-                        if (trainData == null) {
+                        if (trainData == null && !markUp) {
                             iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = (Color)color }]);
                         }
-                        else if (trainData.Markup && window.MarkupType > 0 && (window.MarkupType == 2 || window.FlashState)) {
+                        else if (markUp && window.MarkupType > 0 && (window.MarkupType == 2 || window.FlashState)) {
                             iaType.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = (Color)color }, new ColorMap { OldColor = Color.White, NewColor = Color.Black }]);
                         }
-                        else if (trainData.Markup && window.MarkupType == 0 && !window.FlashState) {
+                        else if (markUp && window.MarkupType == 0 && !window.FlashState) {
                             iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = Color.FromArgb(40, 40, 40) }]);
                         }
                         else {
@@ -834,12 +847,14 @@ namespace TrainCrewTIDWindow.Manager {
                     }
                     // 0埋め列番への警告色として不明色に
                     if (isTrain && numBodyStr[0] == '0') {
+                        fillZero = true;
                         if (colorDict.ContainsKey("UNKNOWN")) {
                             classColor = colorDict["UNKNOWN"];
                         }
                     }
                     // 列番被りへの警告色として不明色に
                     if (isTrain && duplicatingTrains.Contains(numWindow.Train)) {
+                        duplicating = true;
                         if (colorDict.ContainsKey("UNKNOWN")) {
                             classColor = colorDict["UNKNOWN"];
                         }
@@ -854,14 +869,14 @@ namespace TrainCrewTIDWindow.Manager {
                         }
                     }
 
-
-                    if (trainData == null) {
+                    var markUp = trainData != null && trainData.Markup || window.MarkupFillZero && fillZero || window.MarkupDuplication && duplicating || window.MarkupNotTrain && !isTrain;
+                    if (trainData == null && !markUp) {
                         iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = (Color)classColor }]);
                     }
-                    else if (trainData.Markup && window.MarkupType > 0 && (window.MarkupType == 2 || window.FlashState)) {
+                    else if (markUp && window.MarkupType > 0 && (window.MarkupType == 2 || window.FlashState)) {
                         iaType.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = (Color)classColor }, new ColorMap { OldColor = Color.White, NewColor = Color.Black }]);
                     }
-                    else if (trainData.Markup && window.MarkupType == 0 && !window.FlashState) {
+                    else if (markUp && window.MarkupType == 0 && !window.FlashState) {
                         iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = Color.FromArgb(40, 40, 40) }]);
                     }
                     else {
@@ -886,25 +901,31 @@ namespace TrainCrewTIDWindow.Manager {
                     else if (delayMinute >= 1 && colorDict.ContainsKey("delayTime1")) {
                         delayColor = colorDict["delayTime1"];
                     }
-                    if(trainData == null || !trainData.Markup || window.MarkupType == 0 || (window.MarkupType != 2 && !window.FlashState)) {
-                        iaLine.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = delayColor }]);
+
+                    var numIndex = numIndexList.FirstOrDefault(i => i.Text == numWindow.Train && i.Width == 7);
+
+                    if (!markUp || trainData == null || window.MarkupType == 0 || (window.MarkupType != 2 && !window.FlashState)) {
+                        iaLine.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = numIndex != null ? (Color)classColor : delayColor }, new ColorMap { OldColor = Color.FromArgb(0, 255, 0), NewColor = Color.Black }, new ColorMap { OldColor = Color.Red, NewColor = Color.Black }]);
                         iaDelay.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = delayColor }]);
                     }
                     else {
-                        iaLine.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = (Color)classColor }, new ColorMap { OldColor = Color.White, NewColor = delayColor }]);
-                        iaDelay.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = (Color)classColor }, new ColorMap { OldColor = Color.White, NewColor = Color.Black }]);
+                        if(numIndex != null) {
+                            iaLine.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = (Color)classColor }, new ColorMap { OldColor = Color.White, NewColor = (Color)classColor }, new ColorMap { OldColor = Color.FromArgb(0, 255, 0), NewColor = (Color)classColor }, new ColorMap { OldColor = Color.Red, NewColor = (Color)classColor }]);
+                        }
+                        else {
+                            iaLine.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = (Color)classColor }, new ColorMap { OldColor = Color.White, NewColor = delayColor }, new ColorMap { OldColor = Color.FromArgb(0, 255, 0), NewColor = Color.Black }, new ColorMap { OldColor = Color.Red, NewColor = delayColor }]);
+                        }
+                        iaDelay.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = delayColor }, new ColorMap { OldColor = Color.White, NewColor = Color.Black }]);
                     }
 
 
-
-                    var numIndex = numIndexList.FirstOrDefault(i => i.Text == numWindow.Train && i.Width == 7);
                     if (numIndex != null) {
                         // 下線設置
                         if (numWindow.Size == NumberSize.L) {
-                            AddImage(g, numLineL, numWindow.PosX, numWindow.PosY, iaType);
+                            AddImage(g, numLineL, numWindow.PosX, numWindow.PosY, iaLine);
                         }
                         else {
-                            AddImage(g, numLineM, numWindow.PosX, numWindow.PosY, iaType);
+                            AddImage(g, numLineM, numWindow.PosX, numWindow.PosY, iaLine);
                         }
 
                         // 列番設置
