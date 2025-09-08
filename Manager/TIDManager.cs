@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
+using System.Xml.Linq;
 using TrainCrewTIDWindow.Communications;
 using TrainCrewTIDWindow.Models;
 using TrainCrewTIDWindow.Settings;
@@ -113,6 +115,10 @@ namespace TrainCrewTIDWindow.Manager {
         /// </summary>
         private Bitmap originalBitmap;
 
+        private Dictionary<string, bool> markupClassesData = [];
+
+        public bool Markuped => markupClassesData.Values.Any(d => d);
+
 
         public bool Started {
             get;
@@ -169,6 +175,20 @@ namespace TrainCrewTIDWindow.Manager {
             numSettingsDown = LoadNumberSetting("number_down.tsv", numberWindowDict);
             numSettingsUp = LoadNumberSetting("number_up.tsv", numberWindowDict);
 
+            void AddNewClass(string key, string name) {
+                markupClassesData.Add(key, false);
+                var menu = new ToolStripMenuItem();
+                window.MenuItemMarkupClass.DropDownItems.Add(menu);
+                menu.Name = name;
+                menu.Size = new Size(110, 22);
+                menu.Text = name;
+                menu.Click += (sender, e) => {
+                    var v = !markupClassesData[key];
+                    markupClassesData[key] = v;
+                    menu.CheckState = v ? CheckState.Checked : CheckState.Unchecked;
+                    window.ReservedUpdate = true;
+                };
+            }
 
             try {
                 using var sr = new StreamReader(".\\setting\\color_setting.tsv");
@@ -182,12 +202,24 @@ namespace TrainCrewTIDWindow.Manager {
                     var texts = line.Split('\t');
                     line = sr.ReadLine();
 
-                    if (texts.Length < 4 || texts.Any(t => t == "")) {
+                    var i = 0;
+                    for (; i < texts.Length; i++) {
+                        if (texts[i] == "") {
+                            break;
+                        }
+                    }
+                    if (i < 4) {
                         continue;
                     }
 
-                    if (texts[0].Length < 6) {
-                        numColor.Add(texts[0], Color.FromArgb(int.Parse(texts[1]), int.Parse(texts[2]), int.Parse(texts[3])));
+                    var s = texts[0];
+
+                    if (s.Length < 6) {
+                        var color = Color.FromArgb(int.Parse(texts[1]), int.Parse(texts[2]), int.Parse(texts[3]));
+                        numColor.Add(s, color);
+                        if (texts.Length > 4 && texts[4].Length > 1) {
+                            AddNewClass(s, texts[4]);
+                        }
                     }
                     else {
                         colorDict.Add(texts[0], Color.FromArgb(int.Parse(texts[1]), int.Parse(texts[2]), int.Parse(texts[3])));
@@ -196,6 +228,16 @@ namespace TrainCrewTIDWindow.Manager {
             }
             catch {
             }
+
+
+            AddNewClass("local", "普通");
+            AddNewClass("rinji", "臨時");
+            var sep = new ToolStripSeparator();
+            window.MenuItemMarkupClass.DropDownItems.Add(sep);
+            sep.Name = "sep";
+            sep.Size = new Size(177, 6);
+            AddNewClass("illegalZ", "Z");
+            AddNewClass("superIllegalZ", "臨Z");
 
             try {
                 using var sr = new StreamReader(".\\setting\\alpha_index.tsv");
@@ -689,28 +731,56 @@ namespace TrainCrewTIDWindow.Manager {
                 var numBodyStr = Regex.Replace(numWindow.Train, @"[^0-9]", "");
                 var isTrain = int.TryParse(numBodyStr, out var numBody);  // 列番本体（数字部分）
                 var numFooter = Regex.Replace(numWindow.Train, @"[^a-zA-Z]", "");  // 列番の末尾の文字
-                var fillZero = false;
-                var duplicating = false;
+
+                // 遅延時分
+                var delayMinute = trainData != null ? trainData.DelayMinutes : 0;
+                var markUp = trainData != null && trainData.Markup;
+
+                markUp |= window.MarkupDelayed > 0 && delayMinute >= window.MarkupDelayed;
+
+
+                var iaType = new ImageAttributes();
 
                 // 運番
                 if (numWindow.Size == NumberSize.S) {
-                    ImageAttributes iaType = new ImageAttributes();
+                    var hf = $"{numHeader}{numFooter}";
+                    foreach (var k in numColor.Keys) {
+                        if (hf.Contains(k)) {
+                            if (markupClassesData.ContainsKey(k)) {
+                                markUp |= markupClassesData[k];
+                            }
+                            break;
+                        }
+                    }
+                    if(hf != "臨Z" && (numHeader == "" || numHeader == "臨") && (numFooter == "" || numFooter == "X" || numFooter == "Y" || numFooter == "Z")) {
+                        markUp |= markupClassesData["local"];
+                    }
+                    if (numHeader == "臨") {
+                        markUp |= markupClassesData["rinji"];
+                    }
+                    if (numFooter.Contains('Z')) {
+                        markUp |= markupClassesData["illegalZ"];
+                    }
+                    if (numHeader == "臨" && numFooter.Contains('Z')) {
+                        markUp |= markupClassesData["superIllegalZ"];
+                    }
+
                     Color? color = null;
                     // 0埋め列番への警告色として不明色に
                     if (isTrain && numBodyStr[0] == '0') {
-                        fillZero = true;
+                        markUp |= window.MarkupFillZero;
                         if (colorDict.ContainsKey("UNKNOWN")) {
                             color = colorDict["UNKNOWN"];
                         }
                     }
                     // 列番被りへの警告色として不明色に
                     if (isTrain && duplicatingTrains.Contains(numWindow.Train)) {
-                        duplicating = true;
+                        markUp |= window.MarkupDuplication;
                         if (colorDict.ContainsKey("UNKNOWN")) {
                             color = colorDict["UNKNOWN"];
                         }
                     }
-                    var markUp = trainData != null && trainData.Markup || window.MarkupFillZero && fillZero || window.MarkupDuplication && duplicating || window.MarkupNotTrain && !isTrain;
+                    markUp |= window.MarkupNotTrain && !isTrain;
 
                     var numIndex = numIndexList.FirstOrDefault(i => i.Text == numWindow.Train && i.Width == 5);
                     if(numIndex != null) {
@@ -764,7 +834,6 @@ namespace TrainCrewTIDWindow.Manager {
                     else if (isTrain) {
 
                         // 遅延時分表示
-                        var delayMinute = trainData != null ? trainData.DelayMinutes : 10;
                         var iaDelay = new ImageAttributes();
                         var delayColor = Color.White;
                         if (delayMinute >= 10 && colorDict.ContainsKey("delayTime10")) {
@@ -837,24 +906,40 @@ namespace TrainCrewTIDWindow.Manager {
                     var retsuban = numBody;
 
                     // 種別色
-                    var iaType = new ImageAttributes();
                     Color? classColor = null;
+                    var hf = $"{numHeader}{numFooter}";
                     foreach (var k in numColor.Keys) {
-                        if ($"{numHeader}{numFooter}".Contains(k)) {
+                        if (hf.Contains(k)) {
                             classColor = numColor[k];
+
+                            if (markupClassesData.ContainsKey(k)) {
+                                markUp |= markupClassesData[k];
+                            }
                             break;
                         }
                     }
+                    if (hf != "臨Z" && (numHeader == "" || numHeader == "臨") && (numFooter == "" || numFooter == "X" || numFooter == "Y" || numFooter == "Z")) {
+                        markUp |= markupClassesData["local"];
+                    }
+                    if (numHeader == "臨") {
+                        markUp |= markupClassesData["rinji"];
+                    }
+                    if (numFooter.Contains('Z')) {
+                        markUp |= markupClassesData["illegalZ"];
+                    }
+                    if (numHeader == "臨" && numFooter.Contains('Z')) {
+                        markUp |= markupClassesData["superIllegalZ"];
+                    }
                     // 0埋め列番への警告色として不明色に
                     if (isTrain && numBodyStr[0] == '0') {
-                        fillZero = true;
+                        markUp |= window.MarkupFillZero;
                         if (colorDict.ContainsKey("UNKNOWN")) {
                             classColor = colorDict["UNKNOWN"];
                         }
                     }
                     // 列番被りへの警告色として不明色に
                     if (isTrain && duplicatingTrains.Contains(numWindow.Train)) {
-                        duplicating = true;
+                        markUp |= window.MarkupDuplication;
                         if (colorDict.ContainsKey("UNKNOWN")) {
                             classColor = colorDict["UNKNOWN"];
                         }
@@ -869,26 +954,13 @@ namespace TrainCrewTIDWindow.Manager {
                         }
                     }
 
-                    var markUp = trainData != null && trainData.Markup || window.MarkupFillZero && fillZero || window.MarkupDuplication && duplicating || window.MarkupNotTrain && !isTrain;
-                    if (trainData == null && !markUp) {
-                        iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = (Color)classColor }]);
-                    }
-                    else if (markUp && window.MarkupType > 0 && (window.MarkupType == 2 || window.FlashState)) {
-                        iaType.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = (Color)classColor }, new ColorMap { OldColor = Color.White, NewColor = Color.Black }]);
-                    }
-                    else if (markUp && window.MarkupType == 0 && !window.FlashState) {
-                        iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = Color.FromArgb(40, 40, 40) }]);
-                    }
-                    else {
-                        iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = (Color)classColor }]);
-                    }
+                    markUp |= window.MarkupNotTrain && !isTrain;
 
 
 
 
 
                     // 遅延時分
-                    var delayMinute = trainData != null ? trainData.DelayMinutes : 0;
                     var iaLine = new ImageAttributes();
                     var iaDelay = new ImageAttributes();
                     Color delayColor = Color.White;
@@ -900,6 +972,19 @@ namespace TrainCrewTIDWindow.Manager {
                     }
                     else if (delayMinute >= 1 && colorDict.ContainsKey("delayTime1")) {
                         delayColor = colorDict["delayTime1"];
+                    }
+
+                    if (trainData == null && !markUp) {
+                        iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = (Color)classColor }]);
+                    }
+                    else if (markUp && window.MarkupType > 0 && (window.MarkupType == 2 || window.FlashState)) {
+                        iaType.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = (Color)classColor }, new ColorMap { OldColor = Color.White, NewColor = Color.Black }]);
+                    }
+                    else if (markUp && window.MarkupType == 0 && !window.FlashState) {
+                        iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = Color.FromArgb(40, 40, 40) }]);
+                    }
+                    else {
+                        iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = (Color)classColor }]);
                     }
 
                     var numIndex = numIndexList.FirstOrDefault(i => i.Text == numWindow.Train && i.Width == 7);
@@ -945,6 +1030,8 @@ namespace TrainCrewTIDWindow.Manager {
                         else {
                             AddImage(g, numLineM, numWindow.PosX, numWindow.PosY, iaLine);
                         }
+
+
                         if (numWindow.Size == NumberSize.L) {
                             if(delayMinute / 10 > 0) {
                                 AddNumImage(g, delayMinute % 100 / 10, numWindow.PosX + 48, numWindow.PosY, iaDelay);
