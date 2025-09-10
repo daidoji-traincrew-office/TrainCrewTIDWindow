@@ -45,7 +45,7 @@ namespace TrainCrewTIDWindow {
         /// </summary>
         private readonly Dictionary<string, ToolStripMenuItem> trainMenuDict = [];
 
-
+        private readonly Dictionary<int, ToolStripMenuItem> scaleMenuDict = [];
 
 
 
@@ -124,6 +124,10 @@ namespace TrainCrewTIDWindow {
             get;
             private set;
         } = 100;
+
+        private int initialScale = 100;
+
+        private int[] scaleArray = { 50, 75, 90, 100, 110, 125, 150, 175, 200 };
 
         /// <summary>
         /// マウス位置（ドラッグ操作対応用）
@@ -261,12 +265,37 @@ namespace TrainCrewTIDWindow {
 
             if (!loaded) {
                 using (StreamWriter w = new(".\\setting\\setting.txt", false, new UTF8Encoding(false))) {
-                    w.Write("source=select\ntopMost=true\nscale=100\ntimeOffset=14\nzoomMode=pushtozoom\nzoomSize=240\nsilent=false\nflashInterval=0.5\nmarkupType=0\nmarkupDelayed=0\nmarkupDuplication=false\nmarkupFillZero=false\nmarkup9999=false\nmarkupNotTrain=false\nmarkupSpawned=false");
+                    w.Write("source=select\ntopMost=true\nscaleList=50,75,90,100,110,125,150,175,200\ninitialScale=100\ntimeOffset=14\nzoomMode=pushtozoom\nzoomSize=240\nsilent=false\nflashInterval=0.5\nmarkupType=0\nmarkupDelayed=0\nmarkupDuplication=false\nmarkupFillZero=false\nmarkup9999=false\nmarkupNotTrain=false\nmarkupSpawned=false");
                 }
             }
 
+
             if (File.Exists(".\\sound\\warning.wav")) {
                 warningSound = new SoundPlayer(".\\sound\\warning.wav");
+            }
+
+
+            foreach (var scale in scaleArray) {
+                AddScale(scale);
+            }
+
+
+            if (initialScale < 0) {
+                initialScale = -1;
+                TIDScale = initialScale;
+                menuItemScaleFit.CheckState = CheckState.Indeterminate;
+            }
+            else {
+                if (!scaleMenuDict.ContainsKey(initialScale)) {
+                    if (scaleMenuDict.ContainsKey(100)) {
+                        initialScale = 100;
+                    }
+                    else {
+                        initialScale = scaleMenuDict.Keys.FirstOrDefault();
+                    }
+                }
+                TIDScale = initialScale;
+                scaleMenuDict[initialScale].CheckState = CheckState.Indeterminate;
             }
 
 
@@ -284,7 +313,7 @@ namespace TrainCrewTIDWindow {
             trackManager = new TrackManager(displayManager);
 
             Load += TIDWindow_Load;
-            menuItemScale50.Click += (sender, e) => { SetScale(50); };
+            /*menuItemScale50.Click += (sender, e) => { SetScale(50); };
             menuItemScale75.Click += (sender, e) => { SetScale(75); };
             menuItemScale90.Click += (sender, e) => { SetScale(90); };
             menuItemScale100.Click += (sender, e) => { SetScale(100); };
@@ -292,7 +321,7 @@ namespace TrainCrewTIDWindow {
             menuItemScale125.Click += (sender, e) => { SetScale(125); };
             menuItemScale150.Click += (sender, e) => { SetScale(150); };
             menuItemScale175.Click += (sender, e) => { SetScale(175); };
-            menuItemScale200.Click += (sender, e) => { SetScale(200); };
+            menuItemScale200.Click += (sender, e) => { SetScale(200); };*/
             menuItemScaleFit.Click += (sender, e) => { SetScale(-1); };
 
             menuItemHour0.Click += (sender, e) => { SetHourQuick(0); };
@@ -323,6 +352,18 @@ namespace TrainCrewTIDWindow {
             trainMenuDict.Add("9999", menuItemMarkup9999);
         }
 
+        private void AddScale(int scale) {
+            var menu = new ToolStripMenuItem();
+            scaleMenuDict.Add(scale, menu);
+            menuItemScale.DropDownItems.Insert(menuItemScale.DropDownItems.Count - 2, menu);
+            menu.Name = $"menuItemScale{scale}";
+            menu.Size = new Size(110, 22);
+            menu.Text = $"{scale}%";
+            menu.Click += (sender, e) => {
+                SetScale(scale);
+            };
+        }
+
         private bool LoadSetting(string path) {
 
             try {
@@ -346,8 +387,21 @@ namespace TrainCrewTIDWindow {
                         case "topMost":
                             topMostSetting = texts[1].Replace(" ", "").ToLower() == "true";
                             break;
+                        case "scaleList":
+                            var scaleList = new List<int>();
+                            foreach(var str in texts[1].Split(',')) {
+                                if(!int.TryParse(str, out var scale) || scale <= 0 || scale > 500) {
+                                    continue;
+                                }
+                                scaleList.Add(scale);
+                            }
+                            if(scaleList.Count > 0) {
+                                scaleArray = scaleList.ToArray();
+                            }
+                            break;
+                        case "initialScale":
                         case "scale":
-                            menuItemScale50.CheckState = CheckState.Unchecked;
+                            /*menuItemScale50.CheckState = CheckState.Unchecked;
                             menuItemScale75.CheckState = CheckState.Unchecked;
                             menuItemScale90.CheckState = CheckState.Unchecked;
                             menuItemScale100.CheckState = CheckState.Unchecked;
@@ -355,15 +409,24 @@ namespace TrainCrewTIDWindow {
                             menuItemScale125.CheckState = CheckState.Unchecked;
                             menuItemScale150.CheckState = CheckState.Unchecked;
                             menuItemScale175.CheckState = CheckState.Unchecked;
-                            menuItemScale200.CheckState = CheckState.Unchecked;
+                            menuItemScale200.CheckState = CheckState.Unchecked;*/
+                            foreach(var m in scaleMenuDict.Values) {
+                                m.CheckState = CheckState.Unchecked;
+                            }
                             menuItemScaleFit.CheckState = CheckState.Unchecked;
 
                             if (texts[1].Replace(" ", "").ToLower() == "fit") {
-                                TIDScale = -1;
-                                menuItemScaleFit.CheckState = CheckState.Indeterminate;
+                                initialScale = -1;
+                                /*TIDScale = -1;
+                                menuItemScaleFit.CheckState = CheckState.Indeterminate;*/
                                 break;
                             }
-                            switch (texts[1]) {
+                            if (int.TryParse(texts[1], out var s)/* && scaleMenuDict.ContainsKey(s)*/) {
+                                initialScale = s;
+                                /*TIDScale = s;
+                                scaleMenuDict[s].CheckState = CheckState.Indeterminate;*/
+                            }
+                            /*switch (texts[1]) {
                                 case "50":
                                     TIDScale = 50;
                                     menuItemScale50.CheckState = CheckState.Indeterminate;
@@ -400,7 +463,7 @@ namespace TrainCrewTIDWindow {
                                     TIDScale = 200;
                                     menuItemScale200.CheckState = CheckState.Indeterminate;
                                     break;
-                            }
+                            }*/
                             break;
                         case "timeOffset":
                             if (int.TryParse(texts[1], out var hours)) {
@@ -1177,15 +1240,21 @@ namespace TrainCrewTIDWindow {
         }
 
         private void SetScale(int scale) {
-            if (scale < 50 && scale != -1) {
-                scale = 50;
+            var min = scaleMenuDict.Keys.Min();
+            var max = scaleMenuDict.Keys.Max();
+            if (scale < min && scale != -1) {
+                scale = min;
             }
-            if (scale > 200) {
-                scale = 200;
+            if (scale > max) {
+                scale = max;
             }
             LogManager.AddInfoLog($"拡大率変更：{(scale > 0 ? $"{scale}%" : "fit")}");
 
-            menuItemScale50.CheckState = CheckState.Unchecked;
+            foreach(var k in scaleMenuDict.Keys) {
+                scaleMenuDict[k].CheckState = k == scale ? CheckState.Indeterminate : CheckState.Unchecked;
+            }
+
+            /*menuItemScale50.CheckState = CheckState.Unchecked;
             menuItemScale75.CheckState = CheckState.Unchecked;
             menuItemScale90.CheckState = CheckState.Unchecked;
             menuItemScale100.CheckState = CheckState.Unchecked;
@@ -1193,17 +1262,13 @@ namespace TrainCrewTIDWindow {
             menuItemScale125.CheckState = CheckState.Unchecked;
             menuItemScale150.CheckState = CheckState.Unchecked;
             menuItemScale175.CheckState = CheckState.Unchecked;
-            menuItemScale200.CheckState = CheckState.Unchecked;
-            menuItemScaleFit.CheckState = CheckState.Unchecked;
+            menuItemScale200.CheckState = CheckState.Unchecked;*/
+            menuItemScaleFit.CheckState = scale < 0 ? CheckState.Indeterminate : CheckState.Unchecked;
 
-            switch (scale) {
+
+            /*switch (scale) {
                 case 50:
                     menuItemScale50.CheckState = CheckState.Indeterminate;
-                    var mi = new ToolStripMenuItem();
-                    menuItemScale.DropDownItems.Add(mi);
-                    mi.Name = "mi";
-                    mi.Size = new Size(129, 22);
-                    mi.Text = "popopo";
                     break;
                 case 75:
                     menuItemScale75.CheckState = CheckState.Indeterminate;
@@ -1233,7 +1298,7 @@ namespace TrainCrewTIDWindow {
                     menuItemScaleFit.CheckState = CheckState.Indeterminate;
                     break;
 
-            }
+            }*/
 
             TIDScale = scale;
 
@@ -1260,8 +1325,10 @@ namespace TrainCrewTIDWindow {
 
         private void labelScale_MouseDown(object sender, MouseEventArgs e) {
             if (TIDScale > 0) {
+                var i = -1;
                 if (e.Button == MouseButtons.Right) {
-                    switch (TIDScale) {
+                    i = Math.Min(Array.IndexOf(scaleArray, TIDScale) + 1, scaleArray.Length - 1);
+                    /*switch (TIDScale) {
                         case 75:
                         case 110:
                             SetScale(TIDScale + 15);
@@ -1273,10 +1340,11 @@ namespace TrainCrewTIDWindow {
                         default:
                             SetScale(TIDScale + 25);
                             break;
-                    }
+                    }*/
                 }
                 else if (e.Button == MouseButtons.Left) {
-                    switch (TIDScale) {
+                    i = Math.Max(Array.IndexOf(scaleArray, TIDScale) - 1, 0);
+                    /*switch (TIDScale) {
                         case 90:
                         case 125:
                             SetScale(TIDScale - 15);
@@ -1288,7 +1356,10 @@ namespace TrainCrewTIDWindow {
                         default:
                             SetScale(TIDScale - 25);
                             break;
-                    }
+                    }*/
+                }
+                if(i >= 0) {
+                    SetScale(scaleArray[i]);
                 }
             }
         }
@@ -1412,8 +1483,10 @@ namespace TrainCrewTIDWindow {
         private void PictureBox1_MouseWheel(object sender, MouseEventArgs e) {
             if (ModifierKeys.HasFlag(Keys.Control)) {
                 if (TIDScale > 0) {
+                    var i = -1;
                     if (e.Delta > 0) {
-                        switch (TIDScale) {
+                        i = Math.Min(Array.IndexOf(scaleArray, TIDScale) + 1, scaleArray.Length - 1);
+                        /*switch (TIDScale) {
                             case 75:
                             case 110:
                                 SetScale(TIDScale + 15);
@@ -1425,10 +1498,11 @@ namespace TrainCrewTIDWindow {
                             default:
                                 SetScale(TIDScale + 25);
                                 break;
-                        }
+                        }*/
                     }
                     else {
-                        switch (TIDScale) {
+                        i = Math.Max(Array.IndexOf(scaleArray, TIDScale) - 1, 0);
+                        /*switch (TIDScale) {
                             case 90:
                             case 125:
                                 SetScale(TIDScale - 15);
@@ -1440,7 +1514,10 @@ namespace TrainCrewTIDWindow {
                             default:
                                 SetScale(TIDScale - 25);
                                 break;
-                        }
+                        }*/
+                    }
+                    if (i >= 0) {
+                        SetScale(scaleArray[i]);
                     }
                 }
             }
