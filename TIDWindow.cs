@@ -1306,14 +1306,12 @@ namespace TrainCrewTIDWindow {
             if (scale > 0) {
                 labelScale.ForeColor = Color.White;
                 labelScale.Text = $"Scale：{scale}%";
-                pictureBox1.Cursor = Cursors.SizeAll;
             }
             else {
                 labelScale.ForeColor = Color.LightGreen;
                 labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalBitmap.Width * 100 + 0.5)}%";
-                pictureBox1.Cursor = Cursors.Default;
-
             }
+            UpdateMouseCursor();
         }
 
         private void SetHourQuick(int hour) {
@@ -1367,6 +1365,9 @@ namespace TrainCrewTIDWindow {
         private void TIDWindow_KeyDown(object sender, KeyEventArgs e) {
             var code = e.KeyData & Keys.KeyCode;
             var mod = e.KeyData & Keys.Modifiers;
+            if((mod & Keys.Shift) == Keys.Shift) {
+                pictureBox1.Cursor = Cursors.Hand;
+            }
             if (e.KeyData == (Keys.C | Keys.Control)) {
                 displayManager.CopyImage();
             }
@@ -1480,6 +1481,17 @@ namespace TrainCrewTIDWindow {
 
         }
 
+        private void TIDWindow_KeyUp(object sender, KeyEventArgs e) {
+            var mod = e.KeyData & Keys.Modifiers;
+            if ((mod & Keys.Shift) != Keys.Shift) {
+                UpdateMouseCursor();
+                if ((MouseButtons & MouseButtons.Left) == MouseButtons.Left) {
+                    mouseLoc = pictureBox1.PointToClient(Cursor.Position);
+                }
+            }
+            
+        }
+
         private void PictureBox1_MouseWheel(object sender, MouseEventArgs e) {
             if (ModifierKeys.HasFlag(Keys.Control)) {
                 if (TIDScale > 0) {
@@ -1584,7 +1596,7 @@ namespace TrainCrewTIDWindow {
 
                     pictureBox2.Location = new Point(-300, -300);
                     pictureBox2.Size = new Size(240, 240);
-                    Cursor.Show();
+                    UpdateMouseCursor();
                 }
                 else {
                     usingMagnifyingGlass = true;
@@ -1595,13 +1607,14 @@ namespace TrainCrewTIDWindow {
                         pictureBox2.Size = new Size(240, 240);
                     }
                     else {
-                        pictureBox2.Location = new Point(e.X /*- panel1.HorizontalScroll.Value*/ - magnifyingGlassSize / 2, e.Y /*- panel1.VerticalScroll.Value*/ - magnifyingGlassSize / 2);
+                        pictureBox2.Location = new Point(e.X - magnifyingGlassSize / 2, e.Y - magnifyingGlassSize / 2);
                         pictureBox2.Size = new Size(Math.Min(magnifyingGlassSize, Math.Max(0, pictureBox1.Width - e.X + magnifyingGlassSize / 2)), Math.Min(magnifyingGlassSize, Math.Max(0, pictureBox1.Height - e.Y + magnifyingGlassSize / 2)));
                     }
 
                     SetMagnifyingGlass(e.X, e.Y);
 
-                    Cursor.Hide();
+                    /*Cursor.Hide();*/
+                    UpdateMouseCursor();
                 }
 
             }
@@ -1610,10 +1623,22 @@ namespace TrainCrewTIDWindow {
 
                 pictureBox2.Location = new Point(-300, -300);
                 pictureBox2.Size = new Size(240, 240);
-                Cursor.Show();
+                UpdateMouseCursor();
             }
             if ((e.Button & MouseButtons.Left) == MouseButtons.Left) {
-                mouseLoc = e.Location;
+                if (ModifierKeys.HasFlag(Keys.Shift)) {
+                    foreach(var w in displayManager.NumberWindowDict.Values) {
+                        var t = w.Train;
+                        if (t != null && IsInArea(e.Location, w.PosX, w.PosY, w.GetSize()) && trainDataDict.TryGetValue(t, out var td)) {
+                            td.Markup = !td.Markup;
+                            trainMenuDict[t].CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
+                            ReservedUpdate = true;
+                        }
+                    }
+                }
+                else {
+                    mouseLoc = e.Location;
+                }
             }
         }
 
@@ -1624,7 +1649,7 @@ namespace TrainCrewTIDWindow {
 
                     pictureBox2.Location = new Point(-300, -300);
                     pictureBox2.Size = new Size(240, 240);
-                    Cursor.Show();
+                    UpdateMouseCursor();
                 }
             }
             if ((e.Button & MouseButtons.Right) == MouseButtons.Right) {
@@ -1632,7 +1657,19 @@ namespace TrainCrewTIDWindow {
 
                 pictureBox2.Location = new Point(-300, -300);
                 pictureBox2.Size = new Size(240, 240);
-                Cursor.Show();
+                UpdateMouseCursor();
+            }
+            if (toggleMagnifyingGlass && (e.Button & MouseButtons.Left) == MouseButtons.Left) {
+                if (ModifierKeys.HasFlag(Keys.Shift)) {
+                    foreach (var w in displayManager.NumberWindowDict.Values) {
+                        var t = w.Train;
+                        if (t != null && IsInArea(pictureBox1.PointToClient(Cursor.Position), w.PosX, w.PosY, w.GetSize()) && trainDataDict.TryGetValue(t, out var td)) {
+                            td.Markup = !td.Markup;
+                            trainMenuDict[t].CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
+                            ReservedUpdate = true;
+                        }
+                    }
+                }
             }
         }
 
@@ -1662,7 +1699,6 @@ namespace TrainCrewTIDWindow {
 
                         pictureBox2.Location = new Point(-300, -300);
                         pictureBox2.Size = new Size(240, 240);
-                        Cursor.Show();
                     }
                 }
                 else {
@@ -1684,7 +1720,7 @@ namespace TrainCrewTIDWindow {
 
 
             }
-            if ((e.Button & MouseButtons.Left) == MouseButtons.Left) {
+            if (!ModifierKeys.HasFlag(Keys.Shift) && (e.Button & MouseButtons.Left) == MouseButtons.Left) {
                 panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value - e.Location.X + mouseLoc.X, panel1.VerticalScroll.Value - e.Location.Y + mouseLoc.Y);
             }
         }
@@ -1706,7 +1742,7 @@ namespace TrainCrewTIDWindow {
                         pictureBox2.Location = new Point(mouseX - magnifyingGlassSize / 2, mouseY - magnifyingGlassSize / 2);
                         pictureBox2.Size = new Size(Math.Min(magnifyingGlassSize, Math.Max(0, pictureBox1.Width - cp.X + magnifyingGlassSize / 2)), Math.Min(magnifyingGlassSize, Math.Max(0, pictureBox1.Height - cp.Y + magnifyingGlassSize / 2)));
                     }
-
+                    UpdateMouseCursor();
                     SetMagnifyingGlass(cp.X, cp.Y);
                 }
             }
@@ -1718,7 +1754,7 @@ namespace TrainCrewTIDWindow {
 
                 pictureBox2.Location = new Point(-300, -300);
                 pictureBox2.Size = new Size(240, 240);
-                Cursor.Show();
+                UpdateMouseCursor();
             }
             if ((e.Button & MouseButtons.Left) == MouseButtons.Left) {
                 mouseLoc = Point.Empty;
@@ -1892,5 +1928,36 @@ namespace TrainCrewTIDWindow {
             }
             ReservedUpdate = true;
         }
+
+        private Point ConvertPoint(int x, int y) {
+            return new Point(x * displayManager.OriginalBitmap.Width / pictureBox1.Width, y * displayManager.OriginalBitmap.Height / pictureBox1.Height);
+        }
+
+        private Point ConvertPoint(Point p) {
+            return ConvertPoint(p.X, p.Y);
+        }
+
+        private bool IsInArea(Point point, int areaX, int areaY, Size areaSize) {
+            var p = ConvertPoint(point);
+            return p.X >= areaX && p.X < (areaX + areaSize.Width) && p.Y >= areaY && p.Y < (areaY + areaSize.Height);
+        }
+
+        private void UpdateMouseCursor() {
+            if (ModifierKeys.HasFlag(Keys.Shift)) {
+                pictureBox1.Cursor = Cursors.Hand;
+                pictureBox2.Cursor = Cursors.Hand;
+            }
+            else if (usingMagnifyingGlass) {
+                pictureBox1.Cursor = Cursors.Cross;
+                pictureBox2.Cursor = Cursors.Cross;
+            }
+            else if (TIDScale < 0) {
+                pictureBox1.Cursor = Cursors.Default;
+            }
+            else {
+                pictureBox1.Cursor = Cursors.SizeAll;
+            }
+        }
+
     }
 }

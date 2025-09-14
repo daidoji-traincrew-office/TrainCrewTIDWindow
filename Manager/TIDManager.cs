@@ -153,6 +153,8 @@ namespace TrainCrewTIDWindow.Manager {
 
         public ReadOnlyCollection<TrackConnectionSetting> TrackConnections => trackConnections.AsReadOnly();
 
+        public ReadOnlyDictionary<Point, NumberWindowData> NumberWindowDict => numberWindowDict.AsReadOnly();
+
         public TIDWindow Window => window;
 
         /// <summary>

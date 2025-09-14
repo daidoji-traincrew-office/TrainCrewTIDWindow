@@ -84,7 +84,16 @@ namespace TrainCrewTIDWindow.Models {
             var v = Train;
             DeeCount = 0;
             Train = null;
-            return v;
+            return v ?? "";
+        }
+
+        public Size GetSize() {
+            return Size switch {
+                NumberSize.L => new Size(59, 11),
+                NumberSize.M => new Size(47, 11),
+                NumberSize.S => new Size(29, 11),
+                _ => new Size(0, 0),
+            };
         }
 
     }

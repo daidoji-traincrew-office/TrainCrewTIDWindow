@@ -509,6 +509,7 @@
             // pictureBox2
             // 
             pictureBox2.BackColor = Color.Transparent;
+            pictureBox2.Cursor = Cursors.Cross;
             pictureBox2.Location = new Point(-300, -300);
             pictureBox2.Name = "pictureBox2";
             pictureBox2.Size = new Size(240, 240);
@@ -613,6 +614,7 @@
             FormClosing += TIDWindow_Closing;
             SizeChanged += TIDWindow_SizeChanged;
             KeyDown += TIDWindow_KeyDown;
+            KeyUp += TIDWindow_KeyUp;
             Resize += TIDWindow_Resize;
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             contextMenuStrip1.ResumeLayout(false);
