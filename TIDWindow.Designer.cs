@@ -119,25 +119,25 @@
             // 
             contextMenuStrip1.Items.AddRange(new ToolStripItem[] { menuItemCopy, toolStripSeparator2, menuItemTrainMarkup, menuItemMarkupType, toolStripSeparator1, menuItemScale, menuItemMagnifyingGlass, menuItemTopMost, menuItemSilent, menuItemQuickTimeSetting, toolStripSeparator7, menuItemVersion });
             contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new Size(171, 220);
+            contextMenuStrip1.Size = new Size(181, 242);
             // 
             // menuItemCopy
             // 
             menuItemCopy.Name = "menuItemCopy";
-            menuItemCopy.Size = new Size(170, 22);
+            menuItemCopy.Size = new Size(180, 22);
             menuItemCopy.Text = "TID画面をコピー";
             menuItemCopy.Click += menuItemCopy_Click;
             // 
             // toolStripSeparator2
             // 
             toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(167, 6);
+            toolStripSeparator2.Size = new Size(177, 6);
             // 
             // menuItemTrainMarkup
             // 
             menuItemTrainMarkup.DropDownItems.AddRange(new ToolStripItem[] { menuItemMarkupClass, menuItemMarkupDelayed, menuItemMarkupOther, menuItemMarkupAll, menuItemMarkupCancel, toolStripSeparator3 });
             menuItemTrainMarkup.Name = "menuItemTrainMarkup";
-            menuItemTrainMarkup.Size = new Size(170, 22);
+            menuItemTrainMarkup.Size = new Size(180, 22);
             menuItemTrainMarkup.Text = "列車番号強調表示";
             // 
             // menuItemMarkupClass
@@ -265,7 +265,7 @@
             // 
             menuItemMarkupType.DropDownItems.AddRange(new ToolStripItem[] { menuItemMarkupType1, menuItemMarkupType2, menuItemMarkupType3 });
             menuItemMarkupType.Name = "menuItemMarkupType";
-            menuItemMarkupType.Size = new Size(170, 22);
+            menuItemMarkupType.Size = new Size(180, 22);
             menuItemMarkupType.Text = "強調表示タイプ";
             // 
             // menuItemMarkupType1
@@ -294,13 +294,13 @@
             // toolStripSeparator1
             // 
             toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new Size(167, 6);
+            toolStripSeparator1.Size = new Size(177, 6);
             // 
             // menuItemScale
             // 
             menuItemScale.DropDownItems.AddRange(new ToolStripItem[] { toolStripSeparator6, menuItemScaleFit });
             menuItemScale.Name = "menuItemScale";
-            menuItemScale.Size = new Size(170, 22);
+            menuItemScale.Size = new Size(180, 22);
             menuItemScale.Text = "拡大率";
             // 
             // toolStripSeparator6
@@ -318,7 +318,7 @@
             // 
             menuItemMagnifyingGlass.DropDownItems.AddRange(new ToolStripItem[] { menuItemPushToZoom, menuItemToggle });
             menuItemMagnifyingGlass.Name = "menuItemMagnifyingGlass";
-            menuItemMagnifyingGlass.Size = new Size(170, 22);
+            menuItemMagnifyingGlass.Size = new Size(180, 22);
             menuItemMagnifyingGlass.Text = "拡大鏡モード";
             // 
             // menuItemPushToZoom
@@ -340,14 +340,14 @@
             // menuItemTopMost
             // 
             menuItemTopMost.Name = "menuItemTopMost";
-            menuItemTopMost.Size = new Size(170, 22);
+            menuItemTopMost.Size = new Size(180, 22);
             menuItemTopMost.Text = "最前面表示";
             menuItemTopMost.Click += menuItemTopMost_Click;
             // 
             // menuItemSilent
             // 
             menuItemSilent.Name = "menuItemSilent";
-            menuItemSilent.Size = new Size(170, 22);
+            menuItemSilent.Size = new Size(180, 22);
             menuItemSilent.Text = "サイレントモード";
             menuItemSilent.Click += menuItemSilent_Click;
             // 
@@ -355,7 +355,7 @@
             // 
             menuItemQuickTimeSetting.DropDownItems.AddRange(new ToolStripItem[] { menuItemHour0, menuItemHour1, menuItemHour2, menuItemHour3, menuItemHour4, menuItemHour5, menuItemHour6, menuItemHour7, menuItemHour8, menuItemHour9, menuItemHour10, menuItemHour11, menuItemHour12, menuItemHour13, menuItemHour14, menuItemHour15, menuItemHour16, menuItemHour17, menuItemHour18, menuItemHour19, menuItemHour20, menuItemHour21, menuItemHour22, menuItemHour23 });
             menuItemQuickTimeSetting.Name = "menuItemQuickTimeSetting";
-            menuItemQuickTimeSetting.Size = new Size(170, 22);
+            menuItemQuickTimeSetting.Size = new Size(180, 22);
             menuItemQuickTimeSetting.Text = "クイック時刻設定";
             // 
             // menuItemHour0
@@ -505,12 +505,12 @@
             // toolStripSeparator7
             // 
             toolStripSeparator7.Name = "toolStripSeparator7";
-            toolStripSeparator7.Size = new Size(167, 6);
+            toolStripSeparator7.Size = new Size(177, 6);
             // 
             // menuItemVersion
             // 
             menuItemVersion.Name = "menuItemVersion";
-            menuItemVersion.Size = new Size(170, 22);
+            menuItemVersion.Size = new Size(180, 22);
             menuItemVersion.Text = "バージョン情報";
             menuItemVersion.Click += menuItemVersion_Click;
             // 

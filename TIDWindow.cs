@@ -1982,6 +1982,7 @@ namespace TrainCrewTIDWindow {
             form.Icon = Icon;
             form.ShowInTaskbar = false;
             form.AutoScaleMode = AutoScaleMode.Font;
+            form.Text = "バージョン情報 | TID - ダイヤ運転会";
             form.AutoSize = true;
             if (TopMost) {
                 form.TopMost = true;
@@ -2020,7 +2021,7 @@ namespace TrainCrewTIDWindow {
             /*labelVersion.Size = new Size(128, 40);*/
             labelVersion.TabIndex = 1;
             labelVersion.AutoSize = true;
-            labelVersion.Text = $"TrainCrewTIDWindow\nVer. {ServerAddress.Version}";
+            labelVersion.Text = $"TrainCrewTIDWindow\nVer. {ServerAddress.Version.Replace("TrainCrewTIDWindow_", "")}";
             /*form.Controls.Add(labelVersion);*/
             table.Controls.Add(labelVersion, 0, 1);
             table.SetColumnSpan(labelVersion, 2);
