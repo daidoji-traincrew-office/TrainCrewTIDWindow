@@ -117,6 +117,11 @@ namespace TrainCrewTIDWindow.Manager {
 
         private Dictionary<string, bool> markupClassesData = [];
 
+        public int Gap {
+            get;
+            private set;
+        } = 0;
+
         public bool Markuped => markupClassesData.Values.Any(d => d);
 
 
@@ -399,7 +404,12 @@ namespace TrainCrewTIDWindow.Manager {
             catch {
             }
 
+            Gap = 16 - window.Size.Width + window.Panel1.Size.Width;
+            if(Gap != 0) {
+                Gap = (Gap + 0) * 2;
+            }
 
+            window.Panel1.Size = new Size(window.Panel1.Size.Width - (Gap != 0 ? Gap + 3 : Gap), window.Panel1.Size.Height - (int)((window.Panel1.Location.Y - 24) * 1.8));
 
             var width = backgroundDefault.Width * window.TIDScale / 100;
             var height = backgroundDefault.Height * window.TIDScale / 100;
@@ -409,13 +419,13 @@ namespace TrainCrewTIDWindow.Manager {
                 height = backgroundDefault.Height * 2;
             }
 
-            window.MaximumSize = new Size(Math.Max(width, backgroundDefault.Width) + 16, Math.Max(height, backgroundDefault.Height) + 39 + 24);
+            window.MaximumSize = new Size(Math.Max(width, backgroundDefault.Width) + 16 + Gap, Math.Max(height, backgroundDefault.Height) + 39 + window.Panel1.Location.Y + (int)((window.Panel1.Location.Y - 24) * 1.1));
 
 
             lock (pictureBox) {
                 if (window.TIDScale < 0) {
                     pictureBox.Width = window.Size.Width - 16;
-                    pictureBox.Height = window.Size.Height - 39 - 24;
+                    pictureBox.Height = window.Size.Height - 39 - window.Panel1.Location.Y;
                     pictureBox.Cursor = Cursors.Default;
                 }
                 else {
@@ -430,7 +440,7 @@ namespace TrainCrewTIDWindow.Manager {
             pictureBox.Height = backgroundDefault.Height;
 
             window.MaximumSize = new Size(backgroundDefault.Width + 16, backgroundDefault.Height + 39 + 24);*/
-            window./*Client*/Size = new Size(Math.Max(backgroundDefault.Width * window.TIDScale / 100, backgroundDefault.Width) + 16, Math.Max(backgroundDefault.Height * window.TIDScale / 100, backgroundDefault.Height) + 39 + 24);
+            window./*Client*/Size = new Size(Math.Max(backgroundDefault.Width * window.TIDScale / 100, backgroundDefault.Width) + 16 + Gap, Math.Max(backgroundDefault.Height * window.TIDScale / 100, backgroundDefault.Height) + 39 + window.Panel1.Location.Y + (int)((window.Panel1.Location.Y - 24) * 1.1));
             /*window.ClientSize = new Size(Math.Max(backgroundDefault.Width * window.TIDScale / 100, backgroundDefault.Width) + 16 - 16, Math.Max(backgroundDefault.Height * window.TIDScale / 100, backgroundDefault.Height) + 39 + 24 - 39);*/
             window.TopMost = true;
 
@@ -1079,6 +1089,7 @@ namespace TrainCrewTIDWindow.Manager {
             }
 
             lock(originalBitmap)
+            lock(pictureBox.Image)
             lock (pictureBox) {
                 var oldPic = pictureBox.Image;
                 var oldOriginal = originalBitmap;
@@ -1221,6 +1232,7 @@ namespace TrainCrewTIDWindow.Manager {
                 PrepareChangeScale();
 
                 lock (originalBitmap)
+                lock (pictureBox.Image)
                 lock (pictureBox) {
 
                     var oldPic = pictureBox.Image;
@@ -1294,7 +1306,7 @@ namespace TrainCrewTIDWindow.Manager {
 
                 window.ClientSize = cs;*/
 
-                window.MaximumSize = new Size(Math.Max(width, originalBitmap.Width) + 16, Math.Max(height, originalBitmap.Height) + 39 + 24);
+                window.MaximumSize = new Size(Math.Max(width, originalBitmap.Width) + 16 + Gap, Math.Max(height, originalBitmap.Height) + 39 + window.Panel1.Location.Y + (int)((window.Panel1.Location.Y - 24) * 1.1));
 
                 if (-window.Location.X > window.Size.Width - 60) {
                     window.Location = new Point(0, 80);
@@ -1304,7 +1316,7 @@ namespace TrainCrewTIDWindow.Manager {
             lock (pictureBox) {
                 if (window.TIDScale < 0) {
                     pictureBox.Width = window.Size.Width - 16;
-                    pictureBox.Height = window.Size.Height - 39 - 24;
+                    pictureBox.Height = window.Size.Height - 39 - window.Panel1.Location.Y;
                 }
                 else {
                     pictureBox.Width = /*width > originalBitmap.Width ?*/ width /*: originalBitmap.Width*/;

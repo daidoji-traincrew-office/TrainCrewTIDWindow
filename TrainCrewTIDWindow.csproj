@@ -6,7 +6,12 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>TrainCrewTIDIconV2.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="TrainCrewTIDIconV2.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Dapplo.Microsoft.Extensions.Hosting.WinForms" Version="1.0.14" />

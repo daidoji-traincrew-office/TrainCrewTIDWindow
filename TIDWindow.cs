@@ -9,6 +9,7 @@ using System.Text;
 using System.Drawing.Drawing2D;
 using TrainCrewTIDWindow.Settings;
 using System.Media;
+using TrainCrewTIDWindow.Properties;
 
 namespace TrainCrewTIDWindow {
 
@@ -87,6 +88,8 @@ namespace TrainCrewTIDWindow {
         /// 拡大鏡の直径
         /// </summary>
         private int magnifyingGlassSize = 240;
+
+        public Panel Panel1 => panel1;
 
         /// <summary>
         /// 表示される時刻の時差を足す前
@@ -301,6 +304,14 @@ namespace TrainCrewTIDWindow {
 
             displayManager = new TIDManager(pictureBox1, this);
 
+            var gap = displayManager.Gap != 0 ? displayManager.Gap + 2 : displayManager.Gap;
+
+            labelSilent.Location = new Point(labelSilent.Location.X - gap, labelSilent.Location.Y);
+            labelScale.Location = new Point(labelScale.Location.X - gap, labelScale.Location.Y);
+            labelTopMost.Location = new Point(labelTopMost.Location.X - gap, labelTopMost.Location.Y);
+            labelClock.Location = new Point(labelClock.Location.X - gap, labelClock.Location.Y);
+
+
             if (TIDScale > 0) {
                 labelScale.ForeColor = Color.White;
                 labelScale.Text = $"Scale：{TIDScale}%";
@@ -389,13 +400,13 @@ namespace TrainCrewTIDWindow {
                             break;
                         case "scaleList":
                             var scaleList = new List<int>();
-                            foreach(var str in texts[1].Split(',')) {
-                                if(!int.TryParse(str, out var scale) || scale <= 0 || scale > 500) {
+                            foreach (var str in texts[1].Split(',')) {
+                                if (!int.TryParse(str, out var scale) || scale <= 0 || scale > 500) {
                                     continue;
                                 }
                                 scaleList.Add(scale);
                             }
-                            if(scaleList.Count > 0) {
+                            if (scaleList.Count > 0) {
                                 scaleArray = scaleList.ToArray();
                             }
                             break;
@@ -410,7 +421,7 @@ namespace TrainCrewTIDWindow {
                             menuItemScale150.CheckState = CheckState.Unchecked;
                             menuItemScale175.CheckState = CheckState.Unchecked;
                             menuItemScale200.CheckState = CheckState.Unchecked;*/
-                            foreach(var m in scaleMenuDict.Values) {
+                            foreach (var m in scaleMenuDict.Values) {
                                 m.CheckState = CheckState.Unchecked;
                             }
                             menuItemScaleFit.CheckState = CheckState.Unchecked;
@@ -528,7 +539,7 @@ namespace TrainCrewTIDWindow {
                             debugNumberUp = texts[1];
                             break;
                         case "debugDelayDown":
-                            if(!int.TryParse(texts[1], out debugDelayDown) || debugDelayDown < 0) {
+                            if (!int.TryParse(texts[1], out debugDelayDown) || debugDelayDown < 0) {
                                 debugDelayDown = 0;
                             }
                             break;
@@ -568,6 +579,7 @@ namespace TrainCrewTIDWindow {
                 case "tc":
                 case "t":
                     try {
+
                         using var sr = new StreamReader(".\\setting\\signal_switch.tsv");
                         sr.ReadLine();
                         var line = sr.ReadLine();
@@ -1250,7 +1262,7 @@ namespace TrainCrewTIDWindow {
             }
             LogManager.AddInfoLog($"拡大率変更：{(scale > 0 ? $"{scale}%" : "fit")}");
 
-            foreach(var k in scaleMenuDict.Keys) {
+            foreach (var k in scaleMenuDict.Keys) {
                 scaleMenuDict[k].CheckState = k == scale ? CheckState.Indeterminate : CheckState.Unchecked;
             }
 
@@ -1356,7 +1368,7 @@ namespace TrainCrewTIDWindow {
                             break;
                     }*/
                 }
-                if(i >= 0) {
+                if (i >= 0) {
                     SetScale(scaleArray[i]);
                 }
             }
@@ -1365,7 +1377,7 @@ namespace TrainCrewTIDWindow {
         private void TIDWindow_KeyDown(object sender, KeyEventArgs e) {
             var code = e.KeyData & Keys.KeyCode;
             var mod = e.KeyData & Keys.Modifiers;
-            if((mod & Keys.Shift) == Keys.Shift) {
+            if ((mod & Keys.Shift) == Keys.Shift) {
                 pictureBox1.Cursor = Cursors.Hand;
             }
             if (e.KeyData == (Keys.C | Keys.Control)) {
@@ -1489,7 +1501,7 @@ namespace TrainCrewTIDWindow {
                     mouseLoc = pictureBox1.PointToClient(Cursor.Position);
                 }
             }
-            
+
         }
 
         private void PictureBox1_MouseWheel(object sender, MouseEventArgs e) {
@@ -1613,7 +1625,6 @@ namespace TrainCrewTIDWindow {
 
                     SetMagnifyingGlass(e.X, e.Y);
 
-                    /*Cursor.Hide();*/
                     UpdateMouseCursor();
                 }
 
@@ -1627,9 +1638,9 @@ namespace TrainCrewTIDWindow {
             }
             if ((e.Button & MouseButtons.Left) == MouseButtons.Left) {
                 if (ModifierKeys.HasFlag(Keys.Shift)) {
-                    foreach(var w in displayManager.NumberWindowDict.Values) {
+                    foreach (var w in displayManager.NumberWindowDict.Values) {
                         var t = w.Train;
-                        if (t != null && IsInArea(e.Location, w.PosX, w.PosY, w.GetSize()) && trainDataDict.TryGetValue(t, out var td)) {
+                        if (t != null && IsInArea(e.Location, w.PosX, w.PosY, w.GetSize(), 1) && trainDataDict.TryGetValue(t, out var td)) {
                             td.Markup = !td.Markup;
                             trainMenuDict[t].CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
                             ReservedUpdate = true;
@@ -1663,7 +1674,7 @@ namespace TrainCrewTIDWindow {
                 if (ModifierKeys.HasFlag(Keys.Shift)) {
                     foreach (var w in displayManager.NumberWindowDict.Values) {
                         var t = w.Train;
-                        if (t != null && IsInArea(pictureBox1.PointToClient(Cursor.Position), w.PosX, w.PosY, w.GetSize()) && trainDataDict.TryGetValue(t, out var td)) {
+                        if (t != null && IsInArea(pictureBox1.PointToClient(Cursor.Position), w.PosX, w.PosY, w.GetSize(), 1) && trainDataDict.TryGetValue(t, out var td)) {
                             td.Markup = !td.Markup;
                             trainMenuDict[t].CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
                             ReservedUpdate = true;
@@ -1914,7 +1925,7 @@ namespace TrainCrewTIDWindow {
         }
 
         private void menuItemMarkupAll_Click(object sender, EventArgs e) {
-            foreach(var t in trainDataDict.Keys) {
+            foreach (var t in trainDataDict.Keys) {
                 trainDataDict[t].Markup = true;
                 trainMenuDict[t].CheckState = CheckState.Checked;
             }
@@ -1937,9 +1948,9 @@ namespace TrainCrewTIDWindow {
             return ConvertPoint(p.X, p.Y);
         }
 
-        private bool IsInArea(Point point, int areaX, int areaY, Size areaSize) {
+        private bool IsInArea(Point point, int areaX, int areaY, Size areaSize, int padding = 0) {
             var p = ConvertPoint(point);
-            return p.X >= areaX && p.X < (areaX + areaSize.Width) && p.Y >= areaY && p.Y < (areaY + areaSize.Height);
+            return p.X >= areaX - padding && p.X < (areaX + areaSize.Width + padding) && p.Y >= areaY - padding && p.Y < (areaY + areaSize.Height + padding);
         }
 
         private void UpdateMouseCursor() {
@@ -1959,5 +1970,86 @@ namespace TrainCrewTIDWindow {
             }
         }
 
+        private void menuItemVersion_Click(object sender, EventArgs e) {
+            var form = new Form();
+            form.Size = new Size(360, 560);
+            form.MaximumSize = form.Size;
+            form.MinimumSize = form.Size;
+            form.StartPosition = FormStartPosition.CenterParent;
+            form.FormBorderStyle = FormBorderStyle.FixedSingle;
+            form.MaximizeBox = false;
+            form.MinimizeBox = false;
+            form.Icon = Icon;
+            form.ShowInTaskbar = false;
+            form.AutoScaleMode = AutoScaleMode.Font;
+            form.AutoSize = true;
+            if (TopMost) {
+                form.TopMost = true;
+            }
+            var table = new TableLayoutPanel();
+            table.Anchor = AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Left | AnchorStyles.Bottom;
+            table.Size = form.ClientSize;
+            table.AutoSize = true;
+            table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 55));
+            table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 45));
+            form.Controls.Add(table);
+
+            var bitmap = Icon != null ? new Icon(Icon, 256, 256)?.ToBitmap() : new Bitmap(10, 10);
+            var pic = new PictureBox();
+            ((System.ComponentModel.ISupportInitialize)pic).BeginInit();
+            pic.Anchor = AnchorStyles.None;
+            /*pic.Location = new Point(58, 50);*/
+            pic.Name = "pic";
+            /*pic.Size = new Size(128, 128);*/
+            pic.TabIndex = 0;
+            pic.TabStop = false;
+            pic.Image = bitmap;
+            pic.AutoSize = true;
+            pic.Padding = new Padding(0, 40, 0, 0);
+            /*form.Controls.Add(pic);*/
+            table.Controls.Add(pic, 0, 0);
+            table.SetColumnSpan(pic, 2);
+            ((System.ComponentModel.ISupportInitialize)pic).EndInit();
+            var labelVersion = new Label();
+            labelVersion.Anchor = AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Left | AnchorStyles.Bottom;
+            labelVersion.BackColor = Color.Transparent;
+            labelVersion.ForeColor = Color.Black;
+            labelVersion.TextAlign = ContentAlignment.MiddleCenter;
+            /*labelVersion.Location = new Point(58, 150);*/
+            labelVersion.Name = "labelVersion";
+            /*labelVersion.Size = new Size(128, 40);*/
+            labelVersion.TabIndex = 1;
+            labelVersion.AutoSize = true;
+            labelVersion.Text = $"TrainCrewTIDWindow\nVer. {ServerAddress.Version}";
+            /*form.Controls.Add(labelVersion);*/
+            table.Controls.Add(labelVersion, 0, 1);
+            table.SetColumnSpan(labelVersion, 2);
+            table.Controls.Add(new Panel() { Size = new Size(20, 50) }, 0, 2);
+            var labelCredit1 = new Label();
+            labelCredit1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            labelCredit1.BackColor = Color.Transparent;
+            labelCredit1.ForeColor = Color.Black;
+            /*labelCredit1.Location = new Point(28, 200);*/
+            labelCredit1.Name = "labelCredit";
+            /*labelCredit1.Size = new Size(120, 120);*/
+            labelCredit1.TabIndex = 1;
+            labelCredit1.AutoSize = true;
+            labelCredit1.Text = $"メインプログラム\nプログラム協力\n\n画面設計・デザイン\nアイコンデザイン\n\n監修";
+            /*form.Controls.Add(labelCredit1);*/
+            table.Controls.Add(labelCredit1, 0, 3);
+            var labelCredit2 = new Label();
+            labelCredit2.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+            labelCredit2.BackColor = Color.Transparent;
+            labelCredit2.ForeColor = Color.Black;
+            /*labelCredit2.Location = new Point(148, 200);*/
+            labelCredit2.Name = "labelCredit";
+            /*labelCredit2.Size = new Size(100, 120);*/
+            labelCredit2.TabIndex = 2;
+            labelCredit2.AutoSize = true;
+            labelCredit2.Text = $"鍋立山 儀明\nケシゴモン\n匠手 津道\n匠手 津道\nHortensia\n\n匠手 津道";
+            /*form.Controls.Add(labelCredit2);*/
+            table.Controls.Add(labelCredit2, 1, 3);
+            form.ShowDialog();
+        }
     }
 }

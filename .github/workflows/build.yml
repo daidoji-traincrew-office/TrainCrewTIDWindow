@@ -13,6 +13,7 @@ jobs:
     name: "Calc Version"
     outputs:
       VERSION: ${{ steps.calc_version.outputs.VERSION }}
+      APP_PREFIX: ${{ steps.calc_version.outputs.APP_PREFIX }}
     steps:
       - name: Get latest release
         id: latest_release
@@ -51,6 +52,8 @@ jobs:
             VERSION=$(date +%Y%m%d%H%M%S)
           fi
           echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+          file_name_version=$(echo "$VERSION" | sed 's/\./_/g')
+          echo "APP_PREFIX=${{ env.APP_NAME }}_${file_name_version}" >> "$GITHUB_OUTPUT"
   build:
     runs-on: ubuntu-latest
     name: "Build"
@@ -62,7 +65,11 @@ jobs:
     steps:
       - name: Set Zip File Name
         # ZIP_FILE_NAMEは、ビルドしたアプリケーションのファイル名を指定するための環境変数。ソフトによって変えると良さげ
-        run: echo "ZIP_FILE_NAME=${{ env.APP_NAME }}_${{ needs.calc_version.outputs.VERSION }}${{ (matrix.dev && '-dev') || ''}}${{ (matrix.standalone && '-standalone') || '' }}.zip" >> $GITHUB_ENV
+        run: |
+          echo "APP_VERSION=${{ needs.calc_version.outputs.VERSION }}" >> $GITHUB_ENV
+          ZIP_FILE_BASE=${{ needs.calc_version.outputs.APP_PREFIX }}${{ (matrix.dev && '-dev') || ''}}${{ (matrix.standalone && '-standalone') || '' }}
+          echo "ZIP_FILE_BASE=${ZIP_FILE_BASE}" >> $GITHUB_ENV
+          echo "ZIP_FILE_NAME=${ZIP_FILE_BASE}.zip" >> $GITHUB_ENV
       - name: Checkout
         uses: actions/checkout@v4.2.2
       - name: Write ServerAddress.cs
@@ -72,7 +79,7 @@ jobs:
           else
             SERVER_ADDRESS=${{ secrets.SERVER_ADDRESS }}
           fi
-          echo "namespace ${{ env.NAMESPACE }}; public static class ServerAddress { public const string SignalAddress = \"${SERVER_ADDRESS}\"; public static bool IsDebug = false; }" > ./ServerAddress.cs
+          echo "namespace ${{ env.NAMESPACE }}; public static class ServerAddress { public const string SignalAddress = \"${SERVER_ADDRESS}\"; public const string Version = "${{ env.ZIP_FILE_BASE }}"; public static bool IsDebug = false; }" > ./ServerAddress.cs
       - name: Setup dotnet 8.0.x
         uses: actions/setup-dotnet@v4.3.1
         with:
