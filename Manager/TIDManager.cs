@@ -2,9 +2,8 @@
 using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Text.RegularExpressions;
-using System.Windows.Forms;
-using System.Xml.Linq;
 using TrainCrewTIDWindow.Communications;
+using TrainCrewTIDWindow.Forms;
 using TrainCrewTIDWindow.Models;
 using TrainCrewTIDWindow.Settings;
 
@@ -117,10 +116,7 @@ namespace TrainCrewTIDWindow.Manager {
 
         private Dictionary<string, bool> markupClassesData = [];
 
-        public int Gap {
-            get;
-            private set;
-        } = 0;
+        private List<SubWindow> subWindows = [];
 
         public bool Markuped => markupClassesData.Values.Any(d => d);
 
@@ -161,6 +157,16 @@ namespace TrainCrewTIDWindow.Manager {
         public ReadOnlyDictionary<Point, NumberWindowData> NumberWindowDict => numberWindowDict.AsReadOnly();
 
         public TIDWindow Window => window;
+
+        public bool IsActiveForm{
+            get {
+                var v = false;
+                lock (subWindows) {
+                    v = subWindows.Any(w => Form.ActiveForm == w || w.OpeningDialog);
+                }
+                return v;
+            }
+        }
 
         /// <summary>
         /// TID画面管理用
@@ -404,12 +410,7 @@ namespace TrainCrewTIDWindow.Manager {
             catch {
             }
 
-            Gap = 16 - window.Size.Width + window.Panel1.Size.Width;
-            if(Gap != 0) {
-                Gap = (Gap + 0) * 2;
-            }
-
-            window.Panel1.Size = new Size(window.Panel1.Size.Width - (Gap != 0 ? Gap + 3 : Gap), window.Panel1.Size.Height - (int)((window.Panel1.Location.Y - 24) * 1.8));
+            window.Panel1.Size = new Size(window.ClientSize.Width, window.ClientSize.Height - window.Panel1.Location.Y);
 
             var width = backgroundDefault.Width * window.TIDScale / 100;
             var height = backgroundDefault.Height * window.TIDScale / 100;
@@ -419,7 +420,7 @@ namespace TrainCrewTIDWindow.Manager {
                 height = backgroundDefault.Height * 2;
             }
 
-            window.MaximumSize = new Size(Math.Max(width, backgroundDefault.Width) + 16 + Gap, Math.Max(height, backgroundDefault.Height) + 39 + window.Panel1.Location.Y + (int)((window.Panel1.Location.Y - 24) * 1.1));
+            window.MaximumSize = new Size(Math.Max(width, backgroundDefault.Width) + window.Size.Width - window.ClientSize.Width, Math.Max(height, backgroundDefault.Height) + window.Panel1.Location.Y + window.Size.Height - window.ClientSize.Height);
 
 
             lock (pictureBox) {
@@ -429,29 +430,16 @@ namespace TrainCrewTIDWindow.Manager {
                     pictureBox.Cursor = Cursors.Default;
                 }
                 else {
-                    pictureBox.Width = /*width > backgroundDefault.Width ?*/ width /*: backgroundDefault.Width*/;
-                    pictureBox.Height = /*height > backgroundDefault.Height ?*/ height /*: backgroundDefault.Height*/;
+                    pictureBox.Width = width;
+                    pictureBox.Height = height;
                 }
             }
 
 
             pictureBox.Image = new Bitmap(backgroundDefault);
-            /*pictureBox.Width = backgroundDefault.Width;
-            pictureBox.Height = backgroundDefault.Height;
 
-            window.MaximumSize = new Size(backgroundDefault.Width + 16, backgroundDefault.Height + 39 + 24);*/
-            window./*Client*/Size = new Size(Math.Max(backgroundDefault.Width * window.TIDScale / 100, backgroundDefault.Width) + 16 + Gap, Math.Max(backgroundDefault.Height * window.TIDScale / 100, backgroundDefault.Height) + 39 + window.Panel1.Location.Y + (int)((window.Panel1.Location.Y - 24) * 1.1));
-            /*window.ClientSize = new Size(Math.Max(backgroundDefault.Width * window.TIDScale / 100, backgroundDefault.Width) + 16 - 16, Math.Max(backgroundDefault.Height * window.TIDScale / 100, backgroundDefault.Height) + 39 + 24 - 39);*/
+            window.Size = new Size(Math.Max(backgroundDefault.Width * window.TIDScale / 100, backgroundDefault.Width) + window.Size.Width - window.ClientSize.Width, Math.Max(backgroundDefault.Height * window.TIDScale / 100, backgroundDefault.Height) + window.Panel1.Location.Y + window.Size.Height - window.ClientSize.Height);
             window.TopMost = true;
-
-            /*if (window.ClientSize.Width + 16 >= window.MaximumSize.Width && window.ClientSize.Height + 39 < window.MaximumSize.Height) {
-                window.MaximumSize = new Size(Math.Max(width, backgroundDefault.Width) + 16 + 17, Math.Max(height, backgroundDefault.Height) + 39 + 24);
-                window.*//*Client*//*Size = new Size(Math.Max(backgroundDefault.Width * window.TIDScale / 100, backgroundDefault.Width) + 16 + 17, Math.Max(backgroundDefault.Height * window.TIDScale / 100, backgroundDefault.Height) + 39 + 24);
-            }
-            else if (window.ClientSize.Width + 16 < window.MaximumSize.Width && window.ClientSize.Height + 39 >= window.MaximumSize.Height) {
-                window.MaximumSize = new Size(Math.Max(width, backgroundDefault.Width) + 16, Math.Max(height, backgroundDefault.Height) + 39 + 24 + 17);
-                window.*//*Client*//*Size = new Size(Math.Max(backgroundDefault.Width * window.TIDScale / 100, backgroundDefault.Width) + 16, Math.Max(backgroundDefault.Height * window.TIDScale / 100, backgroundDefault.Height) + 39 + 24 + 17);
-            }*/
 
             // 試験表示
             {
@@ -479,30 +467,6 @@ namespace TrainCrewTIDWindow.Manager {
                     AddImage(g, image, numData.PosX, numData.PosY, ia);
                 }
 
-                /*foreach (var numData in numSettingsDown) {
-                    if (numData == null || numData.NotDraw) {
-                        continue;
-                    }
-                    Image image = numData.Size switch {
-                        NumberSize.L => new Bitmap(numLineL),
-                        NumberSize.S => new Bitmap(numLineS),
-                        _ => new Bitmap(numLineM),
-                    };
-                    AddImage(g, image, numData.PosX, numData.PosY + 10, ia);
-                }
-
-                foreach (var numData in numSettingsUp) {
-                    if (numData == null || numData.NotDraw) {
-                        continue;
-                    }
-
-                    Image image = numData.Size switch {
-                        NumberSize.L => new Bitmap(numLineL),
-                        NumberSize.S => new Bitmap(numLineS),
-                        _ => new Bitmap(numLineM),
-                    };
-                    AddImage(g, image, numData.PosX, numData.PosY, ia);
-                }*/
 
                 foreach (var crossing in crossingSettings) {
                     if (crossing == null) {
@@ -1089,7 +1053,6 @@ namespace TrainCrewTIDWindow.Manager {
             }
 
             lock(originalBitmap)
-            lock(pictureBox.Image)
             lock (pictureBox) {
                 var oldPic = pictureBox.Image;
                 var oldOriginal = originalBitmap;
@@ -1109,6 +1072,11 @@ namespace TrainCrewTIDWindow.Manager {
                 }
 
                 originalBitmap = newPic;
+                lock (subWindows) {
+                    foreach (var sw in subWindows) {
+                        sw.UpdateImage(originalBitmap);
+                    }
+                }
                 oldPic?.Dispose();
                 oldOriginal.Dispose();
             }
@@ -1232,7 +1200,6 @@ namespace TrainCrewTIDWindow.Manager {
                 PrepareChangeScale();
 
                 lock (originalBitmap)
-                lock (pictureBox.Image)
                 lock (pictureBox) {
 
                     var oldPic = pictureBox.Image;
@@ -1241,6 +1208,7 @@ namespace TrainCrewTIDWindow.Manager {
                             var aspectRatio = (double)originalBitmap.Width / originalBitmap.Height;
                             if (aspectRatio < (double)pictureBox.Width / pictureBox.Height) {
                                 var width = (int)(pictureBox.Height * aspectRatio);
+                                        Debug.WriteLine($"error {width} {pictureBox.Height}");
                                 pictureBox.Image = new Bitmap(originalBitmap, width, pictureBox.Height);
                                 pictureBox.Width = width;
                             }
@@ -1276,6 +1244,9 @@ namespace TrainCrewTIDWindow.Manager {
         }
 
         private void PrepareChangeScale() {
+            if (window.WindowState == FormWindowState.Minimized) {
+                return;
+            }
             var dr = window.DetectResize;
             window.DetectResize = false;
             int width, height;
@@ -1288,25 +1259,7 @@ namespace TrainCrewTIDWindow.Manager {
                     height = originalBitmap.Height * 2;
                 }
 
-                /*var maxWidth = Math.Max(width, originalBitmap.Width) + 16;
-                var maxHeight = Math.Max(height, originalBitmap.Height) + 39 + 24;
-
-                var cs = window.ClientSize;
-                Debug.WriteLine($"size {window.Size.Width} {window.ClientSize.Width} {maxWidth} {window.Size.Height} {window.ClientSize.Height} {maxHeight}");
-                if (window.Size.Width + 16 >= maxWidth && window.Size.Height + 39 >= maxHeight) {
-                    window.MaximumSize = new Size(maxWidth, maxHeight);
-                }
-                else if (window.Size.Width + 16 >= maxWidth && window.Size.Height + 39 < maxHeight) {
-                    window.MaximumSize = new Size(maxWidth + 17, maxHeight);
-                }
-                else if (window.Size.Width + 16 < maxWidth && window.Size.Height + 39 >= maxHeight) {
-                    window.MaximumSize = new Size(maxWidth, maxHeight + 17);
-                }
-                window.MaximumSize = new Size(maxWidth, maxHeight);
-
-                window.ClientSize = cs;*/
-
-                window.MaximumSize = new Size(Math.Max(width, originalBitmap.Width) + 16 + Gap, Math.Max(height, originalBitmap.Height) + 39 + window.Panel1.Location.Y + (int)((window.Panel1.Location.Y - 24) * 1.1));
+                window.MaximumSize = new Size(Math.Max(width, originalBitmap.Width) + window.Size.Width - window.ClientSize.Width, Math.Max(height, originalBitmap.Height) + window.Panel1.Location.Y + window.Size.Height - window.ClientSize.Height);
 
                 if (-window.Location.X > window.Size.Width - 60) {
                     window.Location = new Point(0, 80);
@@ -1319,8 +1272,8 @@ namespace TrainCrewTIDWindow.Manager {
                     pictureBox.Height = window.Size.Height - 39 - window.Panel1.Location.Y;
                 }
                 else {
-                    pictureBox.Width = /*width > originalBitmap.Width ?*/ width /*: originalBitmap.Width*/;
-                    pictureBox.Height = /*height > originalBitmap.Height ?*/ height /*: originalBitmap.Height*/;
+                    pictureBox.Width = width;
+                    pictureBox.Height = height;
                 }
             }
             window.DetectResize = dr;
@@ -1328,10 +1281,27 @@ namespace TrainCrewTIDWindow.Manager {
         }
 
         public void CopyImage() {
-            var i = new Bitmap(originalBitmap);
-            using var g = Graphics.FromImage(i);
-            g.DrawString((window.Clock + window.TimeOffset).ToString("H:mm:ss"), new Font("ＭＳ ゴシック", 9), Brushes.White, 1869, 0);
-            Clipboard.SetImage(i);
+            lock (originalBitmap) {
+                var i = new Bitmap(originalBitmap);
+                using var g = Graphics.FromImage(i);
+                g.DrawString((window.Clock + window.TimeOffset).ToString("H:mm:ss"), new Font("ＭＳ ゴシック", 9), Brushes.White, originalBitmap.Width - 51, 0);
+                Clipboard.SetImage(i);
+            }
+        }
+
+        public void CopyImage(int x, int y, int width, int height) {
+            lock (originalBitmap) {
+                var i = new Bitmap(width, height + 13);
+                using var g = Graphics.FromImage(i);
+                g.Clear(Color.FromArgb(10, 10, 10));
+                g.DrawImage(originalBitmap, new Rectangle(0, 13, width, height), x, y, width, height, GraphicsUnit.Pixel);
+                g.DrawString((window.Clock + window.TimeOffset).ToString("H:mm:ss"), new Font("ＭＳ ゴシック", 9), Brushes.White, width - 51, 0);
+                Clipboard.SetImage(i);
+            }
+        }
+
+        public void CopyImage(Point location, Size size) {
+            CopyImage(location.X, location.Y, size.Width, size.Height);
         }
 
         public bool UpdateNumWindow() {
@@ -1340,6 +1310,26 @@ namespace TrainCrewTIDWindow.Manager {
                 v |= n.UpdateWindow();
             }
             return v;
+        }
+
+        public void AddSubWindow(SubWindow subWindow) {
+            lock (subWindows) {
+                subWindows.Add(subWindow);
+            }
+        }
+
+        public bool RemoveSubWindow(SubWindow subWindow) {
+            lock (subWindows) {
+                return subWindows.Remove(subWindow);
+            }
+        }
+
+        public void SetClockSubWindows(DateTime time) {
+            lock (subWindows) {
+                foreach (var sw in subWindows) {
+                    sw.SetClock(time);
+                }
+            }
         }
 
     }
