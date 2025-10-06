@@ -1,8 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
-using System.Windows.Forms;
+﻿using System.Diagnostics;
 using TrainCrewTIDWindow.Manager;
-using TrainCrewTIDWindow.Models;
 
 namespace TrainCrewTIDWindow.Forms {
     public partial class SubWindow : Form {
@@ -62,7 +59,6 @@ namespace TrainCrewTIDWindow.Forms {
         }
 
         public void UpdateImage(Image image) {
-            Debug.WriteLine($"updated");
             lock (pictureBox1) {
                 var old = pictureBox1.Image;
                 var b = new Bitmap(DisplaySize.Width, DisplaySize.Height);
@@ -73,8 +69,10 @@ namespace TrainCrewTIDWindow.Forms {
                     original = b;
                     origOld.Dispose();
                 }
-                pictureBox1.Image = new Bitmap(original, pictureBox1.Width, pictureBox1.Height);
-                old?.Dispose();
+                if (WindowState != FormWindowState.Minimized) {
+                    pictureBox1.Image = new Bitmap(original, pictureBox1.Width, pictureBox1.Height);
+                    old?.Dispose();
+                }
             }
         }
 
@@ -138,7 +136,6 @@ namespace TrainCrewTIDWindow.Forms {
         private void PictureBox1_MouseMove(object sender, MouseEventArgs e) {
             if (!ModifierKeys.HasFlag(Keys.Shift) && (e.Button & MouseButtons.Left) == MouseButtons.Left) {
                 var pos = Cursor.Position;
-                Debug.WriteLine($"{pos.X - mouseLoc.X} {pos.Y - mouseLoc.Y}");
                 Location = new Point(Location.X + pos.X - mouseLoc.X, Location.Y + pos.Y - mouseLoc.Y);
                 mouseLoc = pos;
             }
@@ -262,6 +259,81 @@ namespace TrainCrewTIDWindow.Forms {
             OpeningDialog = true;
             d.ShowDialog();
             OpeningDialog = false;
+        }
+
+        private void menuItemVersion_Click(object sender, EventArgs e) {
+            var form = new VersionWindow();
+            form.Icon = Icon;
+            var bitmap = Icon != null ? new Icon(Icon, 256, 256).ToBitmap() : new Bitmap(10, 10);
+            form.PictureIcon.Image = bitmap;
+            form.PictureIcon.Size = new Size(bitmap.Width, bitmap.Height);
+            form.LabelVersion.Text = $"TrainCrewTIDWindow\nVer. {ServerAddress.Version.Replace("TrainCrewTIDWindow_", "")}";
+            if (TopMost) {
+                form.TopMost = true;
+            }
+            OpeningDialog = true;
+            form.ShowDialog();
+            OpeningDialog = false;
+        }
+
+        private void menuItemMarkupDelayed0_Click(object sender, EventArgs e) {
+            displayManager.Window.SetMarkupDelayed(0);
+        }
+
+        private void menuItemMarkupDelayed1_Click(object sender, EventArgs e) {
+            displayManager.Window.SetMarkupDelayed(1);
+        }
+
+        private void menuItemMarkupDelayed5_Click(object sender, EventArgs e) {
+            displayManager.Window.SetMarkupDelayed(5);
+        }
+
+        private void menuItemMarkupDelayed10_Click(object sender, EventArgs e) {
+            displayManager.Window.SetMarkupDelayed(10);
+        }
+
+        private void menuItemMarkupDelayed20_Click(object sender, EventArgs e) {
+            displayManager.Window.SetMarkupDelayed(20);
+        }
+
+        private void menuItemMarkupDuplication_Click(object sender, EventArgs e) {
+            displayManager.Window.SwitchMarkupDuplication();
+        }
+
+        private void menuItemMarkupFillZero_Click(object sender, EventArgs e) {
+            displayManager.Window.SwitchMarkupFillZero();
+        }
+
+        private void menuItemMarkup9999_Click(object sender, EventArgs e) {
+            displayManager.Window.SwitchMarkup9999();
+        }
+
+        private void menuItemMarkupNotTrain_Click(object sender, EventArgs e) {
+            displayManager.Window.SwitchMarkupNotTrain();
+        }
+
+        private void menuItemMarkupSpawned_Click(object sender, EventArgs e) {
+            displayManager.Window.SwitchMarkupSpawned();
+        }
+
+        private void menuItemMarkupAll_Click(object sender, EventArgs e) {
+            displayManager.Window.MarkupAll();
+        }
+
+        private void menuItemMarkupCancel_Click(object sender, EventArgs e) {
+            displayManager.Window.MarkupCancel();
+        }
+
+        private void menuItemMarkupType1_Click(object sender, EventArgs e) {
+            displayManager.Window.SetMarkupType(0);
+        }
+
+        private void menuItemMarkupType2_Click(object sender, EventArgs e) {
+            displayManager.Window.SetMarkupType(1);
+        }
+
+        private void menuItemMarkupType3_Click(object sender, EventArgs e) {
+            displayManager.Window.SetMarkupType(2);
         }
     }
 }

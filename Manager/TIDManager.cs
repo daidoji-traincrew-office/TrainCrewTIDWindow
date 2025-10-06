@@ -1208,7 +1208,6 @@ namespace TrainCrewTIDWindow.Manager {
                             var aspectRatio = (double)originalBitmap.Width / originalBitmap.Height;
                             if (aspectRatio < (double)pictureBox.Width / pictureBox.Height) {
                                 var width = (int)(pictureBox.Height * aspectRatio);
-                                        Debug.WriteLine($"error {width} {pictureBox.Height}");
                                 pictureBox.Image = new Bitmap(originalBitmap, width, pictureBox.Height);
                                 pictureBox.Width = width;
                             }

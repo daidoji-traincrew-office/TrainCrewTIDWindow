@@ -1190,7 +1190,7 @@ namespace TrainCrewTIDWindow {
             labelSilent.ForeColor = silent ? Color.Gray : Color.White;
         }
 
-        private void SetMarkupType(int type) {
+        public void SetMarkupType(int type) {
 
             MarkupType = type < 3 ? (type >= 0 ? type : 0) : 2;
             menuItemMarkupType1.CheckState = type == 0 ? CheckState.Indeterminate : CheckState.Unchecked;
@@ -1786,18 +1786,30 @@ namespace TrainCrewTIDWindow {
         }
 
         private void menuItemMarkupDuplication_Click(object sender, EventArgs e) {
+            SwitchMarkupDuplication();
+        }
+
+        public void SwitchMarkupDuplication() {
             MarkupDuplication = !MarkupDuplication;
             menuItemMarkupDuplication.CheckState = MarkupDuplication ? CheckState.Checked : CheckState.Unchecked;
             ReservedUpdate = true;
         }
 
         private void menuItemMarkupFillZero_Click(object sender, EventArgs e) {
+            SwitchMarkupFillZero();
+        }
+
+        public void SwitchMarkupFillZero() {
             MarkupFillZero = !MarkupFillZero;
             menuItemMarkupFillZero.CheckState = MarkupFillZero ? CheckState.Checked : CheckState.Unchecked;
             ReservedUpdate = true;
         }
 
         private void menuItemMarkup9999_Click(object sender, EventArgs e) {
+            SwitchMarkup9999();
+        }
+
+        public void SwitchMarkup9999() {
             var td = trainDataDict["9999"];
             td.Markup = !td.Markup;
             menuItemMarkup9999.CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
@@ -1805,16 +1817,25 @@ namespace TrainCrewTIDWindow {
         }
 
         private void menuItemMarkupNotTrain_Click(object sender, EventArgs e) {
+            SwitchMarkupNotTrain();
+        }
+
+        public void SwitchMarkupNotTrain() {
             MarkupNotTrain = !MarkupNotTrain;
             menuItemMarkupNotTrain.CheckState = MarkupNotTrain ? CheckState.Checked : CheckState.Unchecked;
             ReservedUpdate = true;
         }
 
         private void menuItemMarkupSpawned_Click(object sender, EventArgs e) {
+            SwitchMarkupSpawned();
+        }
+
+        public void SwitchMarkupSpawned() {
             MarkupSpawned = !MarkupSpawned;
             menuItemMarkupSpawned.CheckState = MarkupSpawned ? CheckState.Checked : CheckState.Unchecked;
         }
-        private void SetMarkupDelayed(int minutes) {
+
+        public void SetMarkupDelayed(int minutes) {
             if (minutes > 10) {
                 minutes = 20;
             }
@@ -1857,6 +1878,10 @@ namespace TrainCrewTIDWindow {
         }
 
         private void menuItemMarkupAll_Click(object sender, EventArgs e) {
+            MarkupAll();
+        }
+
+        public void MarkupAll() {
             foreach (var t in trainDataDict.Keys) {
                 trainDataDict[t].Markup = true;
                 trainMenuDict[t].CheckState = CheckState.Checked;
@@ -1865,6 +1890,10 @@ namespace TrainCrewTIDWindow {
         }
 
         private void menuItemMarkupCancel_Click(object sender, EventArgs e) {
+            MarkupCancel();
+        }
+
+        public void MarkupCancel() {
             foreach (var t in trainDataDict.Keys) {
                 trainDataDict[t].Markup = false;
                 trainMenuDict[t].CheckState = CheckState.Unchecked;

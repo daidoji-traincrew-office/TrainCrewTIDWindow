@@ -121,7 +121,7 @@
             // 
             // contextMenuStrip1
             // 
-            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { menuItemCopy, toolStripSeparator2, menuItemTrainMarkup, menuItemMarkupType, toolStripSeparator1, menuItemScale, menuItemMagnifyingGlass, menuItemTopMost, menuItemSilent, menuItemQuickTimeSetting, toolStripSeparator7, menuItemVersion });
+            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { menuItemCopy, toolStripSeparator1, menuItemTrainMarkup, menuItemMarkupType, toolStripSeparator2, menuItemScale, menuItemMagnifyingGlass, menuItemTopMost, menuItemSilent, menuItemQuickTimeSetting, toolStripSeparator3, menuItemVersion });
             contextMenuStrip1.Name = "contextMenuStrip1";
             contextMenuStrip1.Size = new Size(171, 220);
             // 
@@ -139,7 +139,7 @@
             // 
             // menuItemTrainMarkup
             // 
-            menuItemTrainMarkup.DropDownItems.AddRange(new ToolStripItem[] { menuItemMarkupClass, menuItemMarkupDelayed, menuItemMarkupOther, menuItemMarkupAll, menuItemMarkupCancel, toolStripSeparator3 });
+            menuItemTrainMarkup.DropDownItems.AddRange(new ToolStripItem[] { menuItemMarkupClass, menuItemMarkupDelayed, menuItemMarkupOther, menuItemMarkupAll, menuItemMarkupCancel, toolStripSeparator4 });
             menuItemTrainMarkup.Name = "menuItemTrainMarkup";
             menuItemTrainMarkup.Size = new Size(170, 22);
             menuItemTrainMarkup.Text = "列車番号強調表示";
@@ -201,7 +201,7 @@
             // 
             // menuItemMarkupOther
             // 
-            menuItemMarkupOther.DropDownItems.AddRange(new ToolStripItem[] { menuItemMarkupDuplication, menuItemMarkupFillZero, menuItemMarkup9999, menuItemMarkupNotTrain, toolStripSeparator4, menuItemMarkupSpawned });
+            menuItemMarkupOther.DropDownItems.AddRange(new ToolStripItem[] { menuItemMarkupDuplication, menuItemMarkupFillZero, menuItemMarkup9999, menuItemMarkupNotTrain, toolStripSeparator6, menuItemMarkupSpawned });
             menuItemMarkupOther.Name = "menuItemMarkupOther";
             menuItemMarkupOther.Size = new Size(134, 22);
             menuItemMarkupOther.Text = "その他";
@@ -302,7 +302,7 @@
             // 
             // menuItemScale
             // 
-            menuItemScale.DropDownItems.AddRange(new ToolStripItem[] { toolStripSeparator6, menuItemScaleFit });
+            menuItemScale.DropDownItems.AddRange(new ToolStripItem[] { toolStripSeparator7, menuItemScaleFit });
             menuItemScale.Name = "menuItemScale";
             menuItemScale.Size = new Size(170, 22);
             menuItemScale.Text = "拡大率";
@@ -571,6 +571,7 @@
             labelClock.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             labelClock.AutoSize = true;
             labelClock.BackColor = Color.Transparent;
+            labelClock.Cursor = Cursors.Hand;
             labelClock.Font = new Font("ＭＳ ゴシック", 9F, FontStyle.Regular, GraphicsUnit.Point, 128);
             labelClock.ForeColor = Color.White;
             labelClock.Location = new Point(288, 0);
@@ -587,6 +588,7 @@
             labelTopMost.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             labelTopMost.AutoSize = true;
             labelTopMost.BackColor = Color.FromArgb(30, 30, 30);
+            labelTopMost.Cursor = Cursors.Hand;
             labelTopMost.Font = new Font("ＭＳ ゴシック", 9F, FontStyle.Regular, GraphicsUnit.Point, 128);
             labelTopMost.ForeColor = Color.Gray;
             labelTopMost.Location = new Point(201, 0);
@@ -604,6 +606,7 @@
             labelScale.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             labelScale.AutoSize = true;
             labelScale.BackColor = Color.Transparent;
+            labelScale.Cursor = Cursors.Hand;
             labelScale.Font = new Font("ＭＳ ゴシック", 9F, FontStyle.Regular, GraphicsUnit.Point, 128);
             labelScale.ForeColor = Color.White;
             labelScale.Location = new Point(114, 0);
@@ -620,6 +623,7 @@
             labelSilent.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             labelSilent.AutoSize = true;
             labelSilent.BackColor = Color.FromArgb(30, 30, 30);
+            labelSilent.Cursor = Cursors.Hand;
             labelSilent.Font = new Font("ＭＳ ゴシック", 9F, FontStyle.Regular, GraphicsUnit.Point, 128);
             labelSilent.ForeColor = Color.White;
             labelSilent.Location = new Point(3, 0);
