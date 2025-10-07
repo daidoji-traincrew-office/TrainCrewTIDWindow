@@ -330,6 +330,14 @@ namespace TrainCrewTIDWindow.Forms {
             SetTopMost(!TopMost);
         }
 
+        private void menuItemSilent_Click(object sender, EventArgs e) {
+            displayManager.Window.SetSilent(!displayManager.Window.Silent);
+        }
+
+        public void SetSilent(bool silent) {
+            menuItemSilent.CheckState = silent ? CheckState.Checked : CheckState.Unchecked;
+        }
+
         public void SetWindowName(string name) {
             Text = $"{name} | TID - ダイヤ運転会";
         }

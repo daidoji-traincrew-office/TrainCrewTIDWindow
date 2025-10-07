@@ -1201,11 +1201,16 @@ namespace TrainCrewTIDWindow {
             SetSilent(!Silent);
         }
 
-        private void SetSilent(bool silent) {
+        public void SetSilent(bool silent) {
             Silent = silent;
             menuItemSilent.CheckState = silent ? CheckState.Checked : CheckState.Unchecked;
             labelSilent.Text = $"サイレント：{(silent ? "ON" : "OFF")}";
             labelSilent.ForeColor = silent ? Color.Gray : Color.White;
+            if (displayManager != null) {
+                foreach (var w in displayManager.SubWindows) {
+                    w.SetSilent(silent);
+                }
+            }
         }
 
         public void SetMarkupType(int type) {
