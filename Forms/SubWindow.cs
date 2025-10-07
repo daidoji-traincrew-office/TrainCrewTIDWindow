@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using TrainCrewTIDWindow.Manager;
+using TrainCrewTIDWindow.Models;
 
 namespace TrainCrewTIDWindow.Forms {
     public partial class SubWindow : Form {
@@ -26,6 +27,16 @@ namespace TrainCrewTIDWindow.Forms {
 
         private Size windowSize;
 
+        /// <summary>
+        /// WASDキーなど使用時の移動量
+        /// </summary>
+        private int scrollDelta = 15;
+
+        /// <summary>
+        /// 右クリックメニューの列車ボタン
+        /// </summary>
+        private readonly Dictionary<string, ToolStripMenuItem> trainMenuDict = [];
+
         public bool OpeningDialog {
             get;
             private set;
@@ -36,7 +47,7 @@ namespace TrainCrewTIDWindow.Forms {
         /// </summary>
         private Point mouseLoc = Point.Empty;
 
-        public SubWindow(Point location, Size size, TIDManager displayManager) {
+        public SubWindow(Point location, Size size, TIDManager displayManager, ToolStripItemCollection menuTrains) {
             StartLocation = location;
             DisplaySize = size;
             this.displayManager = displayManager;
@@ -50,6 +61,55 @@ namespace TrainCrewTIDWindow.Forms {
             windowSize = Size;
 
             pictureBox1.Size = size;
+
+
+            SetMarkupType(displayManager.Window.MarkupType);
+            SetMarkupDelayed(displayManager.Window.MarkupDelayed);
+            SetMarkupDuplication(displayManager.Window.MarkupDuplication);
+            SetMarkupFillZero(displayManager.Window.MarkupFillZero);
+            SetMarkupNotTrain(displayManager.Window.MarkupNotTrain);
+            SetMarkupSpawned(displayManager.Window.MarkupSpawned);
+
+            for(var i = 6; i < menuTrains.Count; i++) {
+                var trainNumber = menuTrains[i].Name;
+                if(trainNumber == null) {
+                    continue;
+                }
+                var menu = new ToolStripMenuItem();
+                trainMenuDict.Add(trainNumber, menu);
+                menuItemTrainMarkup.DropDownItems.Add(menu);
+                menu.Name = trainNumber;
+                menu.Size = new Size(110, 22);
+                menu.Text = trainNumber;
+                menu.Click += (sender, e) => {
+                    displayManager.Window.SetTrainMarkup(trainNumber);
+                };
+                menu.CheckState = ((ToolStripMenuItem)menuTrains[i]).CheckState;
+            }
+
+            foreach(ToolStripItem item in displayManager.Window.MenuItemMarkupClass.DropDownItems) {
+                if(item is ToolStripSeparator) {
+                    var sep = new ToolStripSeparator();
+                    menuItemMarkupClass.DropDownItems.Add(sep);
+                    sep.Name = "sep";
+                    sep.Size = new Size(177, 6);
+                    continue;
+                }
+                var key = item.Name;
+                if(key == null) {
+                    continue;
+                }
+                var menu = new ToolStripMenuItem();
+                menuItemMarkupClass.DropDownItems.Add(menu);
+                menu.Name = item.Name;
+                menu.Size = new Size(110, 22);
+                menu.Text = item.Text;
+                menu.CheckState = ((ToolStripMenuItem)item).CheckState;
+                menu.Click += (sender, e) => {
+                    displayManager.SetMarkupClass(key, menuItemMarkupClass.DropDownItems.IndexOf(menu));
+                };
+            }
+            trainMenuDict.Add("9999", menuItemMarkup9999);
 
             /*flowLayoutPanel1.Location = new Point(flowLayoutPanel1.Location.X - Size.Width + ClientSize.Width + 16, flowLayoutPanel1.Location.Y);*/
 
@@ -121,6 +181,9 @@ namespace TrainCrewTIDWindow.Forms {
         private void labelScale_MouseDown(object sender, MouseEventArgs e) {
             DetectResize = false;
             Size = new Size(Size.Width - ClientSize.Width + DisplaySize.Width, Size.Height - ClientSize.Height + pictureBox1.Location.Y + DisplaySize.Height);
+            if(Location.X < 0) {
+                Location = new Point(0, Location.Y);
+            }
             lock (pictureBox1) {
                 var old = pictureBox1.Image;
                 pictureBox1.Image = new Bitmap(original, pictureBox1.Width, pictureBox1.Height);
@@ -197,6 +260,22 @@ namespace TrainCrewTIDWindow.Forms {
             if (e.KeyData == (Keys.C | Keys.Control)) {
                 CopyImage();
             }
+            if (e.KeyData == Keys.Tab) {
+                SetTopMost(!TopMost);
+            }
+
+            if (code == Keys.Right || code == Keys.D) {
+                Location = new Point(Location.X + scrollDelta * (mod == Keys.Shift ? 1 : 3), Location.Y);
+            }
+            if (code == Keys.Left || code == Keys.A) {
+                Location = new Point(Location.X - scrollDelta * (mod == Keys.Shift ? 1 : 3), Location.Y);
+            }
+            if (code == Keys.Up || code == Keys.W) {
+                Location = new Point(Location.X, Location.Y - scrollDelta * (mod == Keys.Shift ? 1 : 3));
+            }
+            if (code == Keys.Down || code == Keys.S) {
+                Location = new Point(Location.X, Location.Y + scrollDelta * (mod == Keys.Shift ? 1 : 3));
+            }
         }
 
         private void SubWindow_KeyUp(object sender, KeyEventArgs e) {
@@ -233,11 +312,13 @@ namespace TrainCrewTIDWindow.Forms {
         public void CopyImage() {
             lock (original) {
                 var i = new Bitmap(original.Width, original.Height + 13);
-                using var g = Graphics.FromImage(i);
-                g.Clear(Color.FromArgb(10, 10, 10));
-                g.DrawImage(original, 0, 13);
-                g.DrawString(labelClock.Text, new Font("ＭＳ ゴシック", 9), Brushes.White, original.Width - 51, 0);
+                using (var g = Graphics.FromImage(i)) {
+                    g.Clear(Color.FromArgb(10, 10, 10));
+                    g.DrawImage(original, 0, 13);
+                    g.DrawString(labelClock.Text, new Font("ＭＳ ゴシック", 9), Brushes.White, original.Width - 51, 0);
+                }
                 Clipboard.SetImage(i);
+                i.Dispose();
             }
         }
 
@@ -296,24 +377,52 @@ namespace TrainCrewTIDWindow.Forms {
             displayManager.Window.SetMarkupDelayed(20);
         }
 
+        public void SetMarkupDelayed(int minutes) {
+            menuItemMarkupDelayed0.CheckState = minutes == 0 ? CheckState.Indeterminate : CheckState.Unchecked;
+            menuItemMarkupDelayed1.CheckState = minutes == 1 ? CheckState.Indeterminate : CheckState.Unchecked;
+            menuItemMarkupDelayed5.CheckState = minutes == 5 ? CheckState.Indeterminate : CheckState.Unchecked;
+            menuItemMarkupDelayed10.CheckState = minutes == 10 ? CheckState.Indeterminate : CheckState.Unchecked;
+            menuItemMarkupDelayed20.CheckState = minutes == 20 ? CheckState.Indeterminate : CheckState.Unchecked;
+        }
+
         private void menuItemMarkupDuplication_Click(object sender, EventArgs e) {
             displayManager.Window.SwitchMarkupDuplication();
+        }
+
+        public void SetMarkupDuplication(bool value) {
+            menuItemMarkupDuplication.CheckState = value ? CheckState.Checked : CheckState.Unchecked;
         }
 
         private void menuItemMarkupFillZero_Click(object sender, EventArgs e) {
             displayManager.Window.SwitchMarkupFillZero();
         }
 
+        public void SetMarkupFillZero(bool value) {
+            menuItemMarkupFillZero.CheckState = value ? CheckState.Checked : CheckState.Unchecked;
+        }
+
         private void menuItemMarkup9999_Click(object sender, EventArgs e) {
             displayManager.Window.SwitchMarkup9999();
+        }
+
+        public void SetMarkup9999(bool value) {
+            menuItemMarkup9999.CheckState = value ? CheckState.Checked : CheckState.Unchecked;
         }
 
         private void menuItemMarkupNotTrain_Click(object sender, EventArgs e) {
             displayManager.Window.SwitchMarkupNotTrain();
         }
 
+        public void SetMarkupNotTrain(bool value) {
+            menuItemMarkupNotTrain.CheckState = value ? CheckState.Checked : CheckState.Unchecked;
+        }
+
         private void menuItemMarkupSpawned_Click(object sender, EventArgs e) {
             displayManager.Window.SwitchMarkupSpawned();
+        }
+
+        public void SetMarkupSpawned(bool value) {
+            menuItemMarkupSpawned.CheckState = value ? CheckState.Checked : CheckState.Unchecked;
         }
 
         private void menuItemMarkupAll_Click(object sender, EventArgs e) {
@@ -334,6 +443,54 @@ namespace TrainCrewTIDWindow.Forms {
 
         private void menuItemMarkupType3_Click(object sender, EventArgs e) {
             displayManager.Window.SetMarkupType(2);
+        }
+
+        public void SetMarkupType(int type) {
+            menuItemMarkupType1.CheckState = type == 0 ? CheckState.Indeterminate : CheckState.Unchecked;
+            menuItemMarkupType2.CheckState = type == 1 ? CheckState.Indeterminate : CheckState.Unchecked;
+            menuItemMarkupType3.CheckState = type == 2 ? CheckState.Indeterminate : CheckState.Unchecked;
+        }
+
+        public void SetMarkupClass(int index, bool value) {
+            ((ToolStripMenuItem)menuItemMarkupClass.DropDownItems[index]).CheckState = value ? CheckState.Checked : CheckState.Unchecked;
+        }
+
+        public void UpdateTrainCheck(TrainData td) {
+            trainMenuDict[td.Number].CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
+        }
+
+        public void AddTrain(string trainNumber) {
+            var menu = new ToolStripMenuItem();
+            trainMenuDict.Add(trainNumber, menu);
+            for (var i = 6; i <= menuItemTrainMarkup.DropDownItems.Count; i++) {
+                if (menuItemTrainMarkup.DropDownItems.Count == i) {
+                    menuItemTrainMarkup.DropDownItems.Add(menu);
+                    break;
+                }
+                if (menuItemTrainMarkup.DropDownItems[i].Name?.CompareTo(trainNumber) >= 0) {
+                    menuItemTrainMarkup.DropDownItems.Insert(i, menu);
+                    break;
+                }
+            }
+            menu.Name = trainNumber;
+            menu.Size = new Size(110, 22);
+            menu.Text = trainNumber;
+            menu.Click += (sender, e) => {
+                displayManager.Window.SetTrainMarkup(trainNumber);
+            };
+            menu.CheckState = displayManager.Window.MarkupSpawned ? CheckState.Checked : CheckState.Unchecked;
+        }
+
+        public void RemoveTrain(string trainNumber) {
+            var menu = trainMenuDict[trainNumber];
+            trainMenuDict.Remove(trainNumber);
+            menuItemTrainMarkup.DropDownItems.Remove(menu);
+        }
+
+        public void SetMarkupTrain(string trainNumber, bool value) {
+            if (trainMenuDict.TryGetValue(trainNumber, out var menu)) {
+                menu.CheckState = value ? CheckState.Checked : CheckState.Unchecked;
+            }
         }
     }
 }

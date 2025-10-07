@@ -151,7 +151,7 @@ namespace TrainCrewTIDWindow.Forms {
             // 
             // contextMenuStrip1
             // 
-            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { menuItemCopy/*, toolStripSeparator1, menuItemTrainMarkup, menuItemMarkupType*/, toolStripSeparator2, menuItemTopMost, menuItemRename, toolStripSeparator3, menuItemVersion });
+            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { menuItemCopy, toolStripSeparator1, menuItemTrainMarkup, menuItemMarkupType, toolStripSeparator2, menuItemTopMost, menuItemRename, toolStripSeparator3, menuItemVersion });
             contextMenuStrip1.Name = "contextMenuStrip1";
             contextMenuStrip1.Size = new Size(171, 160);
             // 

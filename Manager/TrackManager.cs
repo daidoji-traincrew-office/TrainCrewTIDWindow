@@ -35,9 +35,9 @@ namespace TrainCrewTIDWindow.Manager
         /// <summary>
         /// サーバやTRAIN CREW本体から取得した軌道回路の情報
         /// </summary>
-        public ReadOnlyDictionary<string, TrackData> TrackDataDict => trackDataDict.AsReadOnly();
+        public ReadOnlyDictionary<string, TrackData> TrackDataDict { get; init; }
 
-        public ReadOnlyCollection<string> DuplicatingTrains => duplicatingTrains.AsReadOnly();
+        public ReadOnlyCollection<string> DuplicatingTrains { get; init; }
 
         public string? GetTrain(string trackName) {
             foreach(var t in trainTCDict) {
@@ -73,6 +73,8 @@ namespace TrainCrewTIDWindow.Manager
         /// <param name="displayManager">TIDManagerオブジェクト</param>
         public TrackManager(TIDManager displayManager) { 
             this.displayManager = displayManager;
+            TrackDataDict = trackDataDict.AsReadOnly();
+            DuplicatingTrains = duplicatingTrains.AsReadOnly();
         }
 
 

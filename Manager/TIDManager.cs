@@ -114,9 +114,9 @@ namespace TrainCrewTIDWindow.Manager {
         /// </summary>
         private Bitmap originalBitmap;
 
-        private Dictionary<string, bool> markupClassesData = [];
+        private readonly Dictionary<string, bool> markupClassesData = [];
 
-        private List<SubWindow> subWindows = [];
+        private readonly List<SubWindow> subWindows = [];
 
         public bool Markuped => markupClassesData.Values.Any(d => d);
 
@@ -140,21 +140,23 @@ namespace TrainCrewTIDWindow.Manager {
         /// <summary>
         /// 各トラックの線の位置やファイル名などのデータ
         /// </summary>
-        public ReadOnlyCollection<LineSetting> LineSettings => lineSettings.AsReadOnly();
+        public ReadOnlyCollection<LineSetting> LineSettings { get; init; }
 
         /// <summary>
         /// 各トラックの列車番号の位置などのデータ（下り列車用）
         /// </summary>
-        public ReadOnlyCollection<NumberWindowSetting> NumSettingsDown => numSettingsDown.AsReadOnly();
+        public ReadOnlyCollection<NumberWindowSetting> NumSettingsDown { get; init; }
 
         /// <summary>
         /// 各トラックの列車番号の位置などのデータ（上り列車用）
         /// </summary>
-        public ReadOnlyCollection<NumberWindowSetting> NumSettingsUp => numSettingsUp.AsReadOnly();
+        public ReadOnlyCollection<NumberWindowSetting> NumSettingsUp { get; init; }
 
-        public ReadOnlyCollection<TrackConnectionSetting> TrackConnections => trackConnections.AsReadOnly();
+        public ReadOnlyCollection<TrackConnectionSetting> TrackConnections { get; init; }
 
-        public ReadOnlyDictionary<Point, NumberWindowData> NumberWindowDict => numberWindowDict.AsReadOnly();
+        public ReadOnlyDictionary<Point, NumberWindowData> NumberWindowDict { get; init; }
+
+        public ReadOnlyCollection<SubWindow> SubWindows { get; init; }
 
         public TIDWindow Window => window;
 
@@ -188,18 +190,23 @@ namespace TrainCrewTIDWindow.Manager {
             numSettingsDown = LoadNumberSetting("number_down.tsv", numberWindowDict);
             numSettingsUp = LoadNumberSetting("number_up.tsv", numberWindowDict);
 
+
+            LineSettings = lineSettings.AsReadOnly();
+            TrackConnections = trackConnections.AsReadOnly();
+            NumSettingsDown = numSettingsDown.AsReadOnly();
+            NumSettingsUp = numSettingsUp.AsReadOnly();
+            NumberWindowDict = numberWindowDict.AsReadOnly();
+            SubWindows = subWindows.AsReadOnly();
+
             void AddNewClass(string key, string name) {
                 markupClassesData.Add(key, false);
                 var menu = new ToolStripMenuItem();
                 window.MenuItemMarkupClass.DropDownItems.Add(menu);
-                menu.Name = name;
+                menu.Name = key;
                 menu.Size = new Size(110, 22);
                 menu.Text = name;
                 menu.Click += (sender, e) => {
-                    var v = !markupClassesData[key];
-                    markupClassesData[key] = v;
-                    menu.CheckState = v ? CheckState.Checked : CheckState.Unchecked;
-                    window.ReservedUpdate = true;
+                    SetMarkupClass(key, window.MenuItemMarkupClass.DropDownItems.IndexOf(menu));
                 };
             }
 
@@ -1282,20 +1289,25 @@ namespace TrainCrewTIDWindow.Manager {
         public void CopyImage() {
             lock (originalBitmap) {
                 var i = new Bitmap(originalBitmap);
-                using var g = Graphics.FromImage(i);
-                g.DrawString((window.Clock + window.TimeOffset).ToString("H:mm:ss"), new Font("ＭＳ ゴシック", 9), Brushes.White, originalBitmap.Width - 51, 0);
+                using (var g = Graphics.FromImage(i)) {
+                    g.DrawString((window.Clock + window.TimeOffset).ToString("H:mm:ss"), new Font("ＭＳ ゴシック", 9), Brushes.White, originalBitmap.Width - 51, 0);
+                }
                 Clipboard.SetImage(i);
+                i.Dispose(); 
+                
             }
         }
 
         public void CopyImage(int x, int y, int width, int height) {
             lock (originalBitmap) {
                 var i = new Bitmap(width, height + 13);
-                using var g = Graphics.FromImage(i);
-                g.Clear(Color.FromArgb(10, 10, 10));
-                g.DrawImage(originalBitmap, new Rectangle(0, 13, width, height), x, y, width, height, GraphicsUnit.Pixel);
-                g.DrawString((window.Clock + window.TimeOffset).ToString("H:mm:ss"), new Font("ＭＳ ゴシック", 9), Brushes.White, width - 51, 0);
+                using (var g = Graphics.FromImage(i)) {
+                    g.Clear(Color.FromArgb(10, 10, 10));
+                    g.DrawImage(originalBitmap, new Rectangle(0, 13, width, height), x, y, width, height, GraphicsUnit.Pixel);
+                    g.DrawString((window.Clock + window.TimeOffset).ToString("H:mm:ss"), new Font("ＭＳ ゴシック", 9), Brushes.White, width - 51, 0);
+                }
                 Clipboard.SetImage(i);
+                i.Dispose();
             }
         }
 
@@ -1329,6 +1341,16 @@ namespace TrainCrewTIDWindow.Manager {
                     sw.SetClock(time);
                 }
             }
+        }
+
+        public void SetMarkupClass(string key, int index) {
+            var v = !markupClassesData[key];
+            markupClassesData[key] = v;
+            ((ToolStripMenuItem)window.MenuItemMarkupClass.DropDownItems[index]).CheckState = v ? CheckState.Checked : CheckState.Unchecked;
+            foreach (var w in subWindows) { 
+                w.SetMarkupClass(index, v);
+            }
+            window.ReservedUpdate = true;
         }
 
     }

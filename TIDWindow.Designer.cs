@@ -28,7 +28,7 @@
             pictureBox1 = new PictureBox();
             contextMenuStrip1 = new ContextMenuStrip(components);
             menuItemCopy = new ToolStripMenuItem();
-            toolStripSeparator2 = new ToolStripSeparator();
+            toolStripSeparator1 = new ToolStripSeparator();
             menuItemTrainMarkup = new ToolStripMenuItem();
             menuItemMarkupClass = new ToolStripMenuItem();
             menuItemMarkupDelayed = new ToolStripMenuItem();
@@ -43,18 +43,18 @@
             menuItemMarkupFillZero = new ToolStripMenuItem();
             menuItemMarkup9999 = new ToolStripMenuItem();
             menuItemMarkupNotTrain = new ToolStripMenuItem();
-            toolStripSeparator4 = new ToolStripSeparator();
+            toolStripSeparator6 = new ToolStripSeparator();
             menuItemMarkupSpawned = new ToolStripMenuItem();
             menuItemMarkupAll = new ToolStripMenuItem();
             menuItemMarkupCancel = new ToolStripMenuItem();
-            toolStripSeparator3 = new ToolStripSeparator();
+            toolStripSeparator4 = new ToolStripSeparator();
             menuItemMarkupType = new ToolStripMenuItem();
             menuItemMarkupType1 = new ToolStripMenuItem();
             menuItemMarkupType2 = new ToolStripMenuItem();
             menuItemMarkupType3 = new ToolStripMenuItem();
-            toolStripSeparator1 = new ToolStripSeparator();
+            toolStripSeparator2 = new ToolStripSeparator();
             menuItemScale = new ToolStripMenuItem();
-            toolStripSeparator6 = new ToolStripSeparator();
+            toolStripSeparator7 = new ToolStripSeparator();
             menuItemScaleFit = new ToolStripMenuItem();
             menuItemMagnifyingGlass = new ToolStripMenuItem();
             menuItemPushToZoom = new ToolStripMenuItem();
@@ -62,31 +62,7 @@
             menuItemTopMost = new ToolStripMenuItem();
             menuItemSilent = new ToolStripMenuItem();
             menuItemQuickTimeSetting = new ToolStripMenuItem();
-            menuItemHour0 = new ToolStripMenuItem();
-            menuItemHour1 = new ToolStripMenuItem();
-            menuItemHour2 = new ToolStripMenuItem();
-            menuItemHour3 = new ToolStripMenuItem();
-            menuItemHour4 = new ToolStripMenuItem();
-            menuItemHour5 = new ToolStripMenuItem();
-            menuItemHour6 = new ToolStripMenuItem();
-            menuItemHour7 = new ToolStripMenuItem();
-            menuItemHour8 = new ToolStripMenuItem();
-            menuItemHour9 = new ToolStripMenuItem();
-            menuItemHour10 = new ToolStripMenuItem();
-            menuItemHour11 = new ToolStripMenuItem();
-            menuItemHour12 = new ToolStripMenuItem();
-            menuItemHour13 = new ToolStripMenuItem();
-            menuItemHour14 = new ToolStripMenuItem();
-            menuItemHour15 = new ToolStripMenuItem();
-            menuItemHour16 = new ToolStripMenuItem();
-            menuItemHour17 = new ToolStripMenuItem();
-            menuItemHour18 = new ToolStripMenuItem();
-            menuItemHour19 = new ToolStripMenuItem();
-            menuItemHour20 = new ToolStripMenuItem();
-            menuItemHour21 = new ToolStripMenuItem();
-            menuItemHour22 = new ToolStripMenuItem();
-            menuItemHour23 = new ToolStripMenuItem();
-            toolStripSeparator7 = new ToolStripSeparator();
+            toolStripSeparator3 = new ToolStripSeparator();
             menuItemVersion = new ToolStripMenuItem();
             panel1 = new Panel();
             pictureBox3 = new PictureBox();
@@ -132,10 +108,10 @@
             menuItemCopy.Text = "TID画面をコピー";
             menuItemCopy.Click += menuItemCopy_Click;
             // 
-            // toolStripSeparator2
+            // toolStripSeparator1
             // 
-            toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(167, 6);
+            toolStripSeparator1.Name = "toolStripSeparator1";
+            toolStripSeparator1.Size = new Size(167, 6);
             // 
             // menuItemTrainMarkup
             // 
@@ -234,10 +210,10 @@
             menuItemMarkupNotTrain.Text = "列車以外";
             menuItemMarkupNotTrain.Click += menuItemMarkupNotTrain_Click;
             // 
-            // toolStripSeparator4
+            // toolStripSeparator6
             // 
-            toolStripSeparator4.Name = "toolStripSeparator4";
-            toolStripSeparator4.Size = new Size(160, 6);
+            toolStripSeparator6.Name = "toolStripSeparator6";
+            toolStripSeparator6.Size = new Size(160, 6);
             // 
             // menuItemMarkupSpawned
             // 
@@ -260,10 +236,10 @@
             menuItemMarkupCancel.Text = "列番全解除";
             menuItemMarkupCancel.Click += menuItemMarkupCancel_Click;
             // 
-            // toolStripSeparator3
+            // toolStripSeparator4
             // 
-            toolStripSeparator3.Name = "toolStripSeparator3";
-            toolStripSeparator3.Size = new Size(131, 6);
+            toolStripSeparator4.Name = "toolStripSeparator4";
+            toolStripSeparator4.Size = new Size(131, 6);
             // 
             // menuItemMarkupType
             // 
@@ -295,10 +271,10 @@
             menuItemMarkupType3.Text = "タイプ3（色逆転固定）";
             menuItemMarkupType3.Click += menuItemMarkupType3_Click;
             // 
-            // toolStripSeparator1
+            // toolStripSeparator2
             // 
-            toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new Size(167, 6);
+            toolStripSeparator2.Name = "toolStripSeparator2";
+            toolStripSeparator2.Size = new Size(167, 6);
             // 
             // menuItemScale
             // 
@@ -307,10 +283,10 @@
             menuItemScale.Size = new Size(170, 22);
             menuItemScale.Text = "拡大率";
             // 
-            // toolStripSeparator6
+            // toolStripSeparator7
             // 
-            toolStripSeparator6.Name = "toolStripSeparator6";
-            toolStripSeparator6.Size = new Size(126, 6);
+            toolStripSeparator7.Name = "toolStripSeparator7";
+            toolStripSeparator7.Size = new Size(126, 6);
             // 
             // menuItemScaleFit
             // 
@@ -357,159 +333,14 @@
             // 
             // menuItemQuickTimeSetting
             // 
-            menuItemQuickTimeSetting.DropDownItems.AddRange(new ToolStripItem[] { menuItemHour0, menuItemHour1, menuItemHour2, menuItemHour3, menuItemHour4, menuItemHour5, menuItemHour6, menuItemHour7, menuItemHour8, menuItemHour9, menuItemHour10, menuItemHour11, menuItemHour12, menuItemHour13, menuItemHour14, menuItemHour15, menuItemHour16, menuItemHour17, menuItemHour18, menuItemHour19, menuItemHour20, menuItemHour21, menuItemHour22, menuItemHour23 });
             menuItemQuickTimeSetting.Name = "menuItemQuickTimeSetting";
             menuItemQuickTimeSetting.Size = new Size(170, 22);
             menuItemQuickTimeSetting.Text = "クイック時刻設定";
             // 
-            // menuItemHour0
+            // toolStripSeparator3
             // 
-            menuItemHour0.Name = "menuItemHour0";
-            menuItemHour0.Size = new Size(110, 22);
-            menuItemHour0.Text = "0時台";
-            // 
-            // menuItemHour1
-            // 
-            menuItemHour1.Name = "menuItemHour1";
-            menuItemHour1.Size = new Size(110, 22);
-            menuItemHour1.Text = "1時台";
-            // 
-            // menuItemHour2
-            // 
-            menuItemHour2.Name = "menuItemHour2";
-            menuItemHour2.Size = new Size(110, 22);
-            menuItemHour2.Text = "2時台";
-            // 
-            // menuItemHour3
-            // 
-            menuItemHour3.Name = "menuItemHour3";
-            menuItemHour3.Size = new Size(110, 22);
-            menuItemHour3.Text = "3時台";
-            // 
-            // menuItemHour4
-            // 
-            menuItemHour4.Name = "menuItemHour4";
-            menuItemHour4.Size = new Size(110, 22);
-            menuItemHour4.Text = "4時台";
-            // 
-            // menuItemHour5
-            // 
-            menuItemHour5.Name = "menuItemHour5";
-            menuItemHour5.Size = new Size(110, 22);
-            menuItemHour5.Text = "5時台";
-            // 
-            // menuItemHour6
-            // 
-            menuItemHour6.Name = "menuItemHour6";
-            menuItemHour6.Size = new Size(110, 22);
-            menuItemHour6.Text = "6時台";
-            // 
-            // menuItemHour7
-            // 
-            menuItemHour7.Name = "menuItemHour7";
-            menuItemHour7.Size = new Size(110, 22);
-            menuItemHour7.Text = "7時台";
-            // 
-            // menuItemHour8
-            // 
-            menuItemHour8.Name = "menuItemHour8";
-            menuItemHour8.Size = new Size(110, 22);
-            menuItemHour8.Text = "8時台";
-            // 
-            // menuItemHour9
-            // 
-            menuItemHour9.Name = "menuItemHour9";
-            menuItemHour9.Size = new Size(110, 22);
-            menuItemHour9.Text = "9時台";
-            // 
-            // menuItemHour10
-            // 
-            menuItemHour10.Name = "menuItemHour10";
-            menuItemHour10.Size = new Size(110, 22);
-            menuItemHour10.Text = "10時台";
-            // 
-            // menuItemHour11
-            // 
-            menuItemHour11.Name = "menuItemHour11";
-            menuItemHour11.Size = new Size(110, 22);
-            menuItemHour11.Text = "11時台";
-            // 
-            // menuItemHour12
-            // 
-            menuItemHour12.Name = "menuItemHour12";
-            menuItemHour12.Size = new Size(110, 22);
-            menuItemHour12.Text = "12時台";
-            // 
-            // menuItemHour13
-            // 
-            menuItemHour13.Name = "menuItemHour13";
-            menuItemHour13.Size = new Size(110, 22);
-            menuItemHour13.Text = "13時台";
-            // 
-            // menuItemHour14
-            // 
-            menuItemHour14.Name = "menuItemHour14";
-            menuItemHour14.Size = new Size(110, 22);
-            menuItemHour14.Text = "14時台";
-            // 
-            // menuItemHour15
-            // 
-            menuItemHour15.Name = "menuItemHour15";
-            menuItemHour15.Size = new Size(110, 22);
-            menuItemHour15.Text = "15時台";
-            // 
-            // menuItemHour16
-            // 
-            menuItemHour16.Name = "menuItemHour16";
-            menuItemHour16.Size = new Size(110, 22);
-            menuItemHour16.Text = "16時台";
-            // 
-            // menuItemHour17
-            // 
-            menuItemHour17.Name = "menuItemHour17";
-            menuItemHour17.Size = new Size(110, 22);
-            menuItemHour17.Text = "17時台";
-            // 
-            // menuItemHour18
-            // 
-            menuItemHour18.Name = "menuItemHour18";
-            menuItemHour18.Size = new Size(110, 22);
-            menuItemHour18.Text = "18時台";
-            // 
-            // menuItemHour19
-            // 
-            menuItemHour19.Name = "menuItemHour19";
-            menuItemHour19.Size = new Size(110, 22);
-            menuItemHour19.Text = "19時台";
-            // 
-            // menuItemHour20
-            // 
-            menuItemHour20.Name = "menuItemHour20";
-            menuItemHour20.Size = new Size(110, 22);
-            menuItemHour20.Text = "20時台";
-            // 
-            // menuItemHour21
-            // 
-            menuItemHour21.Name = "menuItemHour21";
-            menuItemHour21.Size = new Size(110, 22);
-            menuItemHour21.Text = "21時台";
-            // 
-            // menuItemHour22
-            // 
-            menuItemHour22.Name = "menuItemHour22";
-            menuItemHour22.Size = new Size(110, 22);
-            menuItemHour22.Text = "22時台";
-            // 
-            // menuItemHour23
-            // 
-            menuItemHour23.Name = "menuItemHour23";
-            menuItemHour23.Size = new Size(110, 22);
-            menuItemHour23.Text = "23時台";
-            // 
-            // toolStripSeparator7
-            // 
-            toolStripSeparator7.Name = "toolStripSeparator7";
-            toolStripSeparator7.Size = new Size(167, 6);
+            toolStripSeparator3.Name = "toolStripSeparator3";
+            toolStripSeparator3.Size = new Size(167, 6);
             // 
             // menuItemVersion
             // 
@@ -706,30 +537,6 @@
         private Label labelSilent;
         private ToolStripMenuItem menuItemTopMost;
         private ToolStripMenuItem menuItemQuickTimeSetting;
-        private ToolStripMenuItem menuItemHour0;
-        private ToolStripMenuItem menuItemHour1;
-        private ToolStripMenuItem menuItemHour2;
-        private ToolStripMenuItem menuItemHour3;
-        private ToolStripMenuItem menuItemHour4;
-        private ToolStripMenuItem menuItemHour5;
-        private ToolStripMenuItem menuItemHour6;
-        private ToolStripMenuItem menuItemHour7;
-        private ToolStripMenuItem menuItemHour8;
-        private ToolStripMenuItem menuItemHour9;
-        private ToolStripMenuItem menuItemHour10;
-        private ToolStripMenuItem menuItemHour11;
-        private ToolStripMenuItem menuItemHour12;
-        private ToolStripMenuItem menuItemHour13;
-        private ToolStripMenuItem menuItemHour14;
-        private ToolStripMenuItem menuItemHour15;
-        private ToolStripMenuItem menuItemHour16;
-        private ToolStripMenuItem menuItemHour17;
-        private ToolStripMenuItem menuItemHour18;
-        private ToolStripMenuItem menuItemHour19;
-        private ToolStripMenuItem menuItemHour20;
-        private ToolStripMenuItem menuItemHour21;
-        private ToolStripMenuItem menuItemHour22;
-        private ToolStripMenuItem menuItemHour23;
         private ToolStripSeparator toolStripSeparator2;
         private ToolStripMenuItem menuItemTrainMarkup;
         private ToolStripMenuItem menuItemMarkupType;
