@@ -212,13 +212,13 @@ namespace TrainCrewTIDWindow.Forms {
 
         private void SubWindow_ResizeBegin(object sender, EventArgs e) {
             var screenSize = Screen.FromControl(this).Bounds;
-            var mw = Size.Width - ClientSize.Width + DisplaySize.Width * (screenSize.Height - Size.Height + ClientSize.Height - pictureBox1.Location.Y) / DisplaySize.Height;
-            var mh = Size.Height - ClientSize.Height + pictureBox1.Location.Y + DisplaySize.Height * (screenSize.Width - Size.Width + ClientSize.Width) / DisplaySize.Width;
+            var mw = Size.Width - ClientSize.Width + DisplaySize.Width * (screenSize.Height/* - Size.Height + ClientSize.Height*/ - pictureBox1.Location.Y) / DisplaySize.Height;
+            var mh = Size.Height - ClientSize.Height + pictureBox1.Location.Y + DisplaySize.Height * (screenSize.Width/* - Size.Width + ClientSize.Width*/) / DisplaySize.Width;
             if (screenSize.Height < mh) {
-                MaximumSize = new Size(mw, screenSize.Height);
+                MaximumSize = new Size(mw, screenSize.Height + Size.Height - ClientSize.Height);
             }
             else {
-                MaximumSize = new Size(screenSize.Width, mh);
+                MaximumSize = new Size(screenSize.Width + Size.Width - ClientSize.Width, mh);
             }
 
         }
@@ -240,9 +240,7 @@ namespace TrainCrewTIDWindow.Forms {
                 old?.Dispose();
                 var ratio = pictureBox1.Width * 100 / (double)DisplaySize.Width;
                 labelScale.Text = $"Scale：{(int)ratio}%";
-                if (ratio != 100) {
-                    labelScale.ForeColor = Color.LightGreen;
-                }
+                labelScale.ForeColor = ratio != 100 ? Color.LightGreen : Color.White;
             }
             DetectResize = true;
         }

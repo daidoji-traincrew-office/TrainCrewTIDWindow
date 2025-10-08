@@ -1645,11 +1645,11 @@ namespace TrainCrewTIDWindow {
             }
             if (selectionStarting.HasValue) {
                 var s = selectionStarting.Value;
-                selectionStarting = new Point(s.X > 10 ? (s.X < pictureBox1.Width - 10 ? s.X : pictureBox1.Width) : 0, s.Y > 10 ? (s.Y < pictureBox1.Height - 10 ? s.Y : pictureBox1.Height) : 0);
+                selectionStarting = new Point(s.X > 16 ? (s.X < pictureBox1.Width - 16 ? s.X : pictureBox1.Width) : 0, s.Y > 16 ? (s.Y < pictureBox1.Height - 16 ? s.Y : pictureBox1.Height) : 0);
                 var start = selectionStarting.Value;
                 var end = e.Location;
                 var center = new Point((start.X + end.X) / 2 - end.X + Cursor.Position.X, (start.Y + end.Y) / 2 - end.Y + Cursor.Position.Y);
-                end = new Point(end.X > 10 ? (start.X < pictureBox1.Width && end.X < pictureBox1.Width - 10 ? end.X : pictureBox1.Width) : (start.X > 0 ? 0 : end.X), end.Y > 10 ? (start.Y < pictureBox1.Height && end.Y < pictureBox1.Height - 10 ? end.Y : pictureBox1.Height) : (start.Y > 0 ? 0 : end.Y));
+                end = new Point(end.X > 16 ? (start.X < pictureBox1.Width && end.X < pictureBox1.Width - 16 ? end.X : pictureBox1.Width) : (start.X > 0 ? 0 : end.X), end.Y > 16 ? (start.Y < pictureBox1.Height && end.Y < pictureBox1.Height - 16 ? end.Y : pictureBox1.Height) : (start.Y > 0 ? 0 : end.Y));
                 var startOrig = ConvertPoint(start);
                 var endOrig = ConvertPoint(end);
                 var pos = new Point(Math.Min(start.X, end.X), Math.Min(start.Y, end.Y));
@@ -1659,11 +1659,12 @@ namespace TrainCrewTIDWindow {
                     lock (pictureBox3) {
                         pictureBox3.Location = pos;
                         pictureBox3.Size = size;
+                        var screenSize = Screen.FromControl(this).Bounds;
                         var old = pictureBox3.Image;
                         var b = new Bitmap(size.Width, size.Height);
                         using var g = Graphics.FromImage(b);
                         g.Clear(Color.Transparent);
-                        g.DrawRectangle(sizeOrig.Width > 120 && sizeOrig.Height > 100 ? Pens.LimeGreen : Pens.DarkRed, 0, 0, size.Width - 1, size.Height - 1);
+                        g.DrawRectangle(sizeOrig.Width > 120 && sizeOrig.Width <= screenSize.Width && sizeOrig.Height > 100 && sizeOrig.Height <= screenSize.Height ? Pens.LimeGreen : Pens.DarkRed, 0, 0, size.Width - 1, size.Height - 1);
                         pictureBox3.Image = b;
                         old?.Dispose();
                     }
@@ -1714,12 +1715,13 @@ namespace TrainCrewTIDWindow {
                     }
                     var end = e.Location;
                     var center = new Point((start.X + end.X) / 2 - end.X + Cursor.Position.X, (start.Y + end.Y) / 2 - end.Y + Cursor.Position.Y);
-                    end = new Point(end.X > 10 ? (start.X < pictureBox1.Width && end.X < pictureBox1.Width - 10 ? end.X : pictureBox1.Width) : (start.X > 0 ? 0 : end.X), end.Y > 10 ? (start.Y < pictureBox1.Height && end.Y < pictureBox1.Height - 10 ? end.Y : pictureBox1.Height) : (start.Y > 0 ? 0 : end.Y));
+                    end = new Point(end.X > 16 ? (start.X < pictureBox1.Width && end.X < pictureBox1.Width - 16 ? end.X : pictureBox1.Width) : (start.X > 0 ? 0 : end.X), end.Y > 16 ? (start.Y < pictureBox1.Height && end.Y < pictureBox1.Height - 16 ? end.Y : pictureBox1.Height) : (start.Y > 0 ? 0 : end.Y));
                     start = ConvertPoint(start);
                     end = ConvertPoint(end);
                     var p = new Point(Math.Min(start.X, end.X), Math.Min(start.Y, end.Y));
                     var s = new Size(Math.Abs(start.X - end.X), Math.Abs(start.Y - end.Y));
-                    if(s.Width > 120 && s.Height > 100) {
+                    var screenSize = Screen.FromControl(this).Bounds;
+                    if (s.Width > 120 && s.Width <= screenSize.Width && s.Height > 100 && s.Height <= screenSize.Height - pictureBox1.Location.Y) {
                         var sub = new SubWindow(p, s, displayManager, menuItemTrainMarkup.DropDownItems);
                         sub.Icon = Icon;
                         pictureBox1.Cursor = Cursors.SizeAll;
