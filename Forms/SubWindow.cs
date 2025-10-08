@@ -179,21 +179,24 @@ namespace TrainCrewTIDWindow.Forms {
         }
 
         private void labelScale_MouseDown(object sender, MouseEventArgs e) {
-            DetectResize = false;
-            Size = new Size(Size.Width - ClientSize.Width + DisplaySize.Width, Size.Height - ClientSize.Height + pictureBox1.Location.Y + DisplaySize.Height);
-            if(Location.X < 0) {
-                Location = new Point(0, Location.Y);
-            }
-            lock (pictureBox1) {
-                var old = pictureBox1.Image;
-                pictureBox1.Image = new Bitmap(original, pictureBox1.Width, pictureBox1.Height);
-                old?.Dispose();
-            }
+            if(pictureBox1.Width / (double)DisplaySize.Width != 1) {
+                DetectResize = false;
+                Size = new Size(Size.Width - ClientSize.Width + DisplaySize.Width, Size.Height - ClientSize.Height + pictureBox1.Location.Y + DisplaySize.Height);
+                if (Location.X < 0) {
+                    Location = new Point(0, Location.Y);
+                }
+                lock (pictureBox1) {
+                    var old = pictureBox1.Image;
+                    pictureBox1.Image = new Bitmap(original, pictureBox1.Width, pictureBox1.Height);
+                    old?.Dispose();
+                }
 
 
-            labelScale.Text = $"Scale：100%";
-            labelScale.ForeColor = Color.White;
-            DetectResize = true;
+                labelScale.Text = $"Scale：100%";
+                labelScale.ForeColor = Color.White;
+                labelScale.Cursor = Cursors.Default;
+                DetectResize = true;
+            }
         }
 
         private void PictureBox1_MouseMove(object sender, MouseEventArgs e) {
@@ -240,7 +243,14 @@ namespace TrainCrewTIDWindow.Forms {
                 old?.Dispose();
                 var ratio = pictureBox1.Width * 100 / (double)DisplaySize.Width;
                 labelScale.Text = $"Scale：{(int)ratio}%";
-                labelScale.ForeColor = ratio != 100 ? Color.LightGreen : Color.White;
+                if(ratio == 100) {
+                    labelScale.Cursor = Cursors.Default;
+                    labelScale.ForeColor = Color.White;
+                }
+                else {
+                    labelScale.Cursor = Cursors.Hand;
+                    labelScale.ForeColor = Color.LightGreen;
+                }
             }
             DetectResize = true;
         }
