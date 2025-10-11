@@ -1505,6 +1505,9 @@ namespace TrainCrewTIDWindow.Forms
                     }
                 }
                 else {
+                    if (FixedScale) {
+                        SetFixedScale(false);
+                    }
                     lock (pictureBox1.Image)
                     lock (displayManager.OriginalBitmap) {
                         var size = Size;
