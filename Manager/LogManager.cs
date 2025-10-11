@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 
 namespace TrainCrewTIDWindow.Manager {
     public static class LogManager {
 
-        private static StringBuilder log = new();
+        private static readonly StringBuilder log = new();
 
         private static bool updated = false;
 

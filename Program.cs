@@ -1,4 +1,3 @@
-
 using Dapplo.Microsoft.Extensions.Hosting.WinForms;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using OpenIddict.Client;
 using TrainCrewTIDWindow.Services;
 using TrainCrewTIDWindow.Manager;
+using TrainCrewTIDWindow.Forms;
 
 namespace TrainCrewTIDWindow {
     internal static class Program {

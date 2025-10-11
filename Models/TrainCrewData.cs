@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
-namespace TrainCrewTIDWindow {
+namespace TrainCrewTIDWindow.Models
+{
     [Serializable]
-    public class CommandToTrainCrew {
+    public class CommandToTrainCrew
+    {
         [JsonInclude]
         public string command = "";
         [JsonInclude]
@@ -27,7 +25,8 @@ namespace TrainCrewTIDWindow {
     }
 
     [Serializable]
-    public class TrainCrewStateData {
+    public class TrainCrewStateData
+    {
         public TimeData nowTime;
         public TrainState myTrainData = new TrainState();
         public List<TrackCircuitData>? trackCircuitList;
@@ -40,32 +39,38 @@ namespace TrainCrewTIDWindow {
     }
 
     [Serializable]
-    public struct TimeData {
+    public struct TimeData
+    {
         public int hour;
         public int minute;
         public float second;
 
-        public TimeData(int h, int m, float s) {
+        public TimeData(int h, int m, float s)
+        {
             hour = h;
             minute = m;
             second = s;
         }
 
-        public static TimeData FromTimeSpan(TimeSpan ts) {
+        public static TimeData FromTimeSpan(TimeSpan ts)
+        {
             return new TimeData(ts.Hours, ts.Minutes, ts.Seconds + ts.Milliseconds / 1000f);
         }
-        public TimeSpan ToTimeSpan() {
-            return new TimeSpan(0, hour, minute, (int)second, (int)((second % 1f) * 1000));
+        public TimeSpan ToTimeSpan()
+        {
+            return new TimeSpan(0, hour, minute, (int)second, (int)(second % 1f * 1000));
         }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             return hour + ":" + minute + ":" + second.ToString("0.0");
         }
     }
 
 
     [Serializable]
-    public class TrackCircuitData {
+    public class TrackCircuitData
+    {
         /// <summary>
         /// 列車が在線しているか
         /// </summary>
@@ -86,23 +91,27 @@ namespace TrainCrewTIDWindow {
         /// </summary>
         public string Name { get; init; } = "";
 
-        public override string ToString() {
+        public override string ToString()
+        {
             return $"{Name}/{Last}/{On}";
         }
     }
 
-    public enum DriveMode {
+    public enum DriveMode
+    {
         Normal,
         Free,
         RTA,
     }
-    public enum CrewType {
+    public enum CrewType
+    {
         Driver,
         Conductor,
         Passenger,
     }
 
-    public enum GameScreen {
+    public enum GameScreen
+    {
         MainGame,
         MainGame_Pause,
         MainGame_Loading,
@@ -114,7 +123,8 @@ namespace TrainCrewTIDWindow {
     }
 
     [Serializable]
-    public class RunTrainData {
+    public class RunTrainData
+    {
         public string Name = "";
         public string Class = "";
         public string BoundFor = "";
@@ -130,12 +140,14 @@ namespace TrainCrewTIDWindow {
 
 
     [Serializable]
-    public class SignalData {
+    public class SignalData
+    {
         public string Name = "";
         public Phase phase = Phase.None;
     }
 
-    public enum Phase {
+    public enum Phase
+    {
         None,
         R,
         YY,
@@ -145,7 +157,8 @@ namespace TrainCrewTIDWindow {
     }
 
     [Serializable]
-    public class TrainState {
+    public class TrainState
+    {
         public float Speed;
         public bool AllClose;
         public float MR_Press;
@@ -177,14 +190,17 @@ namespace TrainCrewTIDWindow {
         public List<StationInfo> stationList = new List<StationInfo>();
         public int nowStaIndex = 0;
 
-        public TrainState() {
-            foreach (PanelLamp lmp in Enum.GetValues(typeof(PanelLamp))) {
-                Lamps[lmp] = (lmp == PanelLamp.ATS_Ready);
+        public TrainState()
+        {
+            foreach (PanelLamp lmp in Enum.GetValues(typeof(PanelLamp)))
+            {
+                Lamps[lmp] = lmp == PanelLamp.ATS_Ready;
             }
         }
     }
     [Serializable]
-    public class CarState {
+    public class CarState
+    {
         public bool DoorClose;
         public float BC_Press;
         public float Ampare;
@@ -195,7 +211,8 @@ namespace TrainCrewTIDWindow {
         public bool HasMotor = false;
     }
     [Serializable]
-    public class StationInfo {
+    public class StationInfo
+    {
         public string Name = "";
         public string StopPosName = "";
         public TimeData ArvTime;
@@ -206,7 +223,8 @@ namespace TrainCrewTIDWindow {
     }
 
     [Serializable]
-    public enum PanelLamp {
+    public enum PanelLamp
+    {
         /// <summary>
         /// ●戸閉
         /// </summary>

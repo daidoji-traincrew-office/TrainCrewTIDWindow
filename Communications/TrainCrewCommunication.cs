@@ -2,8 +2,10 @@
 using System.Net.WebSockets;
 using System.Text;
 using Newtonsoft.Json;
+using TrainCrewTIDWindow.Models;
 
-namespace TrainCrewTIDWindow.Communications {
+namespace TrainCrewTIDWindow.Communications
+{
 
     /// <summary>
     /// TRAIN CREW本体用WebSocketクライアント通信クラス（すいねさん作TrainCrewAPIv3のCommunicationを流用）

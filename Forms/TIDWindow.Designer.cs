@@ -1,4 +1,4 @@
-﻿namespace TrainCrewTIDWindow {
+﻿namespace TrainCrewTIDWindow.Forms {
     partial class TIDWindow {
         /// <summary>
         ///  Required designer variable.
@@ -73,6 +73,7 @@
             labelScale = new Label();
             labelSilent = new Label();
             flowLayoutPanel1 = new FlowLayoutPanel();
+            menuItemFixedScale = new ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             contextMenuStrip1.SuspendLayout();
             panel1.SuspendLayout();
@@ -99,25 +100,25 @@
             // 
             contextMenuStrip1.Items.AddRange(new ToolStripItem[] { menuItemCopy, toolStripSeparator1, menuItemTrainMarkup, menuItemMarkupType, toolStripSeparator2, menuItemScale, menuItemMagnifyingGlass, menuItemTopMost, menuItemSilent, menuItemQuickTimeSetting, toolStripSeparator3, menuItemVersion });
             contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new Size(171, 220);
+            contextMenuStrip1.Size = new Size(181, 242);
             // 
             // menuItemCopy
             // 
             menuItemCopy.Name = "menuItemCopy";
-            menuItemCopy.Size = new Size(170, 22);
+            menuItemCopy.Size = new Size(180, 22);
             menuItemCopy.Text = "TID画面をコピー";
             menuItemCopy.Click += menuItemCopy_Click;
             // 
             // toolStripSeparator1
             // 
             toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new Size(167, 6);
+            toolStripSeparator1.Size = new Size(177, 6);
             // 
             // menuItemTrainMarkup
             // 
             menuItemTrainMarkup.DropDownItems.AddRange(new ToolStripItem[] { menuItemMarkupClass, menuItemMarkupDelayed, menuItemMarkupOther, menuItemMarkupAll, menuItemMarkupCancel, toolStripSeparator4 });
             menuItemTrainMarkup.Name = "menuItemTrainMarkup";
-            menuItemTrainMarkup.Size = new Size(170, 22);
+            menuItemTrainMarkup.Size = new Size(180, 22);
             menuItemTrainMarkup.Text = "列車番号強調表示";
             // 
             // menuItemMarkupClass
@@ -245,7 +246,7 @@
             // 
             menuItemMarkupType.DropDownItems.AddRange(new ToolStripItem[] { menuItemMarkupType1, menuItemMarkupType2, menuItemMarkupType3 });
             menuItemMarkupType.Name = "menuItemMarkupType";
-            menuItemMarkupType.Size = new Size(170, 22);
+            menuItemMarkupType.Size = new Size(180, 22);
             menuItemMarkupType.Text = "強調表示タイプ";
             // 
             // menuItemMarkupType1
@@ -274,31 +275,31 @@
             // toolStripSeparator2
             // 
             toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(167, 6);
+            toolStripSeparator2.Size = new Size(177, 6);
             // 
             // menuItemScale
             // 
-            menuItemScale.DropDownItems.AddRange(new ToolStripItem[] { toolStripSeparator7, menuItemScaleFit });
+            menuItemScale.DropDownItems.AddRange(new ToolStripItem[] { toolStripSeparator7, menuItemScaleFit, menuItemFixedScale });
             menuItemScale.Name = "menuItemScale";
-            menuItemScale.Size = new Size(170, 22);
+            menuItemScale.Size = new Size(180, 22);
             menuItemScale.Text = "拡大率";
             // 
             // toolStripSeparator7
             // 
             toolStripSeparator7.Name = "toolStripSeparator7";
-            toolStripSeparator7.Size = new Size(126, 6);
+            toolStripSeparator7.Size = new Size(177, 6);
             // 
             // menuItemScaleFit
             // 
             menuItemScaleFit.Name = "menuItemScaleFit";
-            menuItemScaleFit.Size = new Size(129, 22);
+            menuItemScaleFit.Size = new Size(180, 22);
             menuItemScaleFit.Text = "フィット表示";
             // 
             // menuItemMagnifyingGlass
             // 
             menuItemMagnifyingGlass.DropDownItems.AddRange(new ToolStripItem[] { menuItemPushToZoom, menuItemToggle });
             menuItemMagnifyingGlass.Name = "menuItemMagnifyingGlass";
-            menuItemMagnifyingGlass.Size = new Size(170, 22);
+            menuItemMagnifyingGlass.Size = new Size(180, 22);
             menuItemMagnifyingGlass.Text = "拡大鏡モード";
             // 
             // menuItemPushToZoom
@@ -320,32 +321,32 @@
             // menuItemTopMost
             // 
             menuItemTopMost.Name = "menuItemTopMost";
-            menuItemTopMost.Size = new Size(170, 22);
+            menuItemTopMost.Size = new Size(180, 22);
             menuItemTopMost.Text = "最前面表示";
             menuItemTopMost.Click += menuItemTopMost_Click;
             // 
             // menuItemSilent
             // 
             menuItemSilent.Name = "menuItemSilent";
-            menuItemSilent.Size = new Size(170, 22);
+            menuItemSilent.Size = new Size(180, 22);
             menuItemSilent.Text = "サイレントモード";
             menuItemSilent.Click += menuItemSilent_Click;
             // 
             // menuItemQuickTimeSetting
             // 
             menuItemQuickTimeSetting.Name = "menuItemQuickTimeSetting";
-            menuItemQuickTimeSetting.Size = new Size(170, 22);
+            menuItemQuickTimeSetting.Size = new Size(180, 22);
             menuItemQuickTimeSetting.Text = "クイック時刻設定";
             // 
             // toolStripSeparator3
             // 
             toolStripSeparator3.Name = "toolStripSeparator3";
-            toolStripSeparator3.Size = new Size(167, 6);
+            toolStripSeparator3.Size = new Size(177, 6);
             // 
             // menuItemVersion
             // 
             menuItemVersion.Name = "menuItemVersion";
-            menuItemVersion.Size = new Size(170, 22);
+            menuItemVersion.Size = new Size(180, 22);
             menuItemVersion.Text = "バージョン情報";
             menuItemVersion.Click += menuItemVersion_Click;
             // 
@@ -484,6 +485,12 @@
             flowLayoutPanel1.TabIndex = 7;
             flowLayoutPanel1.WrapContents = false;
             // 
+            // menuItemFixedScale
+            // 
+            menuItemFixedScale.Name = "menuItemFixedScale";
+            menuItemFixedScale.Size = new Size(180, 22);
+            menuItemFixedScale.Text = "倍率固定";
+            // 
             // TIDWindow
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -566,5 +573,6 @@
         private ToolStripMenuItem menuItemVersion;
         private FlowLayoutPanel flowLayoutPanel1;
         private PictureBox pictureBox3;
+        private ToolStripMenuItem menuItemFixedScale;
     }
 }

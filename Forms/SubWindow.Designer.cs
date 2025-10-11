@@ -147,6 +147,7 @@ namespace TrainCrewTIDWindow.Forms {
             pictureBox1.MouseDown += PictureBox1_MouseDown;
             pictureBox1.MouseMove += PictureBox1_MouseMove;
             pictureBox1.MouseUp += PictureBox1_MouseUp;
+            pictureBox1.MouseWheel += PictureBox1_MouseWheel;
             // 
             // contextMenuStrip1
             // 

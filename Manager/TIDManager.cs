@@ -446,7 +446,7 @@ namespace TrainCrewTIDWindow.Manager {
             pictureBox.Image = new Bitmap(backgroundDefault);
 
             window.Size = new Size(Math.Max(backgroundDefault.Width * window.TIDScale / 100, backgroundDefault.Width) + window.Size.Width - window.ClientSize.Width, Math.Max(backgroundDefault.Height * window.TIDScale / 100, backgroundDefault.Height) + window.Panel1.Location.Y + window.Size.Height - window.ClientSize.Height);
-            window.TopMost = true;
+            /*window.TopMost = true;*/
 
             // 試験表示
             {
@@ -1274,8 +1274,8 @@ namespace TrainCrewTIDWindow.Manager {
 
             lock (pictureBox) {
                 if (window.TIDScale < 0) {
-                    pictureBox.Width = window.Size.Width - 16;
-                    pictureBox.Height = window.Size.Height - 39 - window.Panel1.Location.Y;
+                    pictureBox.Width = window.ClientSize.Width;
+                    pictureBox.Height = window.ClientSize.Height - window.Panel1.Location.Y;
                 }
                 else {
                     pictureBox.Width = width;

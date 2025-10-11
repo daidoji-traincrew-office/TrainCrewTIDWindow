@@ -2,10 +2,11 @@
 using Microsoft.AspNetCore.SignalR.Client;
 using OpenIddict.Abstractions;
 using OpenIddict.Client;
-using TrainCrewTIDWindow.Manager;
-using TrainCrewTIDWindow.Models;
 using System.Net;
 using System.Net.WebSockets;
+using TrainCrewTIDWindow.Manager;
+using TrainCrewTIDWindow.Models;
+using TrainCrewTIDWindow.Forms;
 
 namespace TrainCrewTIDWindow.Communications {
     public class ServerCommunication : IAsyncDisposable {

@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TrainCrewTIDWindow.Models {
+﻿namespace TrainCrewTIDWindow.Models
+{
 
     /// <summary>
     /// 常時送信用データクラス

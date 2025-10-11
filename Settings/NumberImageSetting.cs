@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TrainCrewTIDWindow.Settings {
+﻿namespace TrainCrewTIDWindow.Settings {
     public class NumberImageSetting(string text, int x, int y, int width) {
 
         public string Text { get; private set; } = text;

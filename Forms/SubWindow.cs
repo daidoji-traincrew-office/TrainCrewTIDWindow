@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using TrainCrewTIDWindow.Manager;
+﻿using TrainCrewTIDWindow.Manager;
 using TrainCrewTIDWindow.Models;
 
 namespace TrainCrewTIDWindow.Forms {
@@ -141,6 +140,47 @@ namespace TrainCrewTIDWindow.Forms {
             displayManager.RemoveSubWindow(this);
         }
 
+        private void PictureBox1_MouseWheel(object sender, MouseEventArgs e) {
+            if (ModifierKeys.HasFlag(Keys.Control)) {
+                lock (pictureBox1.Image) {
+                    var size = Size;
+                    var dp = e.Location;
+                    var point = ConvertPointToOriginal(dp.X, dp.Y);
+                    var rate = (pictureBox1.Image.Width + e.Delta * 0.2) / DisplaySize.Width;
+                    var width = Size.Width - ClientSize.Width + (int)(DisplaySize.Width * rate);
+                    var height = Size.Height - ClientSize.Height + pictureBox1.Location.Y + (int)(DisplaySize.Height * rate);
+                    var screenSize = Screen.FromControl(this).Bounds;
+                    screenSize = new Rectangle(screenSize.Location, new Size(screenSize.Width + 20, screenSize.Height + 20));
+                    if (width <= screenSize.Width && height <= screenSize.Height) {
+                        Size = new Size(width, height);
+                        var np = ConvertPointToScreen(point);
+                        if (size != Size) {
+                            Location = new Point(Location.X + dp.X - np.X, Location.Y + dp.Y - np.Y);
+                        }
+                    }
+                    else if (width > screenSize.Width) {
+                        width = screenSize.Width;
+                        height = Size.Height - ClientSize.Height + pictureBox1.Location.Y + DisplaySize.Height * (screenSize.Width - Size.Width + ClientSize.Width) / DisplaySize.Width;
+                        Size = new Size(width, height);
+                        var np = ConvertPointToScreen(point);
+                        if (size != Size) {
+                            Location = new Point(Location.X + dp.X - np.X, Location.Y + dp.Y - np.Y);
+                        }
+                    }
+                    else {
+                        height = screenSize.Height;
+                        width = Size.Width - ClientSize.Width + DisplaySize.Width * (screenSize.Height - Size.Height + ClientSize.Height - pictureBox1.Location.Y) / DisplaySize.Height;
+                        Size = new Size(width, height);
+                        var np = ConvertPointToScreen(point);
+                        if (size != Size) {
+                            Location = new Point(Location.X + dp.X - np.X, Location.Y + dp.Y - np.Y);
+                        }
+                    }
+                }
+            }
+            ((HandledMouseEventArgs)e).Handled = true;
+        }
+
         private void PictureBox1_MouseDown(object sender, MouseEventArgs e) {
             if ((e.Button & MouseButtons.Left) == MouseButtons.Left) {
                 if (ModifierKeys.HasFlag(Keys.Shift)) {
@@ -215,8 +255,9 @@ namespace TrainCrewTIDWindow.Forms {
 
         private void SubWindow_ResizeBegin(object sender, EventArgs e) {
             var screenSize = Screen.FromControl(this).Bounds;
-            var mw = Size.Width - ClientSize.Width + DisplaySize.Width * (screenSize.Height/* - Size.Height + ClientSize.Height*/ - pictureBox1.Location.Y) / DisplaySize.Height;
-            var mh = Size.Height - ClientSize.Height + pictureBox1.Location.Y + DisplaySize.Height * (screenSize.Width/* - Size.Width + ClientSize.Width*/) / DisplaySize.Width;
+            screenSize = new Rectangle(screenSize.Location, new Size(screenSize.Width + 20, screenSize.Height + 20));
+            var mw = Size.Width - ClientSize.Width + DisplaySize.Width * (screenSize.Height - Size.Height + ClientSize.Height - pictureBox1.Location.Y) / DisplaySize.Height;
+            var mh = Size.Height - ClientSize.Height + pictureBox1.Location.Y + DisplaySize.Height * (screenSize.Width - Size.Width + ClientSize.Width) / DisplaySize.Width;
             if (screenSize.Height < mh) {
                 MaximumSize = new Size(mw, screenSize.Height + Size.Height - ClientSize.Height);
             }
@@ -295,16 +336,24 @@ namespace TrainCrewTIDWindow.Forms {
             labelClock.Text = time.ToString("H:mm:ss");
         }
 
-        private Point ConvertPoint(int x, int y) {
+        private Point ConvertPointToOriginal(int x, int y) {
             return new Point(StartLocation.X + x * DisplaySize.Width / pictureBox1.Width, StartLocation.Y + y * DisplaySize.Height / pictureBox1.Height);
         }
 
-        private Point ConvertPoint(Point p) {
-            return ConvertPoint(p.X, p.Y);
+        private Point ConvertPointToOriginal(Point p) {
+            return ConvertPointToOriginal(p.X, p.Y);
+        }
+
+        private Point ConvertPointToScreen(int x, int y) {
+            return new Point((x - StartLocation.X) * pictureBox1.Width / DisplaySize.Width, (y - StartLocation.Y) * pictureBox1.Height / DisplaySize.Height);
+        }
+
+        private Point ConvertPointToScreen(Point p) {
+            return ConvertPointToScreen(p.X, p.Y);
         }
 
         private bool IsInArea(Point point, int areaX, int areaY, Size areaSize, int padding = 0) {
-            var p = ConvertPoint(point);
+            var p = ConvertPointToOriginal(point);
             return p.X >= areaX - padding && p.X < (areaX + areaSize.Width + padding) && p.Y >= areaY - padding && p.Y < (areaY + areaSize.Height + padding);
         }
 
@@ -508,5 +557,7 @@ namespace TrainCrewTIDWindow.Forms {
                 menu.CheckState = value ? CheckState.Checked : CheckState.Unchecked;
             }
         }
+
+        
     }
 }

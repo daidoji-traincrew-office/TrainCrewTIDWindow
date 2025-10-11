@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using System.Data;
-using System.Diagnostics;
 using System.Text.RegularExpressions;
 using TrainCrewTIDWindow.Models;
 using TrainCrewTIDWindow.Settings;

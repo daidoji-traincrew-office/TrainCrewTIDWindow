@@ -1,18 +1,17 @@
 ﻿using Dapplo.Microsoft.Extensions.Hosting.WinForms;
 using System.Collections.ObjectModel;
 using OpenIddict.Client;
-using TrainCrewTIDWindow.Communications;
-using TrainCrewTIDWindow.Manager;
-using TrainCrewTIDWindow.Models;
 using System.Diagnostics;
 using System.Text;
 using System.Drawing.Drawing2D;
 using TrainCrewTIDWindow.Settings;
 using System.Media;
-using TrainCrewTIDWindow.Properties;
-using TrainCrewTIDWindow.Forms;
+using TrainCrewTIDWindow.Communications;
+using TrainCrewTIDWindow.Manager;
+using TrainCrewTIDWindow.Models;
 
-namespace TrainCrewTIDWindow {
+namespace TrainCrewTIDWindow.Forms
+{
 
     public partial class TIDWindow : Form, IWinFormsShell {
 
@@ -133,10 +132,17 @@ namespace TrainCrewTIDWindow {
 
         private int[] scaleArray = { 50, 75, 90, 100, 110, 125, 150, 175, 200 };
 
+        public bool FixedScale {
+            get;
+            private set;
+        } = false;
+
         /// <summary>
         /// マウス位置（ドラッグ操作対応用）
         /// </summary>
         private Point mouseLoc = Point.Empty;
+
+        private Cursor defaultCursor = Cursors.SizeAll;
 
         /// <summary>
         /// WASDキーなど使用時の移動量
@@ -262,6 +268,7 @@ namespace TrainCrewTIDWindow {
             LogManager.AddInfoLog("起動");
 
             pictureBox2.Parent = pictureBox1;
+            pictureBox3.Parent = pictureBox1;
 
             PointDataDict = pointDataDict.AsReadOnly();
             DirectionDataDict = directionDataDict.AsReadOnly();
@@ -328,7 +335,9 @@ namespace TrainCrewTIDWindow {
             Load += TIDWindow_Load;
             menuItemScaleFit.Click += (sender, e) => { SetScale(-1); };
 
-            for(var i = 0; i < 24; i++) {
+            ChangeDefaultCursor();
+
+            for (var i = 0; i < 24; i++) {
                 var time = i;
                 var menu = new ToolStripMenuItem();
                 menuItemQuickTimeSetting.DropDownItems.Add(menu);
@@ -339,19 +348,12 @@ namespace TrainCrewTIDWindow {
             }
 
             trainMenuDict.Add("9999", menuItemMarkup9999);
-
-            pictureBox3.Parent = pictureBox1;
-            pictureBox3.BackColor = Color.Transparent;
-            var bm = new Bitmap(100, 100);
-            using var g = Graphics.FromImage(bm);
-            g.Clear(Color.Transparent);
-            pictureBox3.Image = bm;
         }
 
         private void AddScale(int scale) {
             var menu = new ToolStripMenuItem();
             scaleMenuDict.Add(scale, menu);
-            menuItemScale.DropDownItems.Insert(menuItemScale.DropDownItems.Count - 2, menu);
+            menuItemScale.DropDownItems.Insert(menuItemScale.DropDownItems.Count - 3, menu);
             menu.Name = $"menuItemScale{scale}";
             menu.Size = new Size(110, 22);
             menu.Text = $"{scale}%";
@@ -1247,9 +1249,11 @@ namespace TrainCrewTIDWindow {
             }
 
             menuItemScaleFit.CheckState = scale < 0 ? CheckState.Indeterminate : CheckState.Unchecked;
+            menuItemFixedScale.CheckState = CheckState.Unchecked;
 
 
 
+            FixedScale = false;
             TIDScale = scale;
 
             displayManager.ChangeScale();
@@ -1261,7 +1265,32 @@ namespace TrainCrewTIDWindow {
                 labelScale.ForeColor = Color.LightGreen;
                 labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalBitmap.Width * 100 + 0.5)}%";
             }
-            UpdateMouseCursor();
+            ChangeDefaultCursor();
+        }
+
+        public void SetFixedScale(bool value) {
+            LogManager.AddInfoLog($"拡大率変更：{(value ? "倍率固定" : "fit")}");
+
+            foreach (var k in scaleMenuDict.Keys) {
+                scaleMenuDict[k].CheckState = CheckState.Unchecked;
+            }
+
+            menuItemScaleFit.CheckState = !value ? CheckState.Indeterminate : CheckState.Unchecked;
+            menuItemFixedScale.CheckState = value ? CheckState.Indeterminate : CheckState.Unchecked;
+
+
+            FixedScale = value;
+            TIDScale = -1;
+
+            if (value) {
+                labelScale.ForeColor = Color.Red;
+            }
+            else {
+                labelScale.ForeColor = Color.LightGreen;
+                displayManager.ChangeScale();
+            }
+            labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalBitmap.Width * 100 + 0.5)}%";
+            ChangeDefaultCursor();
         }
 
         private void SetHourQuick(int hour) {
@@ -1273,15 +1302,34 @@ namespace TrainCrewTIDWindow {
 
         private void labelScale_MouseDown(object sender, MouseEventArgs e) {
             if (TIDScale > 0) {
-                var i = -1;
-                if (e.Button == MouseButtons.Right) {
-                    i = Math.Min(Array.IndexOf(scaleArray, TIDScale) + 1, scaleArray.Length - 1);
+                if (ModifierKeys.HasFlag(Keys.Shift)) {
+                    SetScale(-1);
                 }
-                else if (e.Button == MouseButtons.Left) {
-                    i = Math.Max(Array.IndexOf(scaleArray, TIDScale) - 1, 0);
+                else if (ModifierKeys.HasFlag(Keys.Control)) {
+                    SetFixedScale(true);
                 }
-                if (i >= 0) {
-                    SetScale(scaleArray[i]);
+                else {
+                    var i = -1;
+                    if (e.Button == MouseButtons.Right) {
+                        i = Math.Min(Array.IndexOf(scaleArray, TIDScale) + 1, scaleArray.Length - 1);
+                    }
+                    else if (e.Button == MouseButtons.Left) {
+                        i = Math.Max(Array.IndexOf(scaleArray, TIDScale) - 1, 0);
+                    }
+                    if (i >= 0) {
+                        SetScale(scaleArray[i]);
+                    }
+                }
+            }
+            else {
+                if (ModifierKeys.HasFlag(Keys.Control)) {
+                    SetFixedScale(!FixedScale);
+                }
+                else if (FixedScale && ModifierKeys.HasFlag(Keys.Shift)) {
+                    SetFixedScale(false);
+                }
+                else {
+                    SetScale(initialScale);
                 }
             }
         }
@@ -1306,8 +1354,8 @@ namespace TrainCrewTIDWindow {
                     var end = pictureBox1.PointToClient(Cursor.Position);
                     var center = new Point((start.X + end.X) / 2 - end.X + Cursor.Position.X, (start.Y + end.Y) / 2 - end.Y + Cursor.Position.Y);
                     end = new Point(end.X > 10 ? (start.X < pictureBox1.Width && end.X < pictureBox1.Width - 10 ? end.X : pictureBox1.Width) : (start.X > 0 ? 0 : end.X), end.Y > 10 ? (start.Y < pictureBox1.Height && end.Y < pictureBox1.Height - 10 ? end.Y : pictureBox1.Height) : (start.Y > 0 ? 0 : end.Y));
-                    start = ConvertPoint(start);
-                    end = ConvertPoint(end);
+                    start = ConvertPointToOriginal(start);
+                    end = ConvertPointToOriginal(end);
                     var p = new Point(Math.Min(start.X, end.X), Math.Min(start.Y, end.Y));
                     var s = new Size(Math.Abs(start.X - end.X), Math.Abs(start.Y - end.Y));
                     displayManager.CopyImage(p, s);
@@ -1456,6 +1504,44 @@ namespace TrainCrewTIDWindow {
                         SetScale(scaleArray[i]);
                     }
                 }
+                else {
+                    lock (pictureBox1.Image)
+                    lock (displayManager.OriginalBitmap) {
+                        var size = Size;
+                        var dp = e.Location;
+                        var point = ConvertPointToOriginal(dp.X, dp.Y);
+                        var rate = (pictureBox1.Image.Width + e.Delta * 0.2) / displayManager.OriginalBitmap.Width;
+                        var width = Size.Width - ClientSize.Width + (int)(displayManager.OriginalBitmap.Width * rate);
+                        var height = Size.Height - ClientSize.Height + panel1.Location.Y + (int)(displayManager.OriginalBitmap.Height * rate);
+                        var screenSize = Screen.FromControl(this).Bounds;
+                        screenSize = new Rectangle(screenSize.Location, new Size(screenSize.Width + 20, screenSize.Height + 20));
+                        if (width <= screenSize.Width && height <= screenSize.Height) {
+                            Size = new Size(width, height);
+                            var np = ConvertPointToScreen(point);
+                            if (size != Size) {
+                                Location = new Point(Location.X + dp.X - np.X, Location.Y + dp.Y - np.Y);
+                            }
+                        }
+                        else if (width > screenSize.Width) {
+                            width = screenSize.Width;
+                            height = Size.Height - ClientSize.Height + panel1.Location.Y + displayManager.OriginalBitmap.Height * (screenSize.Width - Size.Width + ClientSize.Width) / displayManager.OriginalBitmap.Width;
+                            Size = new Size(width, height);
+                            var np = ConvertPointToScreen(point);
+                            if (size != Size) {
+                                Location = new Point(Location.X + dp.X - np.X, Location.Y + dp.Y - np.Y);
+                            }
+                        }
+                        else {
+                            height = screenSize.Height;
+                            width = Size.Width - ClientSize.Width + displayManager.OriginalBitmap.Width * (screenSize.Height - Size.Height + ClientSize.Height - panel1.Location.Y) / displayManager.OriginalBitmap.Height;
+                            Size = new Size(width, height);
+                            var np = ConvertPointToScreen(point);
+                            if (size != Size) {
+                                Location = new Point(Location.X + dp.X - np.X, Location.Y + dp.Y - np.Y);
+                            }
+                        }
+                    }
+                }
             }
             else if (ModifierKeys.HasFlag(Keys.Shift)) {
                 panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value - e.Delta, panel1.VerticalScroll.Value);
@@ -1469,13 +1555,16 @@ namespace TrainCrewTIDWindow {
         private void TIDWindow_Resize(object sender, EventArgs e) {
             if (displayManager != null && DetectResize) {
                 DetectResize = false;
-                if (TIDScale == -1) {
-                    if(WindowState != FormWindowState.Minimized) {
-                        displayManager.ChangeScale();
-                        labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalBitmap.Width * 100 + 0.5)}%";
+                if (WindowState != FormWindowState.Minimized) {
+                    if (TIDScale == -1 && !FixedScale) {
+                        if (WindowState != FormWindowState.Minimized) {
+                            displayManager.ChangeScale();
+                            labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalBitmap.Width * 100 + 0.5)}%";
+                        }
                     }
-                    DetectResize = true;
-                    return;
+                    else {
+                        ChangeDefaultCursor();
+                    }
                 }
                 DetectResize = true;
             }
@@ -1484,11 +1573,18 @@ namespace TrainCrewTIDWindow {
             if (WindowState == FormWindowState.Minimized) {
                 if (!windowMinimized) {
                     LogManager.AddInfoLog("ウィンドウが最小化されました");
+                    windowMinimized = true;
                 }
             }
             else if (windowMinimized) {
                 LogManager.AddInfoLog("ウィンドウの最小化が解除されました");
+                windowMinimized = false;
             }
+        }
+
+        private void ChangeDefaultCursor() {
+            defaultCursor = TIDScale == -1 ? Cursors.Default : (pictureBox1.Width < panel1.Width && pictureBox1.Height < panel1.Height ? Cursors.Default : Cursors.SizeAll);
+            UpdateMouseCursor();
         }
 
         private void PictureBox1_MouseDown(object sender, MouseEventArgs e) {
@@ -1545,7 +1641,7 @@ namespace TrainCrewTIDWindow {
                 }
             }
             if ((e.Button & MouseButtons.Right) == MouseButtons.Right) {
-                pictureBox1.Cursor = Cursors.SizeAll;
+                pictureBox1.Cursor = defaultCursor;
                 selectionStarting = null;
                 lock (pictureBox3) {
                     pictureBox3.Location = new Point(-300, -300);
@@ -1650,8 +1746,8 @@ namespace TrainCrewTIDWindow {
                 var end = e.Location;
                 var center = new Point((start.X + end.X) / 2 - end.X + Cursor.Position.X, (start.Y + end.Y) / 2 - end.Y + Cursor.Position.Y);
                 end = new Point(end.X > 16 ? (start.X < pictureBox1.Width && end.X < pictureBox1.Width - 16 ? end.X : pictureBox1.Width) : (start.X > 0 ? 0 : end.X), end.Y > 16 ? (start.Y < pictureBox1.Height && end.Y < pictureBox1.Height - 16 ? end.Y : pictureBox1.Height) : (start.Y > 0 ? 0 : end.Y));
-                var startOrig = ConvertPoint(start);
-                var endOrig = ConvertPoint(end);
+                var startOrig = ConvertPointToOriginal(start);
+                var endOrig = ConvertPointToOriginal(end);
                 var pos = new Point(Math.Min(start.X, end.X), Math.Min(start.Y, end.Y));
                 var size = new Size(Math.Abs(start.X - end.X), Math.Abs(start.Y - end.Y));
                 var sizeOrig = new Size(Math.Abs(startOrig.X - endOrig.X), Math.Abs(startOrig.Y - endOrig.Y));
@@ -1716,15 +1812,15 @@ namespace TrainCrewTIDWindow {
                     var end = e.Location;
                     var center = new Point((start.X + end.X) / 2 - end.X + Cursor.Position.X, (start.Y + end.Y) / 2 - end.Y + Cursor.Position.Y);
                     end = new Point(end.X > 16 ? (start.X < pictureBox1.Width && end.X < pictureBox1.Width - 16 ? end.X : pictureBox1.Width) : (start.X > 0 ? 0 : end.X), end.Y > 16 ? (start.Y < pictureBox1.Height && end.Y < pictureBox1.Height - 16 ? end.Y : pictureBox1.Height) : (start.Y > 0 ? 0 : end.Y));
-                    start = ConvertPoint(start);
-                    end = ConvertPoint(end);
+                    start = ConvertPointToOriginal(start);
+                    end = ConvertPointToOriginal(end);
                     var p = new Point(Math.Min(start.X, end.X), Math.Min(start.Y, end.Y));
                     var s = new Size(Math.Abs(start.X - end.X), Math.Abs(start.Y - end.Y));
                     var screenSize = Screen.FromControl(this).Bounds;
                     if (s.Width > 120 && s.Width <= screenSize.Width && s.Height > 100 && s.Height <= screenSize.Height - pictureBox1.Location.Y) {
                         var sub = new SubWindow(p, s, displayManager, menuItemTrainMarkup.DropDownItems);
                         sub.Icon = Icon;
-                        pictureBox1.Cursor = Cursors.SizeAll;
+                        pictureBox1.Cursor = defaultCursor;
                         sub.SetMarkup9999(trainDataDict["9999"].Markup);
                         sub.Show();
                         var border = (Size.Width - ClientSize.Width) / 2;
@@ -1971,16 +2067,24 @@ namespace TrainCrewTIDWindow {
             ReservedUpdate = true;
         }
 
-        private Point ConvertPoint(int x, int y) {
+        private Point ConvertPointToOriginal(int x, int y) {
             return new Point(x * displayManager.OriginalBitmap.Width / pictureBox1.Width, y * displayManager.OriginalBitmap.Height / pictureBox1.Height);
         }
 
-        private Point ConvertPoint(Point p) {
-            return ConvertPoint(p.X, p.Y);
+        private Point ConvertPointToOriginal(Point p) {
+            return ConvertPointToOriginal(p.X, p.Y);
+        }
+
+        private Point ConvertPointToScreen(int x, int y) {
+            return new Point(x * pictureBox1.Width / displayManager.OriginalBitmap.Width, y * pictureBox1.Height / displayManager.OriginalBitmap.Height);
+        }
+
+        private Point ConvertPointToScreen(Point p) {
+            return ConvertPointToScreen(p.X, p.Y);
         }
 
         private bool IsInArea(Point point, int areaX, int areaY, Size areaSize, int padding = 0) {
-            var p = ConvertPoint(point);
+            var p = ConvertPointToOriginal(point);
             return p.X >= areaX - padding && p.X < (areaX + areaSize.Width + padding) && p.Y >= areaY - padding && p.Y < (areaY + areaSize.Height + padding);
         }
 
@@ -1997,12 +2101,8 @@ namespace TrainCrewTIDWindow {
                 pictureBox1.Cursor = Cursors.Cross;
                 pictureBox2.Cursor = Cursors.Cross;
             }
-            else if (TIDScale < 0) {
-                pictureBox1.Cursor = Cursors.Default;
-                pictureBox2.Cursor = Cursors.Cross;
-            }
             else {
-                pictureBox1.Cursor = Cursors.SizeAll;
+                pictureBox1.Cursor = defaultCursor;
                 pictureBox2.Cursor = Cursors.Cross;
             }
         }

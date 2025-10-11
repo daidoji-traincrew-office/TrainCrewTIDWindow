@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TrainCrewTIDWindow.Models;
+﻿using TrainCrewTIDWindow.Models;
 
 namespace TrainCrewTIDWindow.Settings {
     public class SignalDirectionSetting(string name, LCR type, string lever1Name, string lever2Name) {
