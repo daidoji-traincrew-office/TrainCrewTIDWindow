@@ -1759,6 +1759,7 @@ namespace TrainCrewTIDWindow.Forms
                         pictureBox3.Location = pos;
                         pictureBox3.Size = size;
                         var screenSize = Screen.FromControl(this).Bounds;
+                        screenSize = new Rectangle(screenSize.Location, new Size(screenSize.Width + 20, screenSize.Height + 20));
                         var old = pictureBox3.Image;
                         var b = new Bitmap(size.Width, size.Height);
                         using var g = Graphics.FromImage(b);
@@ -1820,6 +1821,7 @@ namespace TrainCrewTIDWindow.Forms
                     var p = new Point(Math.Min(start.X, end.X), Math.Min(start.Y, end.Y));
                     var s = new Size(Math.Abs(start.X - end.X), Math.Abs(start.Y - end.Y));
                     var screenSize = Screen.FromControl(this).Bounds;
+                    screenSize = new Rectangle(screenSize.Location, new Size(screenSize.Width + 20, screenSize.Height + 20));
                     if (s.Width > 120 && s.Width <= screenSize.Width && s.Height > 100 && s.Height <= screenSize.Height - pictureBox1.Location.Y) {
                         var sub = new SubWindow(p, s, displayManager, menuItemTrainMarkup.DropDownItems);
                         sub.Icon = Icon;
