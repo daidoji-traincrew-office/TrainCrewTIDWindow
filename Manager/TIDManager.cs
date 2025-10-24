@@ -15,12 +15,12 @@ namespace TrainCrewTIDWindow.Manager {
         /// <summary>
         /// TID画面表示用のPictureBox
         /// </summary>
-        private PictureBox pictureBox;
+        private readonly PictureBox pictureBox;
 
         /// <summary>
         /// TIDWindowオブジェクト
         /// </summary>
-        private TIDWindow window;
+        private readonly TIDWindow window;
 
         /// <summary>
         /// 各トラックの線の位置やファイル名などのデータ
@@ -82,32 +82,32 @@ namespace TrainCrewTIDWindow.Manager {
         /// <summary>
         /// 起動時背景画像
         /// </summary>
-        private Image backgroundDefault;
+        private readonly Image backgroundDefault;
 
         /// <summary>
         /// 通常時背景画像
         /// </summary>
-        private Image backgroundImage;
+        private readonly Image backgroundImage;
 
         /// <summary>
         /// 列車番号下線（遅延表示あり）
         /// </summary>
-        private Image numLineL;
+        private readonly Image numLineL;
 
         /// <summary>
         /// 列車番号下線（遅延表示なし）
         /// </summary>
-        private Image numLineM;
+        private readonly Image numLineM;
 
         /// <summary>
         /// 運行番号下線
         /// </summary>
-        private Image numLineS;
+        private readonly Image numLineS;
 
         /// <summary>
         /// 番号フォント画像
         /// </summary>
-        private Image numberImage;
+        private readonly Image numberImage;
 
         /// <summary>
         /// TID画像の元画像（リサイズ前）
@@ -446,7 +446,7 @@ namespace TrainCrewTIDWindow.Manager {
             pictureBox.Image = new Bitmap(backgroundDefault);
 
             window.Size = new Size(Math.Max(backgroundDefault.Width * window.TIDScale / 100, backgroundDefault.Width) + window.Size.Width - window.ClientSize.Width, Math.Max(backgroundDefault.Height * window.TIDScale / 100, backgroundDefault.Height) + window.Panel1.Location.Y + window.Size.Height - window.ClientSize.Height);
-            /*window.TopMost = true;*/
+            
 
             // 試験表示
             {
@@ -705,15 +705,16 @@ namespace TrainCrewTIDWindow.Manager {
             var duplicatingTrains = window.TrackManager.DuplicatingTrains;
 
             foreach (var numWindow in numberWindowDict.Values) {
-                if(numWindow.Train == null) {
+                var train = numWindow.Train;
+                if (train == null) {
                     continue;
                 }
-                _ = trainDataDict.TryGetValue(numWindow.Train, out var trainData);
+                _ = trainDataDict.TryGetValue(train, out var trainData);
 
-                var numHeader = Regex.Replace(numWindow.Train, @"[0-9a-zA-Z]", "");  // 列番の頭の文字（回、試など）
-                var numBodyStr = Regex.Replace(numWindow.Train, @"[^0-9]", "");
+                var numHeader = Regex.Replace(train, @"[0-9a-zA-Z]", "");  // 列番の頭の文字（回、試など）
+                var numBodyStr = Regex.Replace(train, @"[^0-9]", "");
                 var isTrain = int.TryParse(numBodyStr, out var numBody);  // 列番本体（数字部分）
-                var numFooter = Regex.Replace(numWindow.Train, @"[^a-zA-Z]", "");  // 列番の末尾の文字
+                var numFooter = Regex.Replace(train, @"[^a-zA-Z]", "");  // 列番の末尾の文字
 
                 // 遅延時分
                 var delayMinute = trainData != null ? trainData.DelayMinutes : 0;
@@ -724,9 +725,61 @@ namespace TrainCrewTIDWindow.Manager {
 
                 var iaType = new ImageAttributes();
 
+
+                // 種別色
+                Color? classColor = null;
+                var hf = $"{numHeader}{numFooter}";
+                foreach (var k in numColor.Keys) {
+                    if (hf.Contains(k)) {
+                        classColor = numColor[k];
+
+                        if (markupClassesData.ContainsKey(k)) {
+                            markUp |= markupClassesData[k];
+                        }
+                        break;
+                    }
+                }
+                if (hf != "臨Z" && (numHeader == "" || numHeader == "臨") && (numFooter == "" || numFooter == "X" || numFooter == "Y" || numFooter == "Z")) {
+                    markUp |= markupClassesData["local"];
+                }
+                if (numHeader == "臨") {
+                    markUp |= markupClassesData["rinji"];
+                }
+                if (numFooter.Contains('Z')) {
+                    markUp |= markupClassesData["illegalZ"];
+                }
+                if (numHeader == "臨" && numFooter.Contains('Z')) {
+                    markUp |= markupClassesData["superIllegalZ"];
+                }
+                // 0埋め列番への警告色として不明色に
+                if (isTrain && numBodyStr[0] == '0') {
+                    markUp |= window.MarkupFillZero;
+                    if (colorDict.ContainsKey("UNKNOWN")) {
+                        classColor = colorDict["UNKNOWN"];
+                    }
+                }
+                // 列番被りへの警告色として不明色に
+                if (isTrain && duplicatingTrains.Contains(train)) {
+                    markUp |= window.MarkupDuplication;
+                    if (colorDict.ContainsKey("UNKNOWN")) {
+                        classColor = colorDict["UNKNOWN"];
+                    }
+                }
+                // 種別色無しかつ数字なしであれば不明色に
+                if (classColor == null) {
+                    if (!isTrain && colorDict.ContainsKey("UNKNOWN")) {
+                        classColor = colorDict["UNKNOWN"];
+                    }
+                    else {
+                        classColor = Color.White;
+                    }
+                }
+
+                markUp |= window.MarkupNotTrain && !isTrain;
+
                 // 運番
                 if (numWindow.Size == NumberSize.S) {
-                    var hf = $"{numHeader}{numFooter}";
+                    /*var hf = $"{numHeader}{numFooter}";
                     foreach (var k in numColor.Keys) {
                         if (hf.Contains(k)) {
                             if (markupClassesData.ContainsKey(k)) {
@@ -748,59 +801,111 @@ namespace TrainCrewTIDWindow.Manager {
                         markUp |= markupClassesData["superIllegalZ"];
                     }
 
-                    Color? color = null;
+                    Color? classColor = null;
                     // 0埋め列番への警告色として不明色に
                     if (isTrain && numBodyStr[0] == '0') {
                         markUp |= window.MarkupFillZero;
                         if (colorDict.ContainsKey("UNKNOWN")) {
-                            color = colorDict["UNKNOWN"];
+                            classColor = colorDict["UNKNOWN"];
                         }
                     }
                     // 列番被りへの警告色として不明色に
-                    if (isTrain && duplicatingTrains.Contains(numWindow.Train)) {
+                    if (isTrain && duplicatingTrains.Contains(train)) {
                         markUp |= window.MarkupDuplication;
                         if (colorDict.ContainsKey("UNKNOWN")) {
-                            color = colorDict["UNKNOWN"];
+                            classColor = colorDict["UNKNOWN"];
                         }
                     }
-                    markUp |= window.MarkupNotTrain && !isTrain;
+                    markUp |= window.MarkupNotTrain && !isTrain;*/
 
-                    var numIndex = numIndexList.FirstOrDefault(i => i.Text == numWindow.Train && i.Width == 5);
+
+                    // 種別色
+                    /*Color? classColor = null;
+                    var hf = $"{numHeader}{numFooter}";
+                    foreach (var k in numColor.Keys) {
+                        if (hf.Contains(k)) {
+                            classColor = numColor[k];
+
+                            if (markupClassesData.ContainsKey(k)) {
+                                markUp |= markupClassesData[k];
+                            }
+                            break;
+                        }
+                    }
+                    if (hf != "臨Z" && (numHeader == "" || numHeader == "臨") && (numFooter == "" || numFooter == "X" || numFooter == "Y" || numFooter == "Z")) {
+                        markUp |= markupClassesData["local"];
+                    }
+                    if (numHeader == "臨") {
+                        markUp |= markupClassesData["rinji"];
+                    }
+                    if (numFooter.Contains('Z')) {
+                        markUp |= markupClassesData["illegalZ"];
+                    }
+                    if (numHeader == "臨" && numFooter.Contains('Z')) {
+                        markUp |= markupClassesData["superIllegalZ"];
+                    }
+                    // 0埋め列番への警告色として不明色に
+                    if (isTrain && numBodyStr[0] == '0') {
+                        markUp |= window.MarkupFillZero;
+                        if (colorDict.ContainsKey("UNKNOWN")) {
+                            classColor = colorDict["UNKNOWN"];
+                        }
+                    }
+                    // 列番被りへの警告色として不明色に
+                    if (isTrain && duplicatingTrains.Contains(train)) {
+                        markUp |= window.MarkupDuplication;
+                        if (colorDict.ContainsKey("UNKNOWN")) {
+                            classColor = colorDict["UNKNOWN"];
+                        }
+                    }
+                    // 種別色無しかつ数字なしであれば不明色に
+                    if (classColor == null) {
+                        if (!isTrain && colorDict.ContainsKey("UNKNOWN")) {
+                            classColor = colorDict["UNKNOWN"];
+                        }
+                        else {
+                            classColor = Color.White;
+                        }
+                    }
+
+                    markUp |= window.MarkupNotTrain && !isTrain;*/
+
+                    var numIndex = numIndexList.FirstOrDefault(i => i.Text == train && i.Width == 5);
                     if(numIndex != null) {
                         //色を取得
-                        var colorKey = numColor.Keys.FirstOrDefault(numWindow.Train.Contains);
+                        /*var colorKey = numColor.Keys.FirstOrDefault(train.Contains);
                         if (colorKey != null && numColor.TryGetValue(colorKey, out var newColor)) {
-                            color = numColor[colorKey];
+                            classColor = numColor[colorKey];
                         }
                         // 色が見つからなければとりあえず不明色に
-                        if (color == null) {
+                        if (classColor == null) {
                             if (colorDict.ContainsKey("UNKNOWN")) {
-                                color = colorDict["UNKNOWN"];
+                                classColor = colorDict["UNKNOWN"];
                             }
                             else {
-                                color = Color.White;
+                                classColor = Color.White;
                             }
-                        }
+                        }*/
 
                         
                         if (trainData == null && !markUp) {
-                            iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = (Color)color }]);
+                            iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = (Color)classColor }]);
                         }
                         else if (markUp && window.MarkupType > 0 && (window.MarkupType == 2 || window.FlashState)) {
-                            iaType.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = (Color)color }, new ColorMap { OldColor = Color.White, NewColor = Color.Black }]);
+                            iaType.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = (Color)classColor }, new ColorMap { OldColor = Color.White, NewColor = Color.Black }]);
                         }
                         else if (markUp && window.MarkupType == 0 && !window.FlashState) {
                             iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = Color.FromArgb(40, 40, 40) }]);
                         }
                         else {
-                            iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = (Color)color }]);
+                            iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = (Color)classColor }]);
                         }
                         var iaLine = new ImageAttributes();
                         if (!markUp || trainData == null || window.MarkupType == 0 || (window.MarkupType != 2 && !window.FlashState)) {
-                            iaLine.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = (Color)color }]);
+                            iaLine.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = (Color)classColor }]);
                         }
                         else {
-                            iaLine.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = (Color)color }, new ColorMap { OldColor = Color.White, NewColor = (Color)color }]);
+                            iaLine.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = (Color)classColor }, new ColorMap { OldColor = Color.White, NewColor = (Color)classColor }]);
                         }
 
 
@@ -829,28 +934,28 @@ namespace TrainCrewTIDWindow.Manager {
                             delayColor = colorDict["delayTime1"];
                         }
 
-                        color ??= Color.White;
+                        classColor ??= Color.White;
                         if (!markUp || trainData == null || window.MarkupType == 0 || (window.MarkupType != 2 && !window.FlashState)) {
                             iaDelay.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = delayColor }]);
                         }
                         else {
-                            iaDelay.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = (Color)color }, new ColorMap { OldColor = Color.White, NewColor = delayColor }]);
+                            iaDelay.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = (Color)classColor }, new ColorMap { OldColor = Color.White, NewColor = delayColor }]);
                         }
 
 
                         AddImage(g, numLineS, numWindow.PosX, numWindow.PosY, iaDelay);
 
                         if (trainData == null && !markUp) {
-                            iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = (Color)color }]);
+                            iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = (Color)classColor }]);
                         }
                         else if (markUp && window.MarkupType > 0 && (window.MarkupType == 2 || window.FlashState)) {
-                            iaType.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = (Color)color }, new ColorMap { OldColor = Color.White, NewColor = Color.Black }]);
+                            iaType.SetRemapTable([new ColorMap { OldColor = Color.Black, NewColor = (Color)classColor }, new ColorMap { OldColor = Color.White, NewColor = Color.Black }]);
                         }
                         else if (markUp && window.MarkupType == 0 && !window.FlashState) {
                             iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = Color.FromArgb(40, 40, 40) }]);
                         }
                         else {
-                            iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = (Color)color }]);
+                            iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = (Color)classColor }]);
                         }
 
 
@@ -886,10 +991,9 @@ namespace TrainCrewTIDWindow.Manager {
                 }
                 // 列番
                 else {
-                    var retsuban = numBody;
 
                     // 種別色
-                    Color? classColor = null;
+                    /*Color? classColor = null;
                     var hf = $"{numHeader}{numFooter}";
                     foreach (var k in numColor.Keys) {
                         if (hf.Contains(k)) {
@@ -921,7 +1025,7 @@ namespace TrainCrewTIDWindow.Manager {
                         }
                     }
                     // 列番被りへの警告色として不明色に
-                    if (isTrain && duplicatingTrains.Contains(numWindow.Train)) {
+                    if (isTrain && duplicatingTrains.Contains(train)) {
                         markUp |= window.MarkupDuplication;
                         if (colorDict.ContainsKey("UNKNOWN")) {
                             classColor = colorDict["UNKNOWN"];
@@ -937,7 +1041,7 @@ namespace TrainCrewTIDWindow.Manager {
                         }
                     }
 
-                    markUp |= window.MarkupNotTrain && !isTrain;
+                    markUp |= window.MarkupNotTrain && !isTrain;*/
 
 
 
@@ -970,7 +1074,7 @@ namespace TrainCrewTIDWindow.Manager {
                         iaType.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = (Color)classColor }]);
                     }
 
-                    var numIndex = numIndexList.FirstOrDefault(i => i.Text == numWindow.Train && i.Width == 7);
+                    var numIndex = numIndexList.FirstOrDefault(i => i.Text == train && i.Width == 7);
 
                     if (!markUp || trainData == null || window.MarkupType == 0 || (window.MarkupType != 2 && !window.FlashState)) {
                         iaLine.SetRemapTable([new ColorMap { OldColor = Color.White, NewColor = numIndex != null ? (Color)classColor : delayColor }, new ColorMap { OldColor = Color.FromArgb(0, 255, 0), NewColor = Color.Black }, new ColorMap { OldColor = Color.Red, NewColor = Color.Black }]);
@@ -1290,7 +1394,7 @@ namespace TrainCrewTIDWindow.Manager {
             lock (originalBitmap) {
                 var i = new Bitmap(originalBitmap);
                 using (var g = Graphics.FromImage(i)) {
-                    g.DrawString((window.Clock + window.TimeOffset).ToString("H:mm:ss"), new Font("ＭＳ ゴシック", 9), Brushes.White, originalBitmap.Width - 51, 0);
+                    g.DrawString((window.Clock + window.TimeOffset).ToString("H:mm:ss"), new Font("ＭＳ ゴシック", 12, GraphicsUnit.Pixel), Brushes.White, originalBitmap.Width - 51, 0);
                 }
                 Clipboard.SetImage(i);
                 i.Dispose(); 
@@ -1304,7 +1408,7 @@ namespace TrainCrewTIDWindow.Manager {
                 using (var g = Graphics.FromImage(i)) {
                     g.Clear(Color.FromArgb(10, 10, 10));
                     g.DrawImage(originalBitmap, new Rectangle(0, 13, width, height), x, y, width, height, GraphicsUnit.Pixel);
-                    g.DrawString((window.Clock + window.TimeOffset).ToString("H:mm:ss"), new Font("ＭＳ ゴシック", 9), Brushes.White, width - 51, 0);
+                    g.DrawString((window.Clock + window.TimeOffset).ToString("H:mm:ss"), new Font("ＭＳ ゴシック", 12, GraphicsUnit.Pixel), Brushes.White, width - 51, 0);
                 }
                 Clipboard.SetImage(i);
                 i.Dispose();

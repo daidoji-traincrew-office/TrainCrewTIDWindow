@@ -39,7 +39,7 @@ namespace TrainCrewTIDWindow.Forms {
         public bool OpeningDialog {
             get;
             private set;
-        }
+        } = false;
 
         /// <summary>
         /// マウス位置（ドラッグ操作対応用）

@@ -212,6 +212,11 @@ namespace TrainCrewTIDWindow.Forms
             get; set;
         } = false;
 
+        public bool OpeningDialog {
+            get;
+            private set;
+        } = false;
+
         public void PlayWarningSound() {
             if (warningSound != null) {
                 warningSound.Play();
@@ -265,7 +270,7 @@ namespace TrainCrewTIDWindow.Forms
         public TIDWindow(OpenIddictClientService service) {
             this.service = service;
             InitializeComponent();
-            LogManager.AddInfoLog("起動");
+            LogManager.AddInfoLog($"起動 ver. {ServerAddress.Version}");
 
             pictureBox2.Parent = pictureBox1;
             pictureBox3.Parent = pictureBox1;
@@ -971,7 +976,7 @@ namespace TrainCrewTIDWindow.Forms
         }
 
         private void UpdateClock() {
-            if(ActiveForm != this && !displayManager.IsActiveForm) {
+            if(!OpeningDialog && ActiveForm != this && !displayManager.IsActiveForm) {
                 UpdateMouseCursor();
             }
             if (WindowState == FormWindowState.Maximized) {
@@ -1747,17 +1752,17 @@ namespace TrainCrewTIDWindow.Forms
                 selectionStarting = new Point(s.X > 16 ? (s.X < pictureBox1.Width - 16 ? s.X : pictureBox1.Width) : 0, s.Y > 16 ? (s.Y < pictureBox1.Height - 16 ? s.Y : pictureBox1.Height) : 0);
                 var start = selectionStarting.Value;
                 var end = e.Location;
+                Debug.WriteLine($"{start.Y} {end.Y}");
                 var center = new Point((start.X + end.X) / 2 - end.X + Cursor.Position.X, (start.Y + end.Y) / 2 - end.Y + Cursor.Position.Y);
-                end = new Point(end.X > 16 ? (start.X < pictureBox1.Width && end.X < pictureBox1.Width - 16 ? end.X : pictureBox1.Width) : (start.X > 0 ? 0 : end.X), end.Y > 16 ? (start.Y < pictureBox1.Height && end.Y < pictureBox1.Height - 16 ? end.Y : pictureBox1.Height) : (start.Y > 0 ? 0 : end.Y));
+                end = new Point(end.X > 16 ? (start.X >= pictureBox1.Width || end.X < pictureBox1.Width - 16 ? end.X : pictureBox1.Width) : (start.X > 0 ? 0 : end.X), end.Y > 16 ? (start.Y >= pictureBox1.Height || end.Y < pictureBox1.Height - 16 ? end.Y : pictureBox1.Height) : (start.Y > 0 ? 0 : end.Y));
                 var startOrig = ConvertPointToOriginal(start);
                 var endOrig = ConvertPointToOriginal(end);
                 var pos = new Point(Math.Min(start.X, end.X), Math.Min(start.Y, end.Y));
                 var size = new Size(Math.Abs(start.X - end.X), Math.Abs(start.Y - end.Y));
                 var sizeOrig = new Size(Math.Abs(startOrig.X - endOrig.X), Math.Abs(startOrig.Y - endOrig.Y));
+                Debug.WriteLine($"{start.X} {end.X} {start.Y} {end.Y}");
                 if (size.Width > 1 && size.Height > 1) {
                     lock (pictureBox3) {
-                        pictureBox3.Location = pos;
-                        pictureBox3.Size = size;
                         var screenSize = Screen.FromControl(this).Bounds;
                         screenSize = new Rectangle(screenSize.Location, new Size(screenSize.Width + 20, screenSize.Height + 20));
                         var old = pictureBox3.Image;
@@ -1766,6 +1771,8 @@ namespace TrainCrewTIDWindow.Forms
                         g.Clear(Color.Transparent);
                         g.DrawRectangle(sizeOrig.Width > 120 && sizeOrig.Width <= screenSize.Width && sizeOrig.Height > 100 && sizeOrig.Height <= screenSize.Height ? Pens.LimeGreen : Pens.DarkRed, 0, 0, size.Width - 1, size.Height - 1);
                         pictureBox3.Image = b;
+                        pictureBox3.Location = pos;
+                        pictureBox3.Size = size;
                         old?.Dispose();
                     }
                 }
@@ -1815,7 +1822,7 @@ namespace TrainCrewTIDWindow.Forms
                     }
                     var end = e.Location;
                     var center = new Point((start.X + end.X) / 2 - end.X + Cursor.Position.X, (start.Y + end.Y) / 2 - end.Y + Cursor.Position.Y);
-                    end = new Point(end.X > 16 ? (start.X < pictureBox1.Width && end.X < pictureBox1.Width - 16 ? end.X : pictureBox1.Width) : (start.X > 0 ? 0 : end.X), end.Y > 16 ? (start.Y < pictureBox1.Height && end.Y < pictureBox1.Height - 16 ? end.Y : pictureBox1.Height) : (start.Y > 0 ? 0 : end.Y));
+                    end = new Point(end.X > 16 ? (start.X >= pictureBox1.Width || end.X < pictureBox1.Width - 16 ? end.X : pictureBox1.Width) : (start.X > 0 ? 0 : end.X), end.Y > 16 ? (start.Y >= pictureBox1.Height || end.Y < pictureBox1.Height - 16 ? end.Y : pictureBox1.Height) : (start.Y > 0 ? 0 : end.Y));
                     start = ConvertPointToOriginal(start);
                     end = ConvertPointToOriginal(end);
                     var p = new Point(Math.Min(start.X, end.X), Math.Min(start.Y, end.Y));
@@ -1831,6 +1838,7 @@ namespace TrainCrewTIDWindow.Forms
                         var border = (Size.Width - ClientSize.Width) / 2;
                         sub.Location = new Point(center.X - s.Width / 2 - border, center.Y - s.Height / 2 - Size.Height + ClientSize.Height - panel1.Location.Y / 2 - border);
                         sub.SetTopMost(TopMost);
+                        sub.SetSilent(Silent);
                         displayManager.AddSubWindow(sub);
                     }
                 }
@@ -2122,7 +2130,9 @@ namespace TrainCrewTIDWindow.Forms
             if (TopMost) {
                 form.TopMost = true;
             }
+            OpeningDialog = true;
             form.ShowDialog();
+            OpeningDialog = false;
             
         }
 
