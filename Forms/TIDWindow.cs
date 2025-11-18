@@ -9,6 +9,8 @@ using System.Media;
 using TrainCrewTIDWindow.Communications;
 using TrainCrewTIDWindow.Manager;
 using TrainCrewTIDWindow.Models;
+using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace TrainCrewTIDWindow.Forms
 {
@@ -140,7 +142,7 @@ namespace TrainCrewTIDWindow.Forms
         /// <summary>
         /// マウス位置（ドラッグ操作対応用）
         /// </summary>
-        private Point mouseLoc = Point.Empty;
+        private Point? mouseLoc = null;
 
         private Cursor defaultCursor = Cursors.SizeAll;
 
@@ -205,6 +207,13 @@ namespace TrainCrewTIDWindow.Forms
             get;
             private set;
         } = 0;
+
+        public bool MarkupHandover {
+            get;
+            private set;
+        } = false;
+
+        private List<int> markupUmban = [];
 
         public ToolStripMenuItem MenuItemMarkupClass => menuItemMarkupClass;
 
@@ -287,7 +296,7 @@ namespace TrainCrewTIDWindow.Forms
 
             if (!loaded) {
                 using (StreamWriter w = new(".\\setting\\setting.txt", false, new UTF8Encoding(false))) {
-                    w.Write("source=select\ntopMost=true\nscaleList=50,75,90,100,110,125,150,175,200\ninitialScale=100\ntimeOffset=14\nzoomMode=pushtozoom\nzoomSize=240\nsilent=false\nflashInterval=0.5\nmarkupType=0\nmarkupDelayed=0\nmarkupDuplication=false\nmarkupFillZero=false\nmarkup9999=false\nmarkupNotTrain=false\nmarkupSpawned=false");
+                    w.Write("source=select\ntopMost=true\nscaleList=50,75,90,100,110,125,150,175,200\ninitialScale=100\ntimeOffset=14\nzoomMode=pushtozoom\nzoomSize=240\nsilent=false\nflashInterval=0.5\nmarkupType=0\nmarkupDelayed=0\nmarkupDuplication=false\nmarkupFillZero=false\nmarkup9999=false\nmarkupNotTrain=false\nmarkupSpawned=false\nmarkupHandover=false");
                 }
             }
 
@@ -332,7 +341,7 @@ namespace TrainCrewTIDWindow.Forms
             }
             else {
                 labelScale.ForeColor = Color.LightGreen;
-                labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalBitmap.Width * 100 + 0.5)}%";
+                labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalWidth * 100 + 0.5)}%";
             }
 
             trackManager = new TrackManager(displayManager);
@@ -473,6 +482,10 @@ namespace TrainCrewTIDWindow.Forms
                             MarkupSpawned = texts[1].Replace(" ", "").ToLower() == "true";
                             menuItemMarkupSpawned.CheckState = MarkupSpawned ? CheckState.Checked : CheckState.Unchecked;
                             break;
+                        case "markupHandover":
+                            MarkupHandover = texts[1].Replace(" ", "").ToLower() == "true";
+                            menuItemMarkupHandover.CheckState = MarkupHandover ? CheckState.Checked : CheckState.Unchecked;
+                            break;
                         case "debugNumberDown":
                             debugNumberDown = texts[1];
                             break;
@@ -604,9 +617,6 @@ namespace TrainCrewTIDWindow.Forms
                         menu1.Text = debugNumberDown;
                         menu1.Click += (sender, e) => {
                             SetTrainMarkup(td1.Number);
-                            /*td1.Markup = !td1.Markup;
-                            menu1.CheckState = td1.Markup ? CheckState.Checked : CheckState.Unchecked;
-                            ReservedUpdate = true;*/
                         };
                         foreach (var w in displayManager.SubWindows) {
                             w.AddTrain(debugNumberDown);
@@ -821,11 +831,9 @@ namespace TrainCrewTIDWindow.Forms
                                     menu.Text = t.TrainNumber;
                                     menu.Click += (sender, e) => {
                                         SetTrainMarkup(td.Number);
-                                        /*td.Markup = !td.Markup;
-                                        menu.CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
-                                        ReservedUpdate = true;*/
-                                    };
-                                    td.Markup = MarkupSpawned;
+                                    }; 
+                                    var isTrain = int.TryParse(Regex.Replace(t.TrainNumber, @"[^0-9]", ""), out var numBody);
+                                    td.Markup = MarkupSpawned || markupUmban.Contains(numBody / 3000 * 100 + numBody / 2 * 2 % 100);
                                     menu.CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
                                     foreach (var w in displayManager.SubWindows) {
                                         w.AddTrain(t.TrainNumber);
@@ -848,11 +856,9 @@ namespace TrainCrewTIDWindow.Forms
                                 menu.Text = t.TrainNumber;
                                 menu.Click += (sender, e) => {
                                     SetTrainMarkup(td.Number);
-                                    /*td.Markup = !td.Markup;
-                                    menu.CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
-                                    ReservedUpdate = true;*/
                                 };
-                                td.Markup = MarkupSpawned;
+                                var isTrain = int.TryParse(Regex.Replace(t.TrainNumber, @"[^0-9]", ""), out var numBody);
+                                td.Markup = MarkupSpawned || markupUmban.Contains(numBody / 3000 * 100 + numBody / 2 * 2 % 100);
                                 menu.CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
                                 foreach (var w in displayManager.SubWindows) {
                                     w.AddTrain(t.TrainNumber);
@@ -890,11 +896,9 @@ namespace TrainCrewTIDWindow.Forms
                                 menu.Text = tc.Last;
                                 menu.Click += (sender, e) => {
                                     SetTrainMarkup(td.Number);
-                                    /*td.Markup = !td.Markup;
-                                    menu.CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
-                                    ReservedUpdate = true;*/
                                 };
-                                td.Markup = MarkupSpawned;
+                                var isTrain = int.TryParse(Regex.Replace(tc.Last, @"[^0-9]", ""), out var numBody);
+                                td.Markup = MarkupSpawned || markupUmban.Contains(numBody / 3000 * 100 + numBody / 2 * 2 % 100);
                                 menu.CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
                                 foreach (var w in displayManager.SubWindows) {
                                     w.AddTrain(tc.Last);
@@ -917,11 +921,9 @@ namespace TrainCrewTIDWindow.Forms
                             menu.Text = tc.Last;
                             menu.Click += (sender, e) => {
                                 SetTrainMarkup(td.Number);
-                                /*td.Markup = !td.Markup;
-                                menu.CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
-                                ReservedUpdate = true;*/
                             };
-                            td.Markup = MarkupSpawned;
+                            var isTrain = int.TryParse(Regex.Replace(tc.Last, @"[^0-9]", ""), out var numBody);
+                            td.Markup = MarkupSpawned || markupUmban.Contains(numBody / 3000 * 100 + numBody / 2 * 2 % 100);
                             menu.CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
                             foreach (var w in displayManager.SubWindows) {
                                 w.AddTrain(tc.Last);
@@ -976,7 +978,7 @@ namespace TrainCrewTIDWindow.Forms
         }
 
         private void UpdateClock() {
-            if(!OpeningDialog && ActiveForm != this && !displayManager.IsActiveForm) {
+            if (!OpeningDialog && ActiveForm != this && !displayManager.IsActiveForm) {
                 UpdateMouseCursor();
             }
             if (WindowState == FormWindowState.Maximized) {
@@ -1054,6 +1056,7 @@ namespace TrainCrewTIDWindow.Forms
                     ServerCommunication.Error = true;
                     LogManager.AddWarningLog("サーバからの受信が10秒以上ありません");
                     LabelStatusText = $"データ受信不能(最終受信：{updatedTime?.ToString("H:mm:ss")})";
+                    SetStatusSubWindow("×", Color.Red);
                     Debug.WriteLine($"データ受信不能: {delaySeconds}");
                     if (!Silent) {
                         TaskDialog.ShowDialog(new TaskDialogPage {
@@ -1073,6 +1076,7 @@ namespace TrainCrewTIDWindow.Forms
                     LogManager.AddWarningLog("サーバからの受信が1秒以上ありません");
                 }
                 LabelStatusText = $"データ正常受信(最終受信：{updatedTime?.ToString("H:mm:ss")})";
+                SetStatusSubWindow("▲", Color.Yellow);
                 Debug.WriteLine($"データ受信不能: {delaySeconds}");
             }
         }
@@ -1226,10 +1230,10 @@ namespace TrainCrewTIDWindow.Forms
             menuItemMarkupType1.CheckState = type == 0 ? CheckState.Indeterminate : CheckState.Unchecked;
             menuItemMarkupType2.CheckState = type == 1 ? CheckState.Indeterminate : CheckState.Unchecked;
             menuItemMarkupType3.CheckState = type == 2 ? CheckState.Indeterminate : CheckState.Unchecked;
-            if(displayManager == null) {
+            if (displayManager == null) {
                 return;
             }
-            foreach(var w in displayManager.SubWindows) {
+            foreach (var w in displayManager.SubWindows) {
                 w.SetMarkupType(type);
             }
         }
@@ -1268,7 +1272,7 @@ namespace TrainCrewTIDWindow.Forms
             }
             else {
                 labelScale.ForeColor = Color.LightGreen;
-                labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalBitmap.Width * 100 + 0.5)}%";
+                labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalWidth * 100 + 0.5)}%";
             }
             ChangeDefaultCursor();
         }
@@ -1294,7 +1298,7 @@ namespace TrainCrewTIDWindow.Forms
                 labelScale.ForeColor = Color.LightGreen;
                 displayManager.ChangeScale();
             }
-            labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalBitmap.Width * 100 + 0.5)}%";
+            labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalWidth * 100 + 0.5)}%";
             ChangeDefaultCursor();
         }
 
@@ -1513,14 +1517,13 @@ namespace TrainCrewTIDWindow.Forms
                     if (FixedScale) {
                         SetFixedScale(false);
                     }
-                    lock (pictureBox1.Image)
-                    lock (displayManager.OriginalBitmap) {
+                    lock (pictureBox1.Image) {
                         var size = Size;
                         var dp = e.Location;
                         var point = ConvertPointToOriginal(dp.X, dp.Y);
-                        var rate = (pictureBox1.Image.Width + e.Delta * 0.2) / displayManager.OriginalBitmap.Width;
-                        var width = Size.Width - ClientSize.Width + (int)(displayManager.OriginalBitmap.Width * rate);
-                        var height = Size.Height - ClientSize.Height + panel1.Location.Y + (int)(displayManager.OriginalBitmap.Height * rate);
+                        var rate = (pictureBox1.Image.Width + e.Delta * 0.2) / displayManager.OriginalWidth;
+                        var width = Size.Width - ClientSize.Width + (int)(displayManager.OriginalWidth * rate);
+                        var height = Size.Height - ClientSize.Height + panel1.Location.Y + (int)(displayManager.OriginalHeight * rate);
                         var screenSize = Screen.FromControl(this).Bounds;
                         screenSize = new Rectangle(screenSize.Location, new Size(screenSize.Width + 20, screenSize.Height + 20));
                         if (width <= screenSize.Width && height <= screenSize.Height) {
@@ -1532,7 +1535,7 @@ namespace TrainCrewTIDWindow.Forms
                         }
                         else if (width > screenSize.Width) {
                             width = screenSize.Width;
-                            height = Size.Height - ClientSize.Height + panel1.Location.Y + displayManager.OriginalBitmap.Height * (screenSize.Width - Size.Width + ClientSize.Width) / displayManager.OriginalBitmap.Width;
+                            height = Size.Height - ClientSize.Height + panel1.Location.Y + displayManager.OriginalHeight * (screenSize.Width - Size.Width + ClientSize.Width) / displayManager.OriginalWidth;
                             Size = new Size(width, height);
                             var np = ConvertPointToScreen(point);
                             if (size != Size) {
@@ -1541,7 +1544,7 @@ namespace TrainCrewTIDWindow.Forms
                         }
                         else {
                             height = screenSize.Height;
-                            width = Size.Width - ClientSize.Width + displayManager.OriginalBitmap.Width * (screenSize.Height - Size.Height + ClientSize.Height - panel1.Location.Y) / displayManager.OriginalBitmap.Height;
+                            width = Size.Width - ClientSize.Width + displayManager.OriginalWidth * (screenSize.Height - Size.Height + ClientSize.Height - panel1.Location.Y) / displayManager.OriginalHeight;
                             Size = new Size(width, height);
                             var np = ConvertPointToScreen(point);
                             if (size != Size) {
@@ -1567,7 +1570,7 @@ namespace TrainCrewTIDWindow.Forms
                     if (TIDScale == -1 && !FixedScale) {
                         if (WindowState != FormWindowState.Minimized) {
                             displayManager.ChangeScale();
-                            labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalBitmap.Width * 100 + 0.5)}%";
+                            labelScale.Text = $"Scale：{(int)((double)pictureBox1.Image.Width / displayManager.OriginalWidth * 100 + 0.5)}%";
                         }
                     }
                     else {
@@ -1596,7 +1599,7 @@ namespace TrainCrewTIDWindow.Forms
         }
 
         private void PictureBox1_MouseDown(object sender, MouseEventArgs e) {
-            if (e.Button == MouseButtons.Middle && pictureBox1.Width < displayManager.OriginalBitmap.Width) {
+            if (e.Button == MouseButtons.Middle && pictureBox1.Width < displayManager.OriginalWidth) {
                 if (toggleMagnifyingGlass && usingMagnifyingGlass) {
                     usingMagnifyingGlass = false;
 
@@ -1634,10 +1637,11 @@ namespace TrainCrewTIDWindow.Forms
                 if (ModifierKeys.HasFlag(Keys.Shift)) {
                     foreach (var w in displayManager.NumberWindowDict.Values) {
                         var t = w.Train;
-                        if (t != null && IsInArea(e.Location, w.PosX, w.PosY, w.GetSize(), 1) && trainDataDict.TryGetValue(t, out var td)) {
-                            td.Markup = !td.Markup;
+                        if (t != null && IsInArea(e.Location, w.PosX, w.PosY, w.GetSize(), 1)/* && trainDataDict.TryGetValue(t, out var td)*/) {
+                            SetTrainMarkup(t);
+                            /*td.Markup = !td.Markup;
                             trainMenuDict[t].CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
-                            ReservedUpdate = true;
+                            ReservedUpdate = true;*/
                         }
                     }
                 }
@@ -1659,7 +1663,7 @@ namespace TrainCrewTIDWindow.Forms
         }
 
         private void PictureBox2_MouseDown(object sender, MouseEventArgs e) {
-            if (e.Button == MouseButtons.Middle && pictureBox1.Width < displayManager.OriginalBitmap.Width) {
+            if (e.Button == MouseButtons.Middle && pictureBox1.Width < displayManager.OriginalWidth) {
                 if (toggleMagnifyingGlass && usingMagnifyingGlass) {
                     usingMagnifyingGlass = false;
 
@@ -1679,10 +1683,11 @@ namespace TrainCrewTIDWindow.Forms
                 if (ModifierKeys.HasFlag(Keys.Shift)) {
                     foreach (var w in displayManager.NumberWindowDict.Values) {
                         var t = w.Train;
-                        if (t != null && IsInArea(pictureBox1.PointToClient(Cursor.Position), w.PosX, w.PosY, w.GetSize(), 1) && trainDataDict.TryGetValue(t, out var td)) {
-                            td.Markup = !td.Markup;
+                        if (t != null && IsInArea(pictureBox1.PointToClient(Cursor.Position), w.PosX, w.PosY, w.GetSize(), 1)/* && trainDataDict.TryGetValue(t, out var td)*/) {
+                            SetTrainMarkup(t);
+                            /*td.Markup = !td.Markup;
                             trainMenuDict[t].CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
-                            ReservedUpdate = true;
+                            ReservedUpdate = true;*/
                         }
                     }
                 }
@@ -1744,15 +1749,14 @@ namespace TrainCrewTIDWindow.Forms
 
 
             }
-            if (!selectionStarting.HasValue && !ModifierKeys.HasFlag(Keys.Shift) && (e.Button & MouseButtons.Left) == MouseButtons.Left) {
-                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value - e.Location.X + mouseLoc.X, panel1.VerticalScroll.Value - e.Location.Y + mouseLoc.Y);
+            if (mouseLoc.HasValue && !selectionStarting.HasValue && !ModifierKeys.HasFlag(Keys.Shift) && (e.Button & MouseButtons.Left) == MouseButtons.Left) {
+                panel1.AutoScrollPosition = new Point(panel1.HorizontalScroll.Value - e.Location.X + mouseLoc.Value.X, panel1.VerticalScroll.Value - e.Location.Y + mouseLoc.Value.Y);
             }
             if (selectionStarting.HasValue) {
                 var s = selectionStarting.Value;
                 selectionStarting = new Point(s.X > 16 ? (s.X < pictureBox1.Width - 16 ? s.X : pictureBox1.Width) : 0, s.Y > 16 ? (s.Y < pictureBox1.Height - 16 ? s.Y : pictureBox1.Height) : 0);
                 var start = selectionStarting.Value;
                 var end = e.Location;
-                Debug.WriteLine($"{start.Y} {end.Y}");
                 var center = new Point((start.X + end.X) / 2 - end.X + Cursor.Position.X, (start.Y + end.Y) / 2 - end.Y + Cursor.Position.Y);
                 end = new Point(end.X > 16 ? (start.X >= pictureBox1.Width || end.X < pictureBox1.Width - 16 ? end.X : pictureBox1.Width) : (start.X > 0 ? 0 : end.X), end.Y > 16 ? (start.Y >= pictureBox1.Height || end.Y < pictureBox1.Height - 16 ? end.Y : pictureBox1.Height) : (start.Y > 0 ? 0 : end.Y));
                 var startOrig = ConvertPointToOriginal(start);
@@ -1760,7 +1764,6 @@ namespace TrainCrewTIDWindow.Forms
                 var pos = new Point(Math.Min(start.X, end.X), Math.Min(start.Y, end.Y));
                 var size = new Size(Math.Abs(start.X - end.X), Math.Abs(start.Y - end.Y));
                 var sizeOrig = new Size(Math.Abs(startOrig.X - endOrig.X), Math.Abs(startOrig.Y - endOrig.Y));
-                Debug.WriteLine($"{start.X} {end.X} {start.Y} {end.Y}");
                 if (size.Width > 1 && size.Height > 1) {
                     lock (pictureBox3) {
                         var screenSize = Screen.FromControl(this).Bounds;
@@ -1812,7 +1815,7 @@ namespace TrainCrewTIDWindow.Forms
                 UpdateMouseCursor();
             }
             if ((e.Button & MouseButtons.Left) == MouseButtons.Left) {
-                mouseLoc = Point.Empty;
+                mouseLoc = null;
                 if (selectionStarting.HasValue) {
                     var start = selectionStarting.Value;
                     selectionStarting = null;
@@ -1847,24 +1850,26 @@ namespace TrainCrewTIDWindow.Forms
 
         public void SetMagnifyingGlass(int x, int y) {
             if (usingMagnifyingGlass) {
-                lock (displayManager.OriginalBitmap)
-                    lock (pictureBox2) {
-                        var posX = magnifyingGlassSize / 2 - x * displayManager.OriginalBitmap.Width / pictureBox1.Width;
-                        var posY = magnifyingGlassSize / 2 - y * displayManager.OriginalBitmap.Height / pictureBox1.Height;
-                        posX = posX > magnifyingGlassSize / 2 + 5 ? magnifyingGlassSize / 2 - x : (posX < magnifyingGlassSize / 2 - displayManager.OriginalBitmap.Width ? pictureBox1.Width - x + magnifyingGlassSize / 2 - displayManager.OriginalBitmap.Width : posX);
-                        posY = posY > magnifyingGlassSize / 2 + 5 ? magnifyingGlassSize / 2 - y : (posY < magnifyingGlassSize / 2 - displayManager.OriginalBitmap.Height ? pictureBox1.Height - y + magnifyingGlassSize / 2 - displayManager.OriginalBitmap.Height : posY);
+                lock (pictureBox2) {
+                    var posX = magnifyingGlassSize / 2 - x * displayManager.OriginalWidth / pictureBox1.Width;
+                    var posY = magnifyingGlassSize / 2 - y * displayManager.OriginalHeight / pictureBox1.Height;
+                    posX = posX > magnifyingGlassSize / 2 + 5 ? magnifyingGlassSize / 2 - x : (posX < magnifyingGlassSize / 2 - displayManager.OriginalWidth ? pictureBox1.Width - x + magnifyingGlassSize / 2 - displayManager.OriginalWidth : posX);
+                    posY = posY > magnifyingGlassSize / 2 + 5 ? magnifyingGlassSize / 2 - y : (posY < magnifyingGlassSize / 2 - displayManager.OriginalHeight ? pictureBox1.Height - y + magnifyingGlassSize / 2 - displayManager.OriginalHeight : posY);
 
-                        var b = new Bitmap(magnifyingGlassSize, magnifyingGlassSize);
-                        var old = pictureBox2.Image;
-                        pictureBox2.Image = b;
-                        old?.Dispose();
-                        using var g = Graphics.FromImage(pictureBox2.Image);
-                        GraphicsPath gp = new();
-                        gp.AddEllipse(g.VisibleClipBounds);
-                        g.Clip = new Region(gp);
+                    var b = new Bitmap(magnifyingGlassSize, magnifyingGlassSize);
+                    var old = pictureBox2.Image;
+                    pictureBox2.Image = b;
+                    old?.Dispose();
+                    using var g = Graphics.FromImage(pictureBox2.Image);
+                    GraphicsPath gp = new();
+                    gp.AddEllipse(g.VisibleClipBounds);
+                    g.Clip = new Region(gp);
+
+                    lock (displayManager.OriginalBitmap) {
                         g.DrawImage(displayManager.OriginalBitmap, posX, posY);
-                        g.DrawEllipse(new Pen(Color.DarkGray, 2), 0, 0, magnifyingGlassSize, magnifyingGlassSize);
                     }
+                    g.DrawEllipse(new Pen(Color.DarkGray, 2), 0, 0, magnifyingGlassSize, magnifyingGlassSize);
+                }
             }
         }
 
@@ -2002,6 +2007,33 @@ namespace TrainCrewTIDWindow.Forms
             }
         }
 
+        private void menuItemMarkupHandover_Click(object sender, EventArgs e) {
+            SwitchMarkupHandover();
+        }
+
+        public void SwitchMarkupHandover() {
+            MarkupHandover = !MarkupHandover;
+            menuItemMarkupHandover.CheckState = MarkupHandover ? CheckState.Checked : CheckState.Unchecked;
+            if (displayManager != null) {
+                foreach (var w in displayManager.SubWindows) {
+                    w.SetMarkupHandover(MarkupHandover);
+                }
+            }
+            if (MarkupHandover) {
+                foreach (var t in trainDataDict.Values) {
+                    if (t.Markup && int.TryParse(Regex.Replace(t.Number, @"[^0-9]", ""), out var numBody)) {
+                        var umban = numBody / 3000 * 100 + numBody / 2 * 2 % 100;
+                        if (!markupUmban.Contains(umban)) {
+                            markupUmban.Add(umban);
+                        }
+                    }
+                }
+            }
+            else {
+                markupUmban.Clear();
+            }
+        }
+
         public void SetMarkupDelayed(int minutes) {
             if (minutes > 10) {
                 minutes = 20;
@@ -2058,8 +2090,14 @@ namespace TrainCrewTIDWindow.Forms
             foreach (var t in trainDataDict.Keys) {
                 trainDataDict[t].Markup = true;
                 trainMenuDict[t].CheckState = CheckState.Checked;
-                foreach(var w in displayManager.SubWindows) {
+                foreach (var w in displayManager.SubWindows) {
                     w.SetMarkupTrain(t, true);
+                }
+                if (int.TryParse(Regex.Replace(t, @"[^0-9]", ""), out var numBody)) {
+                    var umban = numBody / 3000 * 100 + numBody / 2 * 2 % 100;
+                    if (!markupUmban.Contains(umban)) {
+                        markupUmban.Add(umban);
+                    }
                 }
             }
             ReservedUpdate = true;
@@ -2077,11 +2115,12 @@ namespace TrainCrewTIDWindow.Forms
                     w.SetMarkupTrain(t, false);
                 }
             }
+            markupUmban.Clear();
             ReservedUpdate = true;
         }
 
         private Point ConvertPointToOriginal(int x, int y) {
-            return new Point(x * displayManager.OriginalBitmap.Width / pictureBox1.Width, y * displayManager.OriginalBitmap.Height / pictureBox1.Height);
+            return new Point(x * displayManager.OriginalWidth / pictureBox1.Width, y * displayManager.OriginalHeight / pictureBox1.Height);
         }
 
         private Point ConvertPointToOriginal(Point p) {
@@ -2089,7 +2128,7 @@ namespace TrainCrewTIDWindow.Forms
         }
 
         private Point ConvertPointToScreen(int x, int y) {
-            return new Point(x * pictureBox1.Width / displayManager.OriginalBitmap.Width, y * pictureBox1.Height / displayManager.OriginalBitmap.Height);
+            return new Point(x * pictureBox1.Width / displayManager.OriginalWidth, y * pictureBox1.Height / displayManager.OriginalHeight);
         }
 
         private Point ConvertPointToScreen(Point p) {
@@ -2133,12 +2172,12 @@ namespace TrainCrewTIDWindow.Forms
             OpeningDialog = true;
             form.ShowDialog();
             OpeningDialog = false;
-            
+
         }
 
         public void UpdateTrainCheck(TrainData td) {
             trainMenuDict[td.Number].CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
-            foreach(var w in displayManager.SubWindows) {
+            foreach (var w in displayManager.SubWindows) {
                 w.UpdateTrainCheck(td);
             }
         }
@@ -2147,7 +2186,25 @@ namespace TrainCrewTIDWindow.Forms
             if (trainDataDict.TryGetValue(trainNumber, out var td)) {
                 td.Markup = !td.Markup;
                 UpdateTrainCheck(td);
+                if (int.TryParse(Regex.Replace(trainNumber, @"[^0-9]", ""), out var numBody)) {
+                    var umban = numBody / 3000 * 100 + numBody / 2 * 2 % 100;
+                    if (td.Markup) {
+                        if (!markupUmban.Contains(umban)) {
+                            markupUmban.Add(umban);
+                        }
+                    }
+                    else if (markupUmban.Contains(umban)) {
+                        markupUmban.Remove(umban);
+                    }
+                }
                 ReservedUpdate = true;
+            }
+        }
+
+
+        public void SetStatusSubWindow(string text, Color color) {
+            foreach (var w in displayManager.SubWindows) {
+                w.SetStatus(text, color);
             }
         }
     }
