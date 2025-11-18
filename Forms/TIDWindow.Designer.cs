@@ -45,6 +45,7 @@
             menuItemMarkupNotTrain = new ToolStripMenuItem();
             toolStripSeparator6 = new ToolStripSeparator();
             menuItemMarkupSpawned = new ToolStripMenuItem();
+            menuItemMarkupHandover = new ToolStripMenuItem();
             menuItemMarkupAll = new ToolStripMenuItem();
             menuItemMarkupCancel = new ToolStripMenuItem();
             toolStripSeparator4 = new ToolStripSeparator();
@@ -56,6 +57,7 @@
             menuItemScale = new ToolStripMenuItem();
             toolStripSeparator7 = new ToolStripSeparator();
             menuItemScaleFit = new ToolStripMenuItem();
+            menuItemFixedScale = new ToolStripMenuItem();
             menuItemMagnifyingGlass = new ToolStripMenuItem();
             menuItemPushToZoom = new ToolStripMenuItem();
             menuItemToggle = new ToolStripMenuItem();
@@ -73,7 +75,6 @@
             labelScale = new Label();
             labelSilent = new Label();
             flowLayoutPanel1 = new FlowLayoutPanel();
-            menuItemFixedScale = new ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             contextMenuStrip1.SuspendLayout();
             panel1.SuspendLayout();
@@ -124,14 +125,14 @@
             // menuItemMarkupClass
             // 
             menuItemMarkupClass.Name = "menuItemMarkupClass";
-            menuItemMarkupClass.Size = new Size(134, 22);
+            menuItemMarkupClass.Size = new Size(180, 22);
             menuItemMarkupClass.Text = "列車種別";
             // 
             // menuItemMarkupDelayed
             // 
             menuItemMarkupDelayed.DropDownItems.AddRange(new ToolStripItem[] { menuItemMarkupDelayed0, toolStripSeparator5, menuItemMarkupDelayed1, menuItemMarkupDelayed5, menuItemMarkupDelayed10, menuItemMarkupDelayed20 });
             menuItemMarkupDelayed.Name = "menuItemMarkupDelayed";
-            menuItemMarkupDelayed.Size = new Size(134, 22);
+            menuItemMarkupDelayed.Size = new Size(180, 22);
             menuItemMarkupDelayed.Text = "遅延列車";
             // 
             // menuItemMarkupDelayed0
@@ -178,69 +179,76 @@
             // 
             // menuItemMarkupOther
             // 
-            menuItemMarkupOther.DropDownItems.AddRange(new ToolStripItem[] { menuItemMarkupDuplication, menuItemMarkupFillZero, menuItemMarkup9999, menuItemMarkupNotTrain, toolStripSeparator6, menuItemMarkupSpawned });
+            menuItemMarkupOther.DropDownItems.AddRange(new ToolStripItem[] { menuItemMarkupDuplication, menuItemMarkupFillZero, menuItemMarkup9999, menuItemMarkupNotTrain, toolStripSeparator6, menuItemMarkupSpawned, menuItemMarkupHandover });
             menuItemMarkupOther.Name = "menuItemMarkupOther";
-            menuItemMarkupOther.Size = new Size(134, 22);
+            menuItemMarkupOther.Size = new Size(180, 22);
             menuItemMarkupOther.Text = "その他";
             // 
             // menuItemMarkupDuplication
             // 
             menuItemMarkupDuplication.Name = "menuItemMarkupDuplication";
-            menuItemMarkupDuplication.Size = new Size(163, 22);
+            menuItemMarkupDuplication.Size = new Size(180, 22);
             menuItemMarkupDuplication.Text = "重複列車番号";
             menuItemMarkupDuplication.Click += menuItemMarkupDuplication_Click;
             // 
             // menuItemMarkupFillZero
             // 
             menuItemMarkupFillZero.Name = "menuItemMarkupFillZero";
-            menuItemMarkupFillZero.Size = new Size(163, 22);
+            menuItemMarkupFillZero.Size = new Size(180, 22);
             menuItemMarkupFillZero.Text = "ゼロ埋め列車番号";
             menuItemMarkupFillZero.Click += menuItemMarkupFillZero_Click;
             // 
             // menuItemMarkup9999
             // 
             menuItemMarkup9999.Name = "menuItemMarkup9999";
-            menuItemMarkup9999.Size = new Size(163, 22);
+            menuItemMarkup9999.Size = new Size(180, 22);
             menuItemMarkup9999.Text = "9999";
             menuItemMarkup9999.Click += menuItemMarkup9999_Click;
             // 
             // menuItemMarkupNotTrain
             // 
             menuItemMarkupNotTrain.Name = "menuItemMarkupNotTrain";
-            menuItemMarkupNotTrain.Size = new Size(163, 22);
+            menuItemMarkupNotTrain.Size = new Size(180, 22);
             menuItemMarkupNotTrain.Text = "列車以外";
             menuItemMarkupNotTrain.Click += menuItemMarkupNotTrain_Click;
             // 
             // toolStripSeparator6
             // 
             toolStripSeparator6.Name = "toolStripSeparator6";
-            toolStripSeparator6.Size = new Size(160, 6);
+            toolStripSeparator6.Size = new Size(177, 6);
             // 
             // menuItemMarkupSpawned
             // 
             menuItemMarkupSpawned.Name = "menuItemMarkupSpawned";
-            menuItemMarkupSpawned.Size = new Size(163, 22);
+            menuItemMarkupSpawned.Size = new Size(180, 22);
             menuItemMarkupSpawned.Text = "新規スポーン";
             menuItemMarkupSpawned.Click += menuItemMarkupSpawned_Click;
+            // 
+            // menuItemMarkupHandover
+            // 
+            menuItemMarkupHandover.Name = "menuItemMarkupHandover";
+            menuItemMarkupHandover.Size = new Size(180, 22);
+            menuItemMarkupHandover.Text = "同一運番に引継ぎ";
+            menuItemMarkupHandover.Click += menuItemMarkupHandover_Click;
             // 
             // menuItemMarkupAll
             // 
             menuItemMarkupAll.Name = "menuItemMarkupAll";
-            menuItemMarkupAll.Size = new Size(134, 22);
+            menuItemMarkupAll.Size = new Size(180, 22);
             menuItemMarkupAll.Text = "列番全選択";
             menuItemMarkupAll.Click += menuItemMarkupAll_Click;
             // 
             // menuItemMarkupCancel
             // 
             menuItemMarkupCancel.Name = "menuItemMarkupCancel";
-            menuItemMarkupCancel.Size = new Size(134, 22);
+            menuItemMarkupCancel.Size = new Size(180, 22);
             menuItemMarkupCancel.Text = "列番全解除";
             menuItemMarkupCancel.Click += menuItemMarkupCancel_Click;
             // 
             // toolStripSeparator4
             // 
             toolStripSeparator4.Name = "toolStripSeparator4";
-            toolStripSeparator4.Size = new Size(131, 6);
+            toolStripSeparator4.Size = new Size(177, 6);
             // 
             // menuItemMarkupType
             // 
@@ -287,13 +295,19 @@
             // toolStripSeparator7
             // 
             toolStripSeparator7.Name = "toolStripSeparator7";
-            toolStripSeparator7.Size = new Size(177, 6);
+            toolStripSeparator7.Size = new Size(126, 6);
             // 
             // menuItemScaleFit
             // 
             menuItemScaleFit.Name = "menuItemScaleFit";
-            menuItemScaleFit.Size = new Size(180, 22);
+            menuItemScaleFit.Size = new Size(129, 22);
             menuItemScaleFit.Text = "フィット表示";
+            // 
+            // menuItemFixedScale
+            // 
+            menuItemFixedScale.Name = "menuItemFixedScale";
+            menuItemFixedScale.Size = new Size(129, 22);
+            menuItemFixedScale.Text = "倍率固定";
             // 
             // menuItemMagnifyingGlass
             // 
@@ -485,12 +499,6 @@
             flowLayoutPanel1.TabIndex = 7;
             flowLayoutPanel1.WrapContents = false;
             // 
-            // menuItemFixedScale
-            // 
-            menuItemFixedScale.Name = "menuItemFixedScale";
-            menuItemFixedScale.Size = new Size(180, 22);
-            menuItemFixedScale.Text = "倍率固定";
-            // 
             // TIDWindow
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -574,5 +582,6 @@
         private FlowLayoutPanel flowLayoutPanel1;
         private PictureBox pictureBox3;
         private ToolStripMenuItem menuItemFixedScale;
+        private ToolStripMenuItem menuItemMarkupHandover;
     }
 }

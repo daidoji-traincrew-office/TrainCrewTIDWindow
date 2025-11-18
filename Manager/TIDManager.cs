@@ -108,12 +108,6 @@ namespace TrainCrewTIDWindow.Manager {
         /// 番号フォント画像
         /// </summary>
         private readonly Image numberImage;
-
-        /// <summary>
-        /// TID画像の元画像（リサイズ前）
-        /// </summary>
-        private Bitmap originalBitmap;
-
         private readonly Dictionary<string, bool> markupClassesData = [];
 
         private readonly List<SubWindow> subWindows = [];
@@ -134,7 +128,11 @@ namespace TrainCrewTIDWindow.Manager {
         /// <summary>
         /// TID画像の元画像（リサイズ前）
         /// </summary>
-        public Bitmap OriginalBitmap => originalBitmap;
+        public Bitmap OriginalBitmap { get; private set; }
+
+        public int OriginalWidth { get; private set; }
+
+        public int OriginalHeight { get; private set; }
 
 
         /// <summary>
@@ -488,7 +486,9 @@ namespace TrainCrewTIDWindow.Manager {
                     AddImage(g, images[arrow.FileName], arrow.PosX, arrow.PosY);
                 }
             }
-            originalBitmap = new Bitmap(pictureBox.Image);
+            OriginalBitmap = new Bitmap(pictureBox.Image);
+            OriginalWidth = OriginalBitmap.Width;
+            OriginalHeight = OriginalBitmap.Height;
             ChangeScale();
             window.DetectResize = true;
 
@@ -765,6 +765,12 @@ namespace TrainCrewTIDWindow.Manager {
                         classColor = colorDict["UNKNOWN"];
                     }
                 }
+                // 列番9999への警告色として不明色に
+                if (isTrain && numBody == 9999) {
+                    if (colorDict.ContainsKey("UNKNOWN")) {
+                        classColor = colorDict["UNKNOWN"];
+                    }
+                }
                 // 種別色無しかつ数字なしであれば不明色に
                 if (classColor == null) {
                     if (!isTrain && colorDict.ContainsKey("UNKNOWN")) {
@@ -964,7 +970,10 @@ namespace TrainCrewTIDWindow.Manager {
                         var umban = numBody / 3000 * 100 + numBody % 100;
 
                         // 運番を偶数にする・矢印設置
-                        if (umban % 2 != 0) {
+                        if(numBody == 9999) {
+                            umban = 400;
+                        }
+                        else if (umban % 2 != 0) {
                             umban -= 1;
                             var index = alphaIndexDict['←'];
                             AddNumImage(g, index.X, index.Y, numWindow.PosX, numWindow.PosY, iaType);
@@ -1163,10 +1172,10 @@ namespace TrainCrewTIDWindow.Manager {
                 }
             }
 
-            lock(originalBitmap)
+            lock(OriginalBitmap)
             lock (pictureBox) {
                 var oldPic = pictureBox.Image;
-                var oldOriginal = originalBitmap;
+                var oldOriginal = OriginalBitmap;
 
 
                 if (window.TIDScale < 0) {
@@ -1182,10 +1191,10 @@ namespace TrainCrewTIDWindow.Manager {
                     pictureBox.Image = new Bitmap(newPic, newPic.Width * window.TIDScale / 100, newPic.Height * window.TIDScale / 100);
                 }
 
-                originalBitmap = newPic;
+                OriginalBitmap = newPic;
                 lock (subWindows) {
                     foreach (var sw in subWindows) {
-                        sw.UpdateImage(originalBitmap);
+                        sw.UpdateImage(OriginalBitmap);
                     }
                 }
                 oldPic?.Dispose();
@@ -1310,26 +1319,26 @@ namespace TrainCrewTIDWindow.Manager {
             try {
                 PrepareChangeScale();
 
-                lock (originalBitmap)
+                lock (OriginalBitmap)
                 lock (pictureBox) {
 
                     var oldPic = pictureBox.Image;
                     if (oldPic != null) {
                         if (window.TIDScale < 0) {
-                            var aspectRatio = (double)originalBitmap.Width / originalBitmap.Height;
+                            var aspectRatio = (double)OriginalWidth / OriginalHeight;
                             if (aspectRatio < (double)pictureBox.Width / pictureBox.Height) {
                                 var width = (int)(pictureBox.Height * aspectRatio);
-                                pictureBox.Image = new Bitmap(originalBitmap, width, pictureBox.Height);
+                                pictureBox.Image = new Bitmap(OriginalBitmap, width, pictureBox.Height);
                                 pictureBox.Width = width;
                             }
                             else {
                                 var height = (int)(pictureBox.Width / aspectRatio);
-                                pictureBox.Image = new Bitmap(originalBitmap, pictureBox.Width, height);
+                                pictureBox.Image = new Bitmap(OriginalBitmap, pictureBox.Width, height);
                                 pictureBox.Height = height;
                             }
                         }
                         else {
-                            pictureBox.Image = new Bitmap(originalBitmap, originalBitmap.Width * window.TIDScale / 100, originalBitmap.Height * window.TIDScale / 100);
+                            pictureBox.Image = new Bitmap(OriginalBitmap, OriginalWidth * window.TIDScale / 100, OriginalHeight * window.TIDScale / 100);
                         }
                         oldPic.Dispose();
                     }
@@ -1341,7 +1350,9 @@ namespace TrainCrewTIDWindow.Manager {
                 Debug.WriteLine($"Server send failed: {e.Message}\n{e.StackTrace}");
                 if (!ServerCommunication.Error) {
                     ServerCommunication.Error = true;
-                    window.Invoke(new Action(() => { window.LabelStatusText = "データ受信失敗"; }));
+                    /*window.Invoke(new Action(() => { window.LabelStatusText = "描画失敗"; }));*/
+                    window.LabelStatusText = "描画失敗";
+                    window.SetStatusSubWindow("×", Color.Red);
                     TaskDialog.ShowDialog(new TaskDialogPage {
                         Caption = "描画エラー | TID - ダイヤ運転会",
                         Heading = "描画エラー",
@@ -1360,20 +1371,18 @@ namespace TrainCrewTIDWindow.Manager {
             var dr = window.DetectResize;
             window.DetectResize = false;
             int width, height;
-            lock (originalBitmap) {
-                width = originalBitmap.Width * window.TIDScale / 100;
-                height = originalBitmap.Height * window.TIDScale / 100;
+            width = OriginalWidth * window.TIDScale / 100;
+            height = OriginalHeight * window.TIDScale / 100;
 
-                if (window.TIDScale < 0) {
-                    width = originalBitmap.Width * 2;
-                    height = originalBitmap.Height * 2;
-                }
+            if (window.TIDScale < 0) {
+                width = OriginalWidth * 2;
+                height = OriginalHeight * 2;
+            }
 
-                window.MaximumSize = new Size(Math.Max(width, originalBitmap.Width) + window.Size.Width - window.ClientSize.Width, Math.Max(height, originalBitmap.Height) + window.Panel1.Location.Y + window.Size.Height - window.ClientSize.Height);
+            window.MaximumSize = new Size(Math.Max(width, OriginalWidth) + window.Size.Width - window.ClientSize.Width, Math.Max(height, OriginalHeight) + window.Panel1.Location.Y + window.Size.Height - window.ClientSize.Height);
 
-                if (-window.Location.X > window.Size.Width - 60) {
-                    window.Location = new Point(0, 80);
-                }
+            if (-window.Location.X > window.Size.Width - 60) {
+                window.Location = new Point(0, 80);
             }
 
             lock (pictureBox) {
@@ -1391,10 +1400,10 @@ namespace TrainCrewTIDWindow.Manager {
         }
 
         public void CopyImage() {
-            lock (originalBitmap) {
-                var i = new Bitmap(originalBitmap);
+            lock (OriginalBitmap) {
+                var i = new Bitmap(OriginalBitmap);
                 using (var g = Graphics.FromImage(i)) {
-                    g.DrawString((window.Clock + window.TimeOffset).ToString("H:mm:ss"), new Font("ＭＳ ゴシック", 12, GraphicsUnit.Pixel), Brushes.White, originalBitmap.Width - 51, 0);
+                    g.DrawString((window.Clock + window.TimeOffset).ToString("H:mm:ss"), new Font("ＭＳ ゴシック", 12, GraphicsUnit.Pixel), Brushes.White, OriginalWidth - 51, 0);
                 }
                 Clipboard.SetImage(i);
                 i.Dispose(); 
@@ -1403,11 +1412,11 @@ namespace TrainCrewTIDWindow.Manager {
         }
 
         public void CopyImage(int x, int y, int width, int height) {
-            lock (originalBitmap) {
+            lock (OriginalBitmap) {
                 var i = new Bitmap(width, height + 13);
                 using (var g = Graphics.FromImage(i)) {
                     g.Clear(Color.FromArgb(10, 10, 10));
-                    g.DrawImage(originalBitmap, new Rectangle(0, 13, width, height), x, y, width, height, GraphicsUnit.Pixel);
+                    g.DrawImage(OriginalBitmap, new Rectangle(0, 13, width, height), x, y, width, height, GraphicsUnit.Pixel);
                     g.DrawString((window.Clock + window.TimeOffset).ToString("H:mm:ss"), new Font("ＭＳ ゴシック", 12, GraphicsUnit.Pixel), Brushes.White, width - 51, 0);
                 }
                 Clipboard.SetImage(i);

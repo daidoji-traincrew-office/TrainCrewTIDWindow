@@ -68,10 +68,11 @@ namespace TrainCrewTIDWindow.Forms {
             SetMarkupFillZero(displayManager.Window.MarkupFillZero);
             SetMarkupNotTrain(displayManager.Window.MarkupNotTrain);
             SetMarkupSpawned(displayManager.Window.MarkupSpawned);
+            SetMarkupHandover(displayManager.Window.MarkupHandover);
 
-            for(var i = 6; i < menuTrains.Count; i++) {
+            for (var i = 6; i < menuTrains.Count; i++) {
                 var trainNumber = menuTrains[i].Name;
-                if(trainNumber == null) {
+                if (trainNumber == null) {
                     continue;
                 }
                 var menu = new ToolStripMenuItem();
@@ -86,8 +87,8 @@ namespace TrainCrewTIDWindow.Forms {
                 menu.CheckState = ((ToolStripMenuItem)menuTrains[i]).CheckState;
             }
 
-            foreach(ToolStripItem item in displayManager.Window.MenuItemMarkupClass.DropDownItems) {
-                if(item is ToolStripSeparator) {
+            foreach (ToolStripItem item in displayManager.Window.MenuItemMarkupClass.DropDownItems) {
+                if (item is ToolStripSeparator) {
                     var sep = new ToolStripSeparator();
                     menuItemMarkupClass.DropDownItems.Add(sep);
                     sep.Name = "sep";
@@ -95,7 +96,7 @@ namespace TrainCrewTIDWindow.Forms {
                     continue;
                 }
                 var key = item.Name;
-                if(key == null) {
+                if (key == null) {
                     continue;
                 }
                 var menu = new ToolStripMenuItem();
@@ -114,7 +115,9 @@ namespace TrainCrewTIDWindow.Forms {
 
             DetectResize = true;
 
-            UpdateImage(displayManager.OriginalBitmap);
+            lock (displayManager.OriginalBitmap) {
+                UpdateImage(displayManager.OriginalBitmap);
+            }
         }
 
         public void UpdateImage(Image image) {
@@ -187,9 +190,10 @@ namespace TrainCrewTIDWindow.Forms {
                     foreach (var w in displayManager.NumberWindowDict.Values) {
                         var t = w.Train;
                         if (t != null && IsInArea(e.Location, w.PosX, w.PosY, w.GetSize(), 1) && displayManager.Window.TrainDataDict.TryGetValue(t, out var td)) {
-                            td.Markup = !td.Markup;
+                            displayManager.Window.SetTrainMarkup(t);
+                            /*td.Markup = !td.Markup;
                             displayManager.Window.UpdateTrainCheck(td);
-                            displayManager.Window.ReservedUpdate = true;
+                            displayManager.Window.ReservedUpdate = true;*/
                         }
                     }
                 }
@@ -219,7 +223,7 @@ namespace TrainCrewTIDWindow.Forms {
         }
 
         private void labelScale_MouseDown(object sender, MouseEventArgs e) {
-            if(pictureBox1.Width / (double)DisplaySize.Width != 1) {
+            if (pictureBox1.Width / (double)DisplaySize.Width != 1) {
                 DetectResize = false;
                 Size = new Size(Size.Width - ClientSize.Width + DisplaySize.Width, Size.Height - ClientSize.Height + pictureBox1.Location.Y + DisplaySize.Height);
                 if (Location.X < 0) {
@@ -284,7 +288,7 @@ namespace TrainCrewTIDWindow.Forms {
                 old?.Dispose();
                 var ratio = pictureBox1.Width * 100 / (double)DisplaySize.Width;
                 labelScale.Text = $"Scale：{(int)ratio}%";
-                if(ratio == 100) {
+                if (ratio == 100) {
                     labelScale.Cursor = Cursors.Default;
                     labelScale.ForeColor = Color.White;
                 }
@@ -490,6 +494,15 @@ namespace TrainCrewTIDWindow.Forms {
             menuItemMarkupSpawned.CheckState = value ? CheckState.Checked : CheckState.Unchecked;
         }
 
+
+        private void menuItemMarkupHandover_Click(object sender, EventArgs e) {
+            displayManager.Window.SwitchMarkupHandover();
+        }
+
+        public void SetMarkupHandover(bool value) {
+            menuItemMarkupHandover.CheckState = value ? CheckState.Checked : CheckState.Unchecked;
+        }
+
         private void menuItemMarkupAll_Click(object sender, EventArgs e) {
             displayManager.Window.MarkupAll();
         }
@@ -558,6 +571,17 @@ namespace TrainCrewTIDWindow.Forms {
             }
         }
 
-        
+        public void SetStatus(string text, Color color) {
+            if (InvokeRequired) {
+                Invoke(() => {
+                    labelStatus.Text = text;
+                    labelStatus.ForeColor = color;
+                });
+            }
+            else {
+                labelStatus.Text = text;
+                labelStatus.ForeColor = color;
+            }
+        }
     }
 }
