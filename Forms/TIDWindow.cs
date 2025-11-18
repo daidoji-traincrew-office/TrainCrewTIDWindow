@@ -2203,8 +2203,9 @@ namespace TrainCrewTIDWindow.Forms
 
 
         public void SetStatusSubWindow(string text, Color color) {
+            SubWindow.SetStatus(text, color);
             foreach (var w in displayManager.SubWindows) {
-                w.SetStatus(text, color);
+                w.UpdateStatus();
             }
         }
     }

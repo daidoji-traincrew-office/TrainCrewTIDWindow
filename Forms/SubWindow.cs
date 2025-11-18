@@ -4,6 +4,16 @@ using TrainCrewTIDWindow.Models;
 namespace TrainCrewTIDWindow.Forms {
     public partial class SubWindow : Form {
 
+        public static string StatusText {
+            get;
+            private set;
+        } = "";
+
+        public static Color StatusColor {
+            get;
+            private set;
+        } = Color.White;
+
         public Point StartLocation {
             get;
             init;
@@ -118,6 +128,7 @@ namespace TrainCrewTIDWindow.Forms {
             lock (displayManager.OriginalBitmap) {
                 UpdateImage(displayManager.OriginalBitmap);
             }
+            UpdateStatus();
         }
 
         public void UpdateImage(Image image) {
@@ -571,17 +582,22 @@ namespace TrainCrewTIDWindow.Forms {
             }
         }
 
-        public void SetStatus(string text, Color color) {
+        public void UpdateStatus() {
             if (InvokeRequired) {
                 Invoke(() => {
-                    labelStatus.Text = text;
-                    labelStatus.ForeColor = color;
+                    labelStatus.Text = StatusText;
+                    labelStatus.ForeColor = StatusColor;
                 });
             }
             else {
-                labelStatus.Text = text;
-                labelStatus.ForeColor = color;
+                labelStatus.Text = StatusText;
+                labelStatus.ForeColor = StatusColor;
             }
+        }
+
+        public static void SetStatus(string text, Color color) {
+            StatusText = text;
+            StatusColor = color;
         }
     }
 }
