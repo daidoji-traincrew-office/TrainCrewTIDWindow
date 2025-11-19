@@ -90,7 +90,7 @@ namespace TrainCrewTIDWindow.Forms {
                 menuItemTrainMarkup.DropDownItems.Add(menu);
                 menu.Name = trainNumber;
                 menu.Size = new Size(110, 22);
-                menu.Text = trainNumber;
+                menu.Text = displayManager.Window.HideNumber ? "??????" : trainNumber;
                 menu.Click += (sender, e) => {
                     displayManager.Window.SetTrainMarkup(trainNumber);
                 };
@@ -120,6 +120,9 @@ namespace TrainCrewTIDWindow.Forms {
                 };
             }
             trainMenuDict.Add("9999", menuItemMarkup9999);
+            if (displayManager.Window.HideNumber) {
+                menuItemMarkup9999.Text = "??????";
+            }
 
             /*flowLayoutPanel1.Location = new Point(flowLayoutPanel1.Location.X - Size.Width + ClientSize.Width + 16, flowLayoutPanel1.Location.Y);*/
 
@@ -534,6 +537,17 @@ namespace TrainCrewTIDWindow.Forms {
             displayManager.Window.SetMarkupType(2);
         }
 
+        private void menuItemHideNumber_Click(object sender, EventArgs e) {
+            displayManager.Window.SwitchHideNumber();
+        }
+
+        public void SetHideNumber(bool value) {
+            menuItemHideNumber.CheckState = value ? CheckState.Checked : CheckState.Unchecked;
+            foreach (var m in trainMenuDict.Values) {
+                m.Text = displayManager.Window.HideNumber ? "??????" : m.Name;
+            }
+        }
+
         public void SetMarkupType(int type) {
             menuItemMarkupType1.CheckState = type == 0 ? CheckState.Indeterminate : CheckState.Unchecked;
             menuItemMarkupType2.CheckState = type == 1 ? CheckState.Indeterminate : CheckState.Unchecked;
@@ -563,7 +577,7 @@ namespace TrainCrewTIDWindow.Forms {
             }
             menu.Name = trainNumber;
             menu.Size = new Size(110, 22);
-            menu.Text = trainNumber;
+            menu.Text = displayManager.Window.HideNumber ? "??????" : trainNumber;
             menu.Click += (sender, e) => {
                 displayManager.Window.SetTrainMarkup(trainNumber);
             };

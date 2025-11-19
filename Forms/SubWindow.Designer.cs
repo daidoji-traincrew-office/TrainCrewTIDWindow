@@ -50,6 +50,7 @@ namespace TrainCrewTIDWindow.Forms {
             menuItemMarkupNotTrain = new ToolStripMenuItem();
             toolStripSeparator6 = new ToolStripSeparator();
             menuItemMarkupSpawned = new ToolStripMenuItem();
+            menuItemMarkupHandover = new ToolStripMenuItem();
             menuItemMarkupAll = new ToolStripMenuItem();
             menuItemMarkupCancel = new ToolStripMenuItem();
             toolStripSeparator4 = new ToolStripSeparator();
@@ -64,7 +65,7 @@ namespace TrainCrewTIDWindow.Forms {
             toolStripSeparator3 = new ToolStripSeparator();
             menuItemVersion = new ToolStripMenuItem();
             labelStatus = new Label();
-            menuItemMarkupHandover = new ToolStripMenuItem();
+            menuItemHideNumber = new ToolStripMenuItem();
             flowLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             contextMenuStrip1.SuspendLayout();
@@ -153,9 +154,9 @@ namespace TrainCrewTIDWindow.Forms {
             // 
             // contextMenuStrip1
             // 
-            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { menuItemCopy, toolStripSeparator1, menuItemTrainMarkup, menuItemMarkupType, toolStripSeparator2, menuItemTopMost, menuItemSilent, menuItemRename, toolStripSeparator3, menuItemVersion });
+            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { menuItemCopy, toolStripSeparator1, menuItemTrainMarkup, menuItemMarkupType, menuItemHideNumber, toolStripSeparator2, menuItemTopMost, menuItemSilent, menuItemRename, toolStripSeparator3, menuItemVersion });
             contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new Size(181, 198);
+            contextMenuStrip1.Size = new Size(181, 220);
             // 
             // menuItemCopy
             // 
@@ -278,6 +279,13 @@ namespace TrainCrewTIDWindow.Forms {
             menuItemMarkupSpawned.Text = "新規スポーン";
             menuItemMarkupSpawned.Click += menuItemMarkupSpawned_Click;
             // 
+            // menuItemMarkupHandover
+            // 
+            menuItemMarkupHandover.Name = "menuItemMarkupHandover";
+            menuItemMarkupHandover.Size = new Size(180, 22);
+            menuItemMarkupHandover.Text = "同一運番に引継ぎ";
+            menuItemMarkupHandover.Click += menuItemMarkupHandover_Click;
+            // 
             // menuItemMarkupAll
             // 
             menuItemMarkupAll.Name = "menuItemMarkupAll";
@@ -378,12 +386,12 @@ namespace TrainCrewTIDWindow.Forms {
             labelStatus.TabIndex = 10;
             labelStatus.Text = " ";
             // 
-            // menuItemMarkupHandover
+            // menuItemHideNumber
             // 
-            menuItemMarkupHandover.Name = "menuItemMarkupHandover";
-            menuItemMarkupHandover.Size = new Size(180, 22);
-            menuItemMarkupHandover.Text = "同一運番に引継ぎ";
-            menuItemMarkupHandover.Click += menuItemMarkupHandover_Click;
+            menuItemHideNumber.Name = "menuItemHideNumber";
+            menuItemHideNumber.Size = new Size(180, 22);
+            menuItemHideNumber.Text = "列車番号隠し";
+            menuItemHideNumber.Click += menuItemHideNumber_Click;
             // 
             // SubWindow
             // 
@@ -452,5 +460,6 @@ namespace TrainCrewTIDWindow.Forms {
         private ToolStripMenuItem menuItemSilent;
         private Label labelStatus;
         private ToolStripMenuItem menuItemMarkupHandover;
+        private ToolStripMenuItem menuItemHideNumber;
     }
 }

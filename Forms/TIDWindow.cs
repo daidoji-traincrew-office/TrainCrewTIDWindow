@@ -213,6 +213,16 @@ namespace TrainCrewTIDWindow.Forms
             private set;
         } = false;
 
+        public bool HideNumber {
+            get;
+            private set;
+        } = false;
+
+        public bool LockHideNumber {
+            get;
+            private set;
+        } = false;
+
         private List<int> markupUmban = [];
 
         public ToolStripMenuItem MenuItemMarkupClass => menuItemMarkupClass;
@@ -296,7 +306,7 @@ namespace TrainCrewTIDWindow.Forms
 
             if (!loaded) {
                 using (StreamWriter w = new(".\\setting\\setting.txt", false, new UTF8Encoding(false))) {
-                    w.Write("source=select\ntopMost=true\nscaleList=50,75,90,100,110,125,150,175,200\ninitialScale=100\ntimeOffset=14\nzoomMode=pushtozoom\nzoomSize=240\nsilent=false\nflashInterval=0.5\nmarkupType=0\nmarkupDelayed=0\nmarkupDuplication=false\nmarkupFillZero=false\nmarkup9999=false\nmarkupNotTrain=false\nmarkupSpawned=false\nmarkupHandover=false");
+                    w.Write("source=select\ntopMost=true\nscaleList=50,75,90,100,110,125,150,175,200\ninitialScale=100\ntimeOffset=14\nzoomMode=pushtozoom\nzoomSize=240\nsilent=false\nflashInterval=0.5\nmarkupType=0\nmarkupDelayed=0\nmarkupDuplication=false\nmarkupFillZero=false\nmarkup9999=false\nmarkupNotTrain=false\nmarkupSpawned=false\nmarkupHandover=false\nhideNumber=false");
                 }
             }
 
@@ -362,6 +372,9 @@ namespace TrainCrewTIDWindow.Forms
             }
 
             trainMenuDict.Add("9999", menuItemMarkup9999);
+            if (HideNumber) {
+                menuItemMarkup9999.Text = "??????";
+            }
         }
 
         private void AddScale(int scale) {
@@ -391,13 +404,14 @@ namespace TrainCrewTIDWindow.Forms
                     if (texts.Length < 2 || texts.Any(t => t == "")) {
                         continue;
                     }
+                    var v = texts[1].Replace(" ", "").ToLower();
 
                     switch (texts[0]) {
                         case "source":
-                            source = texts[1].Replace(" ", "").ToLower();
+                            source = v;
                             break;
                         case "topMost":
-                            topMostSetting = texts[1].Replace(" ", "").ToLower() == "true";
+                            topMostSetting = v == "true";
                             break;
                         case "scaleList":
                             var scaleList = new List<int>();
@@ -418,7 +432,7 @@ namespace TrainCrewTIDWindow.Forms
                             }
                             menuItemScaleFit.CheckState = CheckState.Unchecked;
 
-                            if (texts[1].Replace(" ", "").ToLower() == "fit") {
+                            if (v == "fit") {
                                 initialScale = -1;
                                 break;
                             }
@@ -432,7 +446,7 @@ namespace TrainCrewTIDWindow.Forms
                             }
                             break;
                         case "zoomMode":
-                            toggleMagnifyingGlass = texts[1].Replace(" ", "").ToLower() == "toggle";
+                            toggleMagnifyingGlass = v == "toggle";
                             if (toggleMagnifyingGlass) {
                                 menuItemPushToZoom.CheckState = CheckState.Unchecked;
                                 menuItemToggle.CheckState = CheckState.Indeterminate;
@@ -444,7 +458,7 @@ namespace TrainCrewTIDWindow.Forms
                             }
                             break;
                         case "silent":
-                            SetSilent(texts[1].Replace(" ", "").ToLower() == "true");
+                            SetSilent(v == "true");
                             break;
                         case "flashInterval":
                             if (float.TryParse(texts[1], out var interval) && interval >= 0) {
@@ -462,29 +476,34 @@ namespace TrainCrewTIDWindow.Forms
                             }
                             break;
                         case "markupDuplication":
-                            MarkupDuplication = texts[1].Replace(" ", "").ToLower() == "true";
+                            MarkupDuplication = v == "true";
                             menuItemMarkupDuplication.CheckState = MarkupDuplication ? CheckState.Checked : CheckState.Unchecked;
                             break;
                         case "markupFillZero":
-                            MarkupFillZero = texts[1].Replace(" ", "").ToLower() == "true";
+                            MarkupFillZero = v == "true";
                             menuItemMarkupFillZero.CheckState = MarkupFillZero ? CheckState.Checked : CheckState.Unchecked;
                             break;
                         case "markup9999":
-                            var v = texts[1].Replace(" ", "").ToLower() == "true";
-                            trainDataDict["9999"].Markup = v;
-                            menuItemMarkup9999.CheckState = v ? CheckState.Checked : CheckState.Unchecked;
+                            var vb = v == "true";
+                            trainDataDict["9999"].Markup = vb;
+                            menuItemMarkup9999.CheckState = vb ? CheckState.Checked : CheckState.Unchecked;
                             break;
                         case "markupNotTrain":
-                            MarkupNotTrain = texts[1].Replace(" ", "").ToLower() == "true";
+                            MarkupNotTrain = v == "true";
                             menuItemMarkupNotTrain.CheckState = MarkupNotTrain ? CheckState.Checked : CheckState.Unchecked;
                             break;
                         case "markupSpawned":
-                            MarkupSpawned = texts[1].Replace(" ", "").ToLower() == "true";
+                            MarkupSpawned = v == "true";
                             menuItemMarkupSpawned.CheckState = MarkupSpawned ? CheckState.Checked : CheckState.Unchecked;
                             break;
                         case "markupHandover":
-                            MarkupHandover = texts[1].Replace(" ", "").ToLower() == "true";
+                            MarkupHandover = v == "true";
                             menuItemMarkupHandover.CheckState = MarkupHandover ? CheckState.Checked : CheckState.Unchecked;
+                            break;
+                        case "hideNumber":
+                            HideNumber = v == "true" || v == "lock";
+                            LockHideNumber = v == "lock";
+                            menuItemHideNumber.CheckState = HideNumber ? CheckState.Checked : CheckState.Unchecked;
                             break;
                         case "debugNumberDown":
                             debugNumberDown = texts[1];
@@ -614,7 +633,7 @@ namespace TrainCrewTIDWindow.Forms
                         menuItemTrainMarkup.DropDownItems.Add(menu1);
                         menu1.Name = debugNumberDown;
                         menu1.Size = new Size(110, 22);
-                        menu1.Text = debugNumberDown;
+                        menu1.Text = HideNumber ? "??????" : debugNumberDown;
                         menu1.Click += (sender, e) => {
                             SetTrainMarkup(td1.Number);
                         };
@@ -631,7 +650,7 @@ namespace TrainCrewTIDWindow.Forms
                         menuItemTrainMarkup.DropDownItems.Add(menu2);
                         menu2.Name = debugNumberUp;
                         menu2.Size = new Size(110, 22);
-                        menu2.Text = debugNumberUp;
+                        menu2.Text = HideNumber ? "??????" : debugNumberUp;
                         menu2.Click += (sender, e) => {
                             SetTrainMarkup(td2.Number);
                             /*td2.Markup = !td2.Markup;
@@ -828,10 +847,10 @@ namespace TrainCrewTIDWindow.Forms
                                     }
                                     menu.Name = t.TrainNumber;
                                     menu.Size = new Size(110, 22);
-                                    menu.Text = t.TrainNumber;
+                                    menu.Text = HideNumber ? "??????" : t.TrainNumber;
                                     menu.Click += (sender, e) => {
                                         SetTrainMarkup(td.Number);
-                                    }; 
+                                    };
                                     var isTrain = int.TryParse(Regex.Replace(t.TrainNumber, @"[^0-9]", ""), out var numBody);
                                     td.Markup = MarkupSpawned || markupUmban.Contains(numBody / 3000 * 100 + numBody / 2 * 2 % 100);
                                     menu.CheckState = td.Markup ? CheckState.Checked : CheckState.Unchecked;
@@ -853,7 +872,7 @@ namespace TrainCrewTIDWindow.Forms
                                 }
                                 menu.Name = t.TrainNumber;
                                 menu.Size = new Size(110, 22);
-                                menu.Text = t.TrainNumber;
+                                menu.Text = HideNumber ? "??????" : t.TrainNumber;
                                 menu.Click += (sender, e) => {
                                     SetTrainMarkup(td.Number);
                                 };
@@ -893,7 +912,7 @@ namespace TrainCrewTIDWindow.Forms
                                 }
                                 menu.Name = tc.Last;
                                 menu.Size = new Size(110, 22);
-                                menu.Text = tc.Last;
+                                menu.Text = HideNumber ? "??????" : tc.Last;
                                 menu.Click += (sender, e) => {
                                     SetTrainMarkup(td.Number);
                                 };
@@ -918,7 +937,7 @@ namespace TrainCrewTIDWindow.Forms
                             }
                             menu.Name = tc.Last;
                             menu.Size = new Size(110, 22);
-                            menu.Text = tc.Last;
+                            menu.Text = HideNumber ? "??????" : tc.Last;
                             menu.Click += (sender, e) => {
                                 SetTrainMarkup(td.Number);
                             };
@@ -2116,6 +2135,46 @@ namespace TrainCrewTIDWindow.Forms
                 }
             }
             markupUmban.Clear();
+            ReservedUpdate = true;
+        }
+
+        private void menuItemHideNumber_Click(object sender, EventArgs e) {
+            SwitchHideNumber();
+        }
+
+        public void SwitchHideNumber() {
+            if (HideNumber) {
+                if (LockHideNumber) {
+                    OpeningDialog = true;
+                    TaskDialog.ShowDialog(new TaskDialogPage {
+                        Caption = "残念 | TID - ダイヤ運転会",
+                        Heading = "鎖錠されています",
+                        Icon = TaskDialogIcon.Error,
+                        Text = "列番表示隠しはONで鎖錠されているため、\nあなたは真実を確認することができません。"
+                    });
+                    OpeningDialog = false;
+                    return;
+                }
+                else {
+                    OpeningDialog = true;
+                    DialogResult result = MessageBox.Show($"あなたは真実を受け入れる覚悟ができていますか？", "確認 | TID - ダイヤ運転会",
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    OpeningDialog = false;
+                    if (result != DialogResult.Yes) {
+                        return;
+                    }
+                }
+            }
+            HideNumber = !HideNumber;
+            menuItemHideNumber.CheckState = HideNumber ? CheckState.Checked : CheckState.Unchecked;
+            foreach (var m in trainMenuDict.Values) {
+                m.Text = HideNumber ? "??????" : m.Name;
+            }
+            if (displayManager != null) {
+                foreach (var w in displayManager.SubWindows) {
+                    w.SetHideNumber(HideNumber);
+                }
+            }
             ReservedUpdate = true;
         }
 

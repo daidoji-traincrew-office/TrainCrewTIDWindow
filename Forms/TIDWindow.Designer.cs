@@ -75,6 +75,7 @@
             labelScale = new Label();
             labelSilent = new Label();
             flowLayoutPanel1 = new FlowLayoutPanel();
+            menuItemHideNumber = new ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             contextMenuStrip1.SuspendLayout();
             panel1.SuspendLayout();
@@ -99,9 +100,9 @@
             // 
             // contextMenuStrip1
             // 
-            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { menuItemCopy, toolStripSeparator1, menuItemTrainMarkup, menuItemMarkupType, toolStripSeparator2, menuItemScale, menuItemMagnifyingGlass, menuItemTopMost, menuItemSilent, menuItemQuickTimeSetting, toolStripSeparator3, menuItemVersion });
+            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { menuItemCopy, toolStripSeparator1, menuItemTrainMarkup, menuItemMarkupType, menuItemHideNumber, toolStripSeparator2, menuItemScale, menuItemMagnifyingGlass, menuItemTopMost, menuItemSilent, menuItemQuickTimeSetting, toolStripSeparator3, menuItemVersion });
             contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new Size(181, 242);
+            contextMenuStrip1.Size = new Size(181, 264);
             // 
             // menuItemCopy
             // 
@@ -499,6 +500,13 @@
             flowLayoutPanel1.TabIndex = 7;
             flowLayoutPanel1.WrapContents = false;
             // 
+            // menuItemHideNumber
+            // 
+            menuItemHideNumber.Name = "menuItemHideNumber";
+            menuItemHideNumber.Size = new Size(180, 22);
+            menuItemHideNumber.Text = "列車番号隠し";
+            menuItemHideNumber.Click += menuItemHideNumber_Click;
+            // 
             // TIDWindow
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -583,5 +591,6 @@
         private PictureBox pictureBox3;
         private ToolStripMenuItem menuItemFixedScale;
         private ToolStripMenuItem menuItemMarkupHandover;
+        private ToolStripMenuItem menuItemHideNumber;
     }
 }

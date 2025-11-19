@@ -730,26 +730,26 @@ namespace TrainCrewTIDWindow.Manager {
                 Color? classColor = null;
                 var hf = $"{numHeader}{numFooter}";
                 foreach (var k in numColor.Keys) {
-                    if (hf.Contains(k)) {
+                    if ((!window.HideNumber || !isTrain) && hf.Contains(k)) {
                         classColor = numColor[k];
 
                         if (markupClassesData.ContainsKey(k)) {
-                            markUp |= markupClassesData[k];
+                            markUp |= !window.HideNumber && markupClassesData[k];
                         }
                         break;
                     }
                 }
                 if (hf != "臨Z" && (numHeader == "" || numHeader == "臨") && (numFooter == "" || numFooter == "X" || numFooter == "Y" || numFooter == "Z")) {
-                    markUp |= markupClassesData["local"];
+                    markUp |= !window.HideNumber && markupClassesData["local"];
                 }
                 if (numHeader == "臨") {
-                    markUp |= markupClassesData["rinji"];
+                    markUp |= !window.HideNumber && markupClassesData["rinji"];
                 }
                 if (numFooter.Contains('Z')) {
-                    markUp |= markupClassesData["illegalZ"];
+                    markUp |= !window.HideNumber && markupClassesData["illegalZ"];
                 }
                 if (numHeader == "臨" && numFooter.Contains('Z')) {
-                    markUp |= markupClassesData["superIllegalZ"];
+                    markUp |= !window.HideNumber && markupClassesData["superIllegalZ"];
                 }
                 // 0埋め列番への警告色として不明色に
                 if (isTrain && numBodyStr[0] == '0') {
@@ -918,7 +918,19 @@ namespace TrainCrewTIDWindow.Manager {
                         // 下線設置
                         AddImage(g, numLineS, numWindow.PosX, numWindow.PosY, iaLine);
                         // 列番設置
-                        AddNumImage(g, numIndex.Width, numIndex.X, numIndex.Y, numWindow.PosX, numWindow.PosY, iaType);
+                        if (!window.HideNumber) {
+                            AddNumImage(g, numIndex.Width, numIndex.X, numIndex.Y, numWindow.PosX, numWindow.PosY, iaType);
+                        }
+                        else if (isTrain) {
+                            if (numBody % 2 != 0) {
+                                var index = alphaIndexDict['←'];
+                                AddNumImage(g, index.X, index.Y, numWindow.PosX, numWindow.PosY, iaType);
+                            }
+                            else {
+                                var index = alphaIndexDict['→'];
+                                AddNumImage(g, index.X, index.Y, numWindow.PosX + 24, numWindow.PosY, iaType);
+                            }
+                        }
 
 
 
@@ -984,16 +996,18 @@ namespace TrainCrewTIDWindow.Manager {
                         }
 
                         // 運番設置
-                        for (var i = 2; i >= 0; i--) {
-                            if (umban <= 0) {
-                                if (numBodyStr[0] != '0') {
-                                    break;
+                        if (!window.HideNumber) {
+                            for (var i = 2; i >= 0; i--) {
+                                if (umban <= 0) {
+                                    if (numBodyStr[0] != '0') {
+                                        break;
+                                    }
+                                    AddNumImage(g, 0, numWindow.PosX + 6 + i * 6, numWindow.PosY, iaType);
                                 }
-                                AddNumImage(g, 0, numWindow.PosX + 6 + i * 6, numWindow.PosY, iaType);
+                                var num = umban % 10;
+                                AddNumImage(g, num, numWindow.PosX + 6 + i * 6, numWindow.PosY, iaType);
+                                umban /= 10;
                             }
-                            var num = umban % 10;
-                            AddNumImage(g, num, numWindow.PosX + 6 + i * 6, numWindow.PosY, iaType);
-                            umban /= 10;
                         }
 
                     }
@@ -1110,7 +1124,19 @@ namespace TrainCrewTIDWindow.Manager {
                         }
 
                         // 列番設置
-                        AddNumImage(g, numIndex.Width, numIndex.X, numIndex.Y, numWindow.PosX, numWindow.PosY, iaType);
+                        if (!window.HideNumber) {
+                            AddNumImage(g, numIndex.Width, numIndex.X, numIndex.Y, numWindow.PosX, numWindow.PosY, iaType);
+                        }
+                        else if (isTrain) {
+                            if (numBody % 2 != 0) {
+                                var index = alphaIndexDict['←'];
+                                AddNumImage(g, index.X, index.Y, numWindow.PosX, numWindow.PosY, iaType);
+                            }
+                            else {
+                                var index = alphaIndexDict['→'];
+                                AddNumImage(g, index.X, index.Y, numWindow.PosX + 42, numWindow.PosY, iaType);
+                            }
+                        }
 
 
 
@@ -1135,31 +1161,44 @@ namespace TrainCrewTIDWindow.Manager {
                             AddNumImage(g, delayMinute % 10, numWindow.PosX + 54, numWindow.PosY, iaDelay);
                         }
 
-                        // 列番の頭の文字設置
-                        if (numHeader.Length > 0 && alphaIndexDict.TryGetValue(numHeader[0], out var nh)) {
-                            AddNumImage(g, nh.Width, nh.X, nh.Y, numWindow.PosX, numWindow.PosY, iaType);
-                        }
-
-                        // 列番本体設置
-                        for (var i = 0; i < 4 && i < numBodyStr.Length; i++) {
-                            var num = numBodyStr[numBodyStr.Length - 1 - i] - '0';
-                            AddNumImage(g, num, numWindow.PosX + 12 + (3 - i) * 6, numWindow.PosY, iaType);
-                        }
 
 
-                        // 列番の末尾の文字設置
-                        if (numFooter.Length > 0) {
-                            var p = alphaIndexDict[numFooter[0]];
-                            if (p.X < 55 && p.Y < 55) {
-                                AddNumImage(g, p.X, p.Y, numWindow.PosX + 36, numWindow.PosY, iaType);
+                        if (!window.HideNumber) {
+                            // 列番の頭の文字設置
+                            if (numHeader.Length > 0 && alphaIndexDict.TryGetValue(numHeader[0], out var nh)) {
+                                AddNumImage(g, nh.Width, nh.X, nh.Y, numWindow.PosX, numWindow.PosY, iaType);
+                            }
+
+                            // 列番本体設置
+                            for (var i = 0; i < 4 && i < numBodyStr.Length; i++) {
+                                var num = numBodyStr[numBodyStr.Length - 1 - i] - '0';
+                                AddNumImage(g, num, numWindow.PosX + 12 + (3 - i) * 6, numWindow.PosY, iaType);
+                            }
+
+
+                            // 列番の末尾の文字設置
+                            if (numFooter.Length > 0) {
+                                var p = alphaIndexDict[numFooter[0]];
+                                if (p.X < 55 && p.Y < 55) {
+                                    AddNumImage(g, p.X, p.Y, numWindow.PosX + 36, numWindow.PosY, iaType);
+                                }
+                            }
+                            if (numFooter.Length > 1) {
+                                var p = alphaIndexDict[numFooter[1]];
+                                if (p.X < 55 && p.Y < 55) {
+                                    AddNumImage(g, p.X, p.Y, numWindow.PosX + 42, numWindow.PosY, iaType);
+                                }
                             }
                         }
-                        if (numFooter.Length > 1) {
-                            var p = alphaIndexDict[numFooter[1]];
-                            if (p.X < 55 && p.Y < 55) {
-                                AddNumImage(g, p.X, p.Y, numWindow.PosX + 42, numWindow.PosY, iaType);
-                            }
+                        else if (numBody % 2 != 0) {
+                            var index = alphaIndexDict['←'];
+                            AddNumImage(g, index.X, index.Y, numWindow.PosX, numWindow.PosY, iaType);
                         }
+                        else {
+                            var index = alphaIndexDict['→'];
+                            AddNumImage(g, index.X, index.Y, numWindow.PosX + 42, numWindow.PosY, iaType);
+                        }
+
                     }
                 }
             }
