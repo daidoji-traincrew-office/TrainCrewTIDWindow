@@ -2245,7 +2245,7 @@ namespace TrainCrewTIDWindow.Forms
             if (trainDataDict.TryGetValue(trainNumber, out var td)) {
                 td.Markup = !td.Markup;
                 UpdateTrainCheck(td);
-                if (int.TryParse(Regex.Replace(trainNumber, @"[^0-9]", ""), out var numBody)) {
+                if (MarkupHandover && int.TryParse(Regex.Replace(trainNumber, @"[^0-9]", ""), out var numBody)) {
                     var umban = numBody / 3000 * 100 + numBody / 2 * 2 % 100;
                     if (td.Markup) {
                         if (!markupUmban.Contains(umban)) {
