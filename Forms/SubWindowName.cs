@@ -24,7 +24,7 @@ namespace TrainCrewTIDWindow.Forms {
         private void DecideName() {
             var name = textBox1.Text;
             if(name.Length <= 0) {
-                TaskDialog.ShowDialog(new TaskDialogPage {
+                TaskDialog.ShowDialog(this, new TaskDialogPage {
                     Caption = "使用できないウィンドウ名 | TID - ダイヤ運転会",
                     Heading = "使用できないウィンドウ名",
                     Icon = TaskDialogIcon.Warning,
@@ -33,7 +33,7 @@ namespace TrainCrewTIDWindow.Forms {
                 });
             }
             else if (name == "全線TID") {
-                TaskDialog.ShowDialog(new TaskDialogPage {
+                TaskDialog.ShowDialog(this, new TaskDialogPage {
                     Caption = "使用できないウィンドウ名 | TID - ダイヤ運転会",
                     Heading = "使用できないウィンドウ名",
                     Icon = TaskDialogIcon.Warning,

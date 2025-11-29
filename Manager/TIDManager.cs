@@ -1392,7 +1392,7 @@ namespace TrainCrewTIDWindow.Manager {
                     /*window.Invoke(new Action(() => { window.LabelStatusText = "描画失敗"; }));*/
                     window.LabelStatusText = "描画失敗";
                     window.SetStatusSubWindow("×", Color.Red);
-                    TaskDialog.ShowDialog(new TaskDialogPage {
+                    TaskDialog.ShowDialog(window, new TaskDialogPage {
                         Caption = "描画エラー | TID - ダイヤ運転会",
                         Heading = "描画エラー",
                         Icon = TaskDialogIcon.Error,

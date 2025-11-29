@@ -79,6 +79,7 @@ namespace TrainCrewTIDWindow.Forms {
             SetMarkupNotTrain(displayManager.Window.MarkupNotTrain);
             SetMarkupSpawned(displayManager.Window.MarkupSpawned);
             SetMarkupHandover(displayManager.Window.MarkupHandover);
+            SetHideNumber(displayManager.Window.HideNumber);
 
             for (var i = 6; i < menuTrains.Count; i++) {
                 var trainNumber = menuTrains[i].Name;
@@ -538,7 +539,7 @@ namespace TrainCrewTIDWindow.Forms {
         }
 
         private void menuItemHideNumber_Click(object sender, EventArgs e) {
-            displayManager.Window.SwitchHideNumber();
+            displayManager.Window.SwitchHideNumber(this);
         }
 
         public void SetHideNumber(bool value) {

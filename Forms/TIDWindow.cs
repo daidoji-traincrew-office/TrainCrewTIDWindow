@@ -1078,7 +1078,7 @@ namespace TrainCrewTIDWindow.Forms
                     SetStatusSubWindow("×", Color.Red);
                     Debug.WriteLine($"データ受信不能: {delaySeconds}");
                     if (!Silent) {
-                        TaskDialog.ShowDialog(new TaskDialogPage {
+                        TaskDialog.ShowDialog(this, new TaskDialogPage {
                             Caption = "データ受信不能 | TID - ダイヤ運転会",
                             Heading = "データ受信不能",
                             Icon = TaskDialogIcon.Error,
@@ -1920,7 +1920,7 @@ namespace TrainCrewTIDWindow.Forms
 
         private void TIDWindow_Closing(object sender, EventArgs e) {
             if (LogManager.Output && LogManager.NeededWarning) {
-                TaskDialog.ShowDialog(new TaskDialogPage {
+                TaskDialog.ShowDialog(this, new TaskDialogPage {
                     Caption = "エラーログ出力 | TID - ダイヤ運転会",
                     Heading = "エラーログ出力",
                     Icon = TaskDialogIcon.Information,
@@ -2139,14 +2139,14 @@ namespace TrainCrewTIDWindow.Forms
         }
 
         private void menuItemHideNumber_Click(object sender, EventArgs e) {
-            SwitchHideNumber();
+            SwitchHideNumber(this);
         }
 
-        public void SwitchHideNumber() {
+        public void SwitchHideNumber(Form owner) {
             if (HideNumber) {
                 if (LockHideNumber) {
                     OpeningDialog = true;
-                    TaskDialog.ShowDialog(new TaskDialogPage {
+                    TaskDialog.ShowDialog(owner, new TaskDialogPage {
                         Caption = "残念 | TID - ダイヤ運転会",
                         Heading = "鎖錠されています",
                         Icon = TaskDialogIcon.Error,
@@ -2156,11 +2156,22 @@ namespace TrainCrewTIDWindow.Forms
                     return;
                 }
                 else {
+                    if (OpeningDialog) {
+                        return;
+                    }
                     OpeningDialog = true;
-                    DialogResult result = MessageBox.Show($"あなたは真実を受け入れる覚悟ができていますか？", "確認 | TID - ダイヤ運転会",
-                        MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    var result = TaskDialog.ShowDialog(owner, new TaskDialogPage {
+                        Caption = "確認 | TID - ダイヤ運転会",
+                        Icon = TaskDialogIcon.Warning,
+                        Text = "あなたは真実を受け入れる覚悟ができていますか？",
+                        Buttons = { TaskDialogButton.Yes, TaskDialogButton.No },
+                        DefaultButton = TaskDialogButton.No
+
+                    });
+                    /*DialogResult result = MessageBox.Show($"あなたは真実を受け入れる覚悟ができていますか？", "確認 | TID - ダイヤ運転会",
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Question);*/
                     OpeningDialog = false;
-                    if (result != DialogResult.Yes) {
+                    if (result != TaskDialogButton.Yes) {
                         return;
                     }
                 }
