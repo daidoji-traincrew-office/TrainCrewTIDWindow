@@ -161,7 +161,7 @@ namespace TrainCrewTIDWindow.Communications {
                 var result = TaskDialog.ShowDialog(_window, new TaskDialogPage {
                     Caption = "サーバ認証失敗 | TID - ダイヤ運転会",
                     Icon = TaskDialogIcon.Error,
-                    Text = "サーバ認証に失敗しました。\n再認証しますか？\n\n{exception.Message}\n{exception.StackTrace})",
+                    Text = $"サーバ認証に失敗しました。\n再認証しますか？\n\n{exception.Message}\n{exception.StackTrace})",
                     Buttons = { TaskDialogButton.Yes, TaskDialogButton.No },
                     DefaultButton = TaskDialogButton.Yes
                 });

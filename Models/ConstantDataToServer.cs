@@ -24,6 +24,12 @@
         /// 列車状態情報リスト
         /// </summary>
         public List<TrainStateData> TrainStateDatas { get; set; }
+
+
+        /// <summary>
+        /// TST時差
+        /// </summary>
+        public int TimeOffset { get; set; } = 14;
     }
 
     public enum LCR {

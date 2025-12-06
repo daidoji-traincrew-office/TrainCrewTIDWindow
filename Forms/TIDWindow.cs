@@ -223,6 +223,16 @@ namespace TrainCrewTIDWindow.Forms
             private set;
         } = false;
 
+        public bool UseServerTime {
+            get;
+            private set;
+        } = false;
+
+        public int ServerTime {
+            get;
+            private set;
+        } = 14;
+
         private List<int> markupUmban = [];
 
         public ToolStripMenuItem MenuItemMarkupClass => menuItemMarkupClass;
@@ -616,6 +626,8 @@ namespace TrainCrewTIDWindow.Forms
                     TimeOffset = new(0, 0, 0);
                     tcCommunication.ConnectionStatusChanged += UpdateConnectionStatus;
                     tcCommunication.TCDataUpdated += UpdateTCData;
+                    menuItemQuickTimeSetting.DropDownItems.Remove(menuItemServerTime);
+                    menuItemQuickTimeSetting.DropDownItems.Remove(toolStripSeparator8);
                     LogManager.AddInfoLog("TRAIN CREWに接続します");
                     await TryConnectTrainCrew();
                     break;
@@ -661,6 +673,8 @@ namespace TrainCrewTIDWindow.Forms
                             w.AddTrain(debugNumberUp);
                         }
                     }
+                    menuItemQuickTimeSetting.DropDownItems.Remove(menuItemServerTime);
+                    menuItemQuickTimeSetting.DropDownItems.Remove(toolStripSeparator8);
                     break;
                 default:
                     /*trackManager.CountStart = 0;*/
@@ -668,6 +682,8 @@ namespace TrainCrewTIDWindow.Forms
                     //デフォルトのサーバへの接続処理
                     serverCommunication = new(this, ServerAddress.SignalAddress, service);
                     serverCommunication.DataUpdated += UpdateServerData;
+                    UseServerTime = true;
+                    menuItemServerTime.CheckState = CheckState.Checked;
                     LogManager.AddInfoLog($"{(ServerAddress.SignalAddress.Contains("dev") ? "Dev" : "Prod")}サーバに接続します");
                     await TryConnectServer();
                     break;
@@ -777,6 +793,10 @@ namespace TrainCrewTIDWindow.Forms
             var sList = data.SwitchDatas;
             var dList = data.DirectionDatas;
             var trainList = data.TrainStateDatas;
+            ServerTime = data.TimeOffset;
+            while (ServerTime < 0) {
+                ServerTime += 24;
+            }
 
             var updated = tcList != null && UpdateTrainData(tcList, trainList);
             updated |= tcList != null && trackManager.UpdateTCData(tcList);
@@ -1059,6 +1079,9 @@ namespace TrainCrewTIDWindow.Forms
                 return;
             }
             Clock = RealTime;
+            if (UseServerTime) {
+                TimeOffset = new TimeSpan(ServerTime, 0, 0);
+            }
             var time = Clock + TimeOffset;
             displayManager.SetClockSubWindows(time);
             if (showOffset <= 0) {
@@ -1140,6 +1163,9 @@ namespace TrainCrewTIDWindow.Forms
         }
 
         private void labelClock_MouseDown(object sender, MouseEventArgs e) {
+            if(e.Button == MouseButtons.Middle) {
+                SetUseServerTime(true);
+            }
             if (e.Button != MouseButtons.Left && e.Button != MouseButtons.Right) {
                 return;
             }
@@ -1194,6 +1220,7 @@ namespace TrainCrewTIDWindow.Forms
                     showOffset = 40;
                 }
             }
+            SetUseServerTime(false);
             TimeOffset = new TimeSpan(hour % 24, min % 60, sec % 60);
             if (showOffset > 0) {
                 labelClock.Text = $"+{TimeOffset.Hours}h{TimeOffset.Minutes}m{TimeOffset.Seconds}s";
@@ -1322,6 +1349,7 @@ namespace TrainCrewTIDWindow.Forms
         }
 
         private void SetHourQuick(int hour) {
+            SetUseServerTime(false);
             TimeOffset = new TimeSpan((hour + 24 - Clock.Hour) % 24, TimeOffset.Minutes, TimeOffset.Seconds);
         }
 
@@ -1861,6 +1889,7 @@ namespace TrainCrewTIDWindow.Forms
                         sub.Location = new Point(center.X - s.Width / 2 - border, center.Y - s.Height / 2 - Size.Height + ClientSize.Height - panel1.Location.Y / 2 - border);
                         sub.SetTopMost(TopMost);
                         sub.SetSilent(Silent);
+                        sub.SetClockColor(serverCommunication == null || UseServerTime ? Color.White : Color.Yellow);
                         displayManager.AddSubWindow(sub);
                     }
                 }
@@ -2187,6 +2216,29 @@ namespace TrainCrewTIDWindow.Forms
                 }
             }
             ReservedUpdate = true;
+        }
+
+        private void menuItemServerTime_Click(object sender, EventArgs e) {
+            SetUseServerTime(!UseServerTime);
+
+        }
+
+        public void SetUseServerTime(bool value) {
+            if (serverCommunication != null) {
+                UseServerTime = value;
+                menuItemServerTime.CheckState = UseServerTime ? CheckState.Checked : CheckState.Unchecked;
+                Color color;
+                if (UseServerTime) {
+                    color = Color.White;
+                }
+                else {
+                    color = Color.Yellow;
+                }
+                labelClock.ForeColor = color;
+                foreach(var w in displayManager.SubWindows) {
+                    w.SetClockColor(color);
+                }
+            }
         }
 
         private Point ConvertPointToOriginal(int x, int y) {

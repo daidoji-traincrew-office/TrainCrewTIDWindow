@@ -614,5 +614,9 @@ namespace TrainCrewTIDWindow.Forms {
             StatusText = text;
             StatusColor = color;
         }
+
+        public void SetClockColor(Color color) {
+            labelClock.ForeColor = color;
+        }
     }
 }
