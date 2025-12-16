@@ -1749,6 +1749,42 @@ namespace TrainCrewTIDWindow.Forms
             }
         }
 
+        private void PictureBox2_MouseUp(object sender, MouseEventArgs e) {
+            if ((e.Button & MouseButtons.Left) == MouseButtons.Left) {
+                mouseLoc = null;
+                if (selectionStarting.HasValue) {
+                    var start = selectionStarting.Value;
+                    selectionStarting = null;
+                    lock (pictureBox3) {
+                        pictureBox3.Location = new Point(-300, -300);
+                        pictureBox3.Size = new Size(100, 100);
+                    }
+                    var end = pictureBox1.PointToClient(Cursor.Position);
+                    var center = new Point((start.X + end.X) / 2 - end.X + Cursor.Position.X, (start.Y + end.Y) / 2 - end.Y + Cursor.Position.Y);
+                    end = new Point(end.X > 16 ? (start.X >= pictureBox1.Width || end.X < pictureBox1.Width - 16 ? end.X : pictureBox1.Width) : (start.X > 0 ? 0 : end.X), end.Y > 16 ? (start.Y >= pictureBox1.Height || end.Y < pictureBox1.Height - 16 ? end.Y : pictureBox1.Height) : (start.Y > 0 ? 0 : end.Y));
+                    start = ConvertPointToOriginal(start);
+                    end = ConvertPointToOriginal(end);
+                    var p = new Point(Math.Min(start.X, end.X), Math.Min(start.Y, end.Y));
+                    var s = new Size(Math.Abs(start.X - end.X), Math.Abs(start.Y - end.Y));
+                    var screenSize = Screen.FromControl(this).Bounds;
+                    screenSize = new Rectangle(screenSize.Location, new Size(screenSize.Width + 20, screenSize.Height + 20));
+                    if (s.Width > 120 && s.Width <= screenSize.Width && s.Height > 100 && s.Height <= screenSize.Height - pictureBox1.Location.Y) {
+                        var sub = new SubWindow(p, s, displayManager, menuItemTrainMarkup.DropDownItems);
+                        sub.Icon = Icon;
+                        pictureBox1.Cursor = defaultCursor;
+                        sub.SetMarkup9999(trainDataDict["9999"].Markup);
+                        sub.Show();
+                        var border = (Size.Width - ClientSize.Width) / 2;
+                        sub.Location = new Point(center.X - s.Width / 2 - border, center.Y - s.Height / 2 - Size.Height + ClientSize.Height - panel1.Location.Y / 2 - border);
+                        sub.SetTopMost(TopMost);
+                        sub.SetSilent(Silent);
+                        sub.SetClockColor(serverCommunication == null || UseServerTime ? Color.White : Color.Yellow);
+                        displayManager.AddSubWindow(sub);
+                    }
+                }
+            }
+        }
+
         private void PictureBox1_MouseMove(object sender, MouseEventArgs e) {
             if (usingMagnifyingGlass) {
                 if (!toggleMagnifyingGlass) {
@@ -1850,6 +1886,35 @@ namespace TrainCrewTIDWindow.Forms
                     UpdateMouseCursor();
                     SetMagnifyingGlass(cp.X, cp.Y);
                 }
+            }
+            else if (selectionStarting.HasValue) {
+                var s = selectionStarting.Value;
+                selectionStarting = new Point(s.X > 16 ? (s.X < pictureBox1.Width - 16 ? s.X : pictureBox1.Width) : 0, s.Y > 16 ? (s.Y < pictureBox1.Height - 16 ? s.Y : pictureBox1.Height) : 0);
+                var start = selectionStarting.Value;
+                var end = pictureBox1.PointToClient(Cursor.Position);
+                var center = new Point((start.X + end.X) / 2 - end.X + Cursor.Position.X, (start.Y + end.Y) / 2 - end.Y + Cursor.Position.Y);
+                end = new Point(end.X > 16 ? (start.X >= pictureBox1.Width || end.X < pictureBox1.Width - 16 ? end.X : pictureBox1.Width) : (start.X > 0 ? 0 : end.X), end.Y > 16 ? (start.Y >= pictureBox1.Height || end.Y < pictureBox1.Height - 16 ? end.Y : pictureBox1.Height) : (start.Y > 0 ? 0 : end.Y));
+                var startOrig = ConvertPointToOriginal(start);
+                var endOrig = ConvertPointToOriginal(end);
+                var pos = new Point(Math.Min(start.X, end.X), Math.Min(start.Y, end.Y));
+                var size = new Size(Math.Abs(start.X - end.X), Math.Abs(start.Y - end.Y));
+                var sizeOrig = new Size(Math.Abs(startOrig.X - endOrig.X), Math.Abs(startOrig.Y - endOrig.Y));
+                if (size.Width > 1 && size.Height > 1) {
+                    lock (pictureBox3) {
+                        var screenSize = Screen.FromControl(this).Bounds;
+                        screenSize = new Rectangle(screenSize.Location, new Size(screenSize.Width + 20, screenSize.Height + 20));
+                        var old = pictureBox3.Image;
+                        var b = new Bitmap(size.Width, size.Height);
+                        using var g = Graphics.FromImage(b);
+                        g.Clear(Color.Transparent);
+                        g.DrawRectangle(sizeOrig.Width > 120 && sizeOrig.Width <= screenSize.Width && sizeOrig.Height > 100 && sizeOrig.Height <= screenSize.Height ? Pens.LimeGreen : Pens.DarkRed, 0, 0, size.Width - 1, size.Height - 1);
+                        pictureBox3.Image = b;
+                        pictureBox3.Location = pos;
+                        pictureBox3.Size = size;
+                        old?.Dispose();
+                    }
+                }
+
             }
         }
 
