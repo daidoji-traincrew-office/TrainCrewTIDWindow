@@ -118,6 +118,7 @@ namespace TrainCrewTIDWindow.Communications {
 
                 _window.LabelStatusText = "サーバ認証失敗（タイムアウト）";
                 _window.SetStatusSubWindow("×", Color.Red);
+                _window.OpeningDialog = true;
                 var result = TaskDialog.ShowDialog(_window, new TaskDialogPage {
                     Caption = "サーバ認証失敗（タイムアウト） | TID - ダイヤ運転会",
                     Icon = TaskDialogIcon.Error,
@@ -125,6 +126,7 @@ namespace TrainCrewTIDWindow.Communications {
                     Buttons = { TaskDialogButton.Yes, TaskDialogButton.No },
                     DefaultButton = TaskDialogButton.Yes
                 });
+                _window.OpeningDialog = false;
                 /*DialogResult result = MessageBox.Show($"サーバ認証中にタイムアウトしました。\n再認証しますか？", "サーバ認証失敗（タイムアウト） | TID - ダイヤ運転会",
                     MessageBoxButtons.YesNo, MessageBoxIcon.Error);*/
                 if (result == TaskDialogButton.Yes) {
@@ -143,12 +145,14 @@ namespace TrainCrewTIDWindow.Communications {
                 _window.LabelStatusText = "サーバ認証失敗（拒否）";
                 _window.SetStatusSubWindow("×", Color.Red);
 
+                _window.OpeningDialog = true;
                 TaskDialog.ShowDialog(_window, new TaskDialogPage {
                     Caption = "サーバ認証失敗（拒否） | TID - ダイヤ運転会",
                     Heading = "サーバ認証失敗（拒否）",
                     Icon = TaskDialogIcon.Error,
                     Text = "サーバ認証は拒否されました。\n入鋏されていない可能性があります。\n入鋏を受け、必要な権限を取得してください。\n再試行する場合はアプリケーションを再起動してください。"
                 });
+                _window.OpeningDialog = false;
                 return false;
             }
 
@@ -158,6 +162,7 @@ namespace TrainCrewTIDWindow.Communications {
                 Debug.WriteLine(exception);
                 _window.LabelStatusText = "サーバ認証失敗";
                 _window.SetStatusSubWindow("×", Color.Red);
+                _window.OpeningDialog = true;
                 var result = TaskDialog.ShowDialog(_window, new TaskDialogPage {
                     Caption = "サーバ認証失敗 | TID - ダイヤ運転会",
                     Icon = TaskDialogIcon.Error,
@@ -165,6 +170,7 @@ namespace TrainCrewTIDWindow.Communications {
                     Buttons = { TaskDialogButton.Yes, TaskDialogButton.No },
                     DefaultButton = TaskDialogButton.Yes
                 });
+                _window.OpeningDialog = false;
                 /*DialogResult result =
                     MessageBox.Show($"サーバ認証に失敗しました。\n再認証しますか？\n\n{exception.Message}\n{exception.StackTrace})",
                         "サーバ認証失敗 | TID - ダイヤ運転会", MessageBoxButtons.YesNo, MessageBoxIcon.Error);*/
@@ -337,6 +343,7 @@ namespace TrainCrewTIDWindow.Communications {
             Debug.WriteLine("Refresh token is invalid or expired.");
             LogManager.AddWarningLog("トークンが切れました");
 
+            _window.OpeningDialog = true;
             var result = TaskDialog.ShowDialog(_window, new TaskDialogPage {
                 Caption = "認証失敗 | TID - ダイヤ運転会",
                 Icon = TaskDialogIcon.Error,
@@ -344,6 +351,7 @@ namespace TrainCrewTIDWindow.Communications {
                 Buttons = { TaskDialogButton.Yes, TaskDialogButton.No },
                 DefaultButton = TaskDialogButton.Yes
             });
+            _window.OpeningDialog = false;
             /*DialogResult dialogResult = MessageBox.Show(
                 "トークンが切れました。\n再認証してください。\n※いいえを選択した場合、再認証にはアプリケーション再起動が必要です。",
                 "認証失敗 | TID - ダイヤ運転会", MessageBoxButtons.YesNo, MessageBoxIcon.Error);*/
@@ -394,6 +402,7 @@ namespace TrainCrewTIDWindow.Communications {
             catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Forbidden) {
                 LogManager.AddExceptionLog(ex);
                 LogManager.OutputLog();
+                _window.OpeningDialog = true;
                 var result = TaskDialog.ShowDialog(_window, new TaskDialogPage {
                     Caption = "認証拒否 | TID - ダイヤ運転会",
                     Icon = TaskDialogIcon.Error,
@@ -401,6 +410,7 @@ namespace TrainCrewTIDWindow.Communications {
                     Buttons = { TaskDialogButton.Yes, TaskDialogButton.No },
                     DefaultButton = TaskDialogButton.Yes
                 });
+                _window.OpeningDialog = false;
                 /*DialogResult dialogResult = MessageBox.Show(
                     "認証が拒否されました。\n再認証してください。",
                     "認証拒否 | TID - ダイヤ運転会", MessageBoxButtons.YesNo, MessageBoxIcon.Error);*/
@@ -474,6 +484,7 @@ namespace TrainCrewTIDWindow.Communications {
                     _window.LabelStatusText = "データ受信失敗";
                     _window.SetStatusSubWindow("×", Color.Red);
                     if (!_window.Silent) {
+                        _window.OpeningDialog = true;
                         TaskDialog.ShowDialog(_window, new TaskDialogPage {
                             Caption = "データ受信失敗 | TID - ダイヤ運転会",
                             Heading = "データ受信失敗",
@@ -481,6 +492,7 @@ namespace TrainCrewTIDWindow.Communications {
                             Text =
                                 $"データの受信に失敗しました。\n復旧を試みますが、しばらく経っても復旧しない場合はアプリケーションの再起動をお願いします。\nerrorcode:{e.WebSocketErrorCode}",
                         });
+                        _window.OpeningDialog = false;
                     }
                     else {
                         _window.PlayWarningSound();
@@ -497,12 +509,14 @@ namespace TrainCrewTIDWindow.Communications {
                     _window.LabelStatusText = "タイムアウト";
                     _window.SetStatusSubWindow("×", Color.Red);
                     if (!_window.Silent) {
+                        _window.OpeningDialog = true;
                         TaskDialog.ShowDialog(_window, new TaskDialogPage {
                             Caption = "タイムアウト | TID - ダイヤ運転会",
                             Heading = "タイムアウト",
                             Icon = TaskDialogIcon.Error,
                             Text = "サーバとの通信がタイムアウトしました。\n復旧を試みますが、しばらく経っても復旧しない場合はアプリケーションの再起動をお願いします。"
                         });
+                        _window.OpeningDialog = false;
                     }
                     else {
                         _window.PlayWarningSound();
@@ -521,12 +535,14 @@ namespace TrainCrewTIDWindow.Communications {
                     _window.LabelStatusText = "未知のエラー";
                     _window.SetStatusSubWindow("×", Color.Red);
                     if (!_window.Silent) {
+                        _window.OpeningDialog = true;
                         TaskDialog.ShowDialog(_window, new TaskDialogPage {
                             Caption = "未知のエラー | TID - ダイヤ運転会",
                             Heading = "未知のエラー",
                             Icon = TaskDialogIcon.Error,
                             Text = "未知のエラーです。\nTID製作者に状況を報告願います。"
                         });
+                        _window.OpeningDialog = false;
                     }
                     else {
                         _window.PlayWarningSound();

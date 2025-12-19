@@ -66,6 +66,8 @@ namespace TrainCrewTIDWindow.Forms
         /// </summary>
         private ServerCommunication? serverCommunication;
 
+        public bool HasServerCommunication => serverCommunication != null;
+
         /// <summary>
         /// データの取得元（traincrew/server/select）
         /// </summary>
@@ -243,7 +245,7 @@ namespace TrainCrewTIDWindow.Forms
 
         public bool OpeningDialog {
             get;
-            private set;
+            set;
         } = false;
 
         public void PlayWarningSound() {
@@ -310,14 +312,30 @@ namespace TrainCrewTIDWindow.Forms
 
             var loaded = false;
 
-            loaded |= LoadSetting(Environment.GetFolderPath(Environment.SpecialFolder.Personal) + @"\TRAIN CREW Tool\TrainCrewTIDWindow\setting.txt");
-
-            loaded |= LoadSetting(".\\setting\\setting.txt");
+            var docuPath = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + @"\TRAIN CREW Tool\TrainCrewTIDWindow";
+            var lg = LoadSetting($"{docuPath}\\setting.txt"); ;
+            loaded |= lg;
+            if (lg) {
+                LogManager.AddInfoLog("グローバル設定ファイルを読み込みました");
+            }
+            var ll = LoadSetting(".\\setting\\setting.txt");
+            loaded |= ll;
+            if (ll) {
+                LogManager.AddInfoLog("ローカル設定ファイルを読み込みました");
+            }
 
             if (!loaded) {
                 using (StreamWriter w = new(".\\setting\\setting.txt", false, new UTF8Encoding(false))) {
-                    w.Write("source=select\ntopMost=true\nscaleList=50,75,90,100,110,125,150,175,200\ninitialScale=100\ntimeOffset=14\nzoomMode=pushtozoom\nzoomSize=240\nsilent=false\nflashInterval=0.5\nmarkupType=0\nmarkupDelayed=0\nmarkupDuplication=false\nmarkupFillZero=false\nmarkup9999=false\nmarkupNotTrain=false\nmarkupSpawned=false\nmarkupHandover=false\nhideNumber=false");
+                    w.Write($"#このファイルは {docuPath} に配置しても動作します。\nsource=select\ntopMost=true\nscaleList=50,75,90,100,110,125,150,175,200\ninitialScale=100\ntimeOffset=14\nzoomMode=pushtozoom\nzoomSize=240\nsilent=false\nflashInterval=0.5\nmarkupType=0\nmarkupDelayed=0\nmarkupDuplication=false\nmarkupFillZero=false\nmarkup9999=false\nmarkupNotTrain=false\nmarkupSpawned=false\nmarkupHandover=false\nhideNumber=false");
                 }
+                LogManager.AddInfoLog("ローカル設定ファイルを作成しました");
+
+                TaskDialog.ShowDialog(new TaskDialogPage {
+                    Caption = "設定ファイル作成 | TID - ダイヤ運転会",
+                    Heading = "設定ファイルが作成されました",
+                    Icon = TaskDialogIcon.Information,
+                    Text = $"{Path.GetFullPath(".\\setting\\setting.txt")}\nに設定ファイルを作成しました。\n設定ファイルを編集することで起動時の設定などが変更できます。"
+                });
             }
 
 
@@ -408,6 +426,10 @@ namespace TrainCrewTIDWindow.Forms
                 using var sr = new StreamReader(path);
                 var line = sr.ReadLine();
                 while (line != null) {
+                    if (line.StartsWith('#')) {
+                        line = sr.ReadLine();
+                        continue;
+                    }
                     var texts = line.Replace(" ", "").Split('=');
                     line = sr.ReadLine();
 
@@ -1101,12 +1123,14 @@ namespace TrainCrewTIDWindow.Forms
                     SetStatusSubWindow("×", Color.Red);
                     Debug.WriteLine($"データ受信不能: {delaySeconds}");
                     if (!Silent) {
+                        OpeningDialog = true;
                         TaskDialog.ShowDialog(this, new TaskDialogPage {
                             Caption = "データ受信不能 | TID - ダイヤ運転会",
                             Heading = "データ受信不能",
                             Icon = TaskDialogIcon.Error,
                             Text = "サーバ側からのデータ受信が10秒以上ありませんでした。\n復旧を試みますが、しばらく経っても復旧しない場合はアプリケーションの再起動をおすすめします。"
                         });
+                        OpeningDialog = false;
                     }
                     else {
                         PlayWarningSound();

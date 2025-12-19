@@ -66,8 +66,10 @@ namespace TrainCrewTIDWindow.Forms {
             menuItemVersion = new ToolStripMenuItem();
             labelStatus = new Label();
             menuItemHideNumber = new ToolStripMenuItem();
+            pictureBox3 = new PictureBox();
             flowLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pictureBox3).BeginInit();
             contextMenuStrip1.SuspendLayout();
             SuspendLayout();
             // 
@@ -151,6 +153,15 @@ namespace TrainCrewTIDWindow.Forms {
             pictureBox1.MouseMove += PictureBox1_MouseMove;
             pictureBox1.MouseUp += PictureBox1_MouseUp;
             pictureBox1.MouseWheel += PictureBox1_MouseWheel;
+            // 
+            // pictureBox3
+            // 
+            pictureBox3.BackColor = Color.Transparent;
+            pictureBox3.Location = new Point(-300, -300);
+            pictureBox3.Name = "pictureBox3";
+            pictureBox3.Size = new Size(100, 100);
+            pictureBox3.TabIndex = 7;
+            pictureBox3.TabStop = false;
             // 
             // contextMenuStrip1
             // 
@@ -400,6 +411,7 @@ namespace TrainCrewTIDWindow.Forms {
             BackColor = Color.FromArgb(20, 20, 20);
             ClientSize = new Size(784, 461);
             Controls.Add(labelStatus);
+            Controls.Add(pictureBox3);
             Controls.Add(pictureBox1);
             Controls.Add(flowLayoutPanel1);
             MaximizeBox = false;
@@ -414,6 +426,7 @@ namespace TrainCrewTIDWindow.Forms {
             flowLayoutPanel1.ResumeLayout(false);
             flowLayoutPanel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
+            ((System.ComponentModel.ISupportInitialize)pictureBox3).EndInit();
             contextMenuStrip1.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
@@ -461,5 +474,6 @@ namespace TrainCrewTIDWindow.Forms {
         private Label labelStatus;
         private ToolStripMenuItem menuItemMarkupHandover;
         private ToolStripMenuItem menuItemHideNumber;
+        private PictureBox pictureBox3;
     }
 }

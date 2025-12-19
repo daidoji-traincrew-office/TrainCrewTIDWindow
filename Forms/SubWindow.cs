@@ -54,13 +54,17 @@ namespace TrainCrewTIDWindow.Forms {
         /// <summary>
         /// マウス位置（ドラッグ操作対応用）
         /// </summary>
-        private Point mouseLoc = Point.Empty;
+        private Point? mouseLoc = null;
+
+        private Point? selectionStarting = null;
 
         public SubWindow(Point location, Size size, TIDManager displayManager, ToolStripItemCollection menuTrains) {
             StartLocation = location;
             DisplaySize = size;
             this.displayManager = displayManager;
             InitializeComponent();
+
+            pictureBox3.Parent = pictureBox1;
 
             Text = $"サブモニタ{++counter} | TID - ダイヤ運転会";
 
@@ -212,8 +216,19 @@ namespace TrainCrewTIDWindow.Forms {
                         }
                     }
                 }
+                else if (ModifierKeys.HasFlag(Keys.Control)) {
+                    selectionStarting = e.Location;
+                }
                 else {
                     mouseLoc = Cursor.Position;
+                }
+            }
+            if ((e.Button & MouseButtons.Right) == MouseButtons.Right) {
+                pictureBox1.Cursor = Cursors.SizeAll;
+                selectionStarting = null;
+                lock (pictureBox3) {
+                    pictureBox3.Location = new Point(-300, -300);
+                    pictureBox3.Size = new Size(100, 100);
                 }
             }
         }
@@ -259,16 +274,75 @@ namespace TrainCrewTIDWindow.Forms {
         }
 
         private void PictureBox1_MouseMove(object sender, MouseEventArgs e) {
-            if (!ModifierKeys.HasFlag(Keys.Shift) && (e.Button & MouseButtons.Left) == MouseButtons.Left) {
+            if (mouseLoc.HasValue && !selectionStarting.HasValue && !ModifierKeys.HasFlag(Keys.Shift) && (e.Button & MouseButtons.Left) == MouseButtons.Left) {
                 var pos = Cursor.Position;
-                Location = new Point(Location.X + pos.X - mouseLoc.X, Location.Y + pos.Y - mouseLoc.Y);
+                Location = new Point(Location.X + pos.X - mouseLoc.Value.X, Location.Y + pos.Y - mouseLoc.Value.Y);
                 mouseLoc = pos;
+            }
+            if (selectionStarting.HasValue) {
+                var s = selectionStarting.Value;
+                selectionStarting = new Point(s.X > 16 ? (s.X < pictureBox1.Width - 16 ? s.X : pictureBox1.Width) : 0, s.Y > 16 ? (s.Y < pictureBox1.Height - 16 ? s.Y : pictureBox1.Height) : 0);
+                var start = selectionStarting.Value;
+                var end = e.Location;
+                var center = new Point((start.X + end.X) / 2 - end.X + Cursor.Position.X, (start.Y + end.Y) / 2 - end.Y + Cursor.Position.Y);
+                end = new Point(end.X > 16 ? (start.X >= pictureBox1.Width || end.X < pictureBox1.Width - 16 ? end.X : pictureBox1.Width) : (start.X > 0 ? 0 : end.X), end.Y > 16 ? (start.Y >= pictureBox1.Height || end.Y < pictureBox1.Height - 16 ? end.Y : pictureBox1.Height) : (start.Y > 0 ? 0 : end.Y));
+                var startOrig = ConvertPointToOriginal(start);
+                var endOrig = ConvertPointToOriginal(end);
+                var pos = new Point(Math.Min(start.X, end.X)/* - StartLocation.X*/, Math.Min(start.Y, end.Y)/* - StartLocation.Y*/);
+                var size = new Size(Math.Abs(start.X - end.X), Math.Abs(start.Y - end.Y));
+                var sizeOrig = new Size(Math.Abs(startOrig.X - endOrig.X), Math.Abs(startOrig.Y - endOrig.Y));
+                if (size.Width > 1 && size.Height > 1) {
+                    lock (pictureBox3) {
+                        var screenSize = Screen.FromControl(this).Bounds;
+                        screenSize = new Rectangle(screenSize.Location, new Size(screenSize.Width + 20, screenSize.Height + 20));
+                        var old = pictureBox3.Image;
+                        var b = new Bitmap(size.Width, size.Height);
+                        using var g = Graphics.FromImage(b);
+                        g.Clear(Color.Transparent);
+                        g.DrawRectangle(sizeOrig.Width > 120 && sizeOrig.Width <= screenSize.Width && sizeOrig.Height > 100 && sizeOrig.Height <= screenSize.Height ? Pens.LimeGreen : Pens.DarkRed, 0, 0, size.Width - 1, size.Height - 1);
+                        pictureBox3.Image = b;
+                        pictureBox3.Location = pos;
+                        pictureBox3.Size = size;
+                        old?.Dispose();
+                    }
+                }
+
             }
         }
 
         private void PictureBox1_MouseUp(object sender, MouseEventArgs e) {
             if ((e.Button & MouseButtons.Left) == MouseButtons.Left) {
-                mouseLoc = Point.Empty;
+                mouseLoc = null;
+                if (selectionStarting.HasValue) {
+                    var start = selectionStarting.Value;
+                    selectionStarting = null;
+                    lock (pictureBox3) {
+                        pictureBox3.Location = new Point(-300, -300);
+                        pictureBox3.Size = new Size(100, 100);
+                    }
+                    var end = e.Location;
+                    var center = new Point((start.X + end.X) / 2 - end.X + Cursor.Position.X, (start.Y + end.Y) / 2 - end.Y + Cursor.Position.Y);
+                    end = new Point(end.X > 16 ? (start.X >= pictureBox1.Width || end.X < pictureBox1.Width - 16 ? end.X : pictureBox1.Width) : (start.X > 0 ? 0 : end.X), end.Y > 16 ? (start.Y >= pictureBox1.Height || end.Y < pictureBox1.Height - 16 ? end.Y : pictureBox1.Height) : (start.Y > 0 ? 0 : end.Y));
+                    start = ConvertPointToOriginal(start);
+                    end = ConvertPointToOriginal(end);
+                    var p = new Point(Math.Min(start.X, end.X), Math.Min(start.Y, end.Y));
+                    var s = new Size(Math.Abs(start.X - end.X), Math.Abs(start.Y - end.Y));
+                    var screenSize = Screen.FromControl(this).Bounds;
+                    screenSize = new Rectangle(screenSize.Location, new Size(screenSize.Width + 20, screenSize.Height + 20));
+                    if (s.Width > 120 && s.Width <= screenSize.Width && s.Height > 100 && s.Height <= screenSize.Height - pictureBox1.Location.Y) {
+                        var sub = new SubWindow(p, s, displayManager, menuItemTrainMarkup.DropDownItems);
+                        sub.Icon = Icon;
+                        pictureBox1.Cursor = Cursors.SizeAll;
+                        sub.SetMarkup9999(displayManager.Window.TrainDataDict["9999"].Markup);
+                        sub.Show();
+                        var border = (Size.Width - ClientSize.Width) / 2;
+                        sub.Location = new Point(center.X - s.Width / 2 - border, center.Y - s.Height / 2 - Size.Height + ClientSize.Height - pictureBox1.Location.Y / 2 - border);
+                        sub.SetTopMost(TopMost);
+                        sub.SetSilent(displayManager.Window.Silent);
+                        sub.SetClockColor(displayManager.Window.HasServerCommunication || displayManager.Window.UseServerTime ? Color.White : Color.Yellow);
+                        displayManager.AddSubWindow(sub);
+                    }
+                }
             }
         }
 
@@ -325,8 +399,29 @@ namespace TrainCrewTIDWindow.Forms {
             if ((mod & Keys.Shift) == Keys.Shift) {
                 pictureBox1.Cursor = Cursors.Hand;
             }
+            else if ((mod & Keys.Control) == Keys.Control) {
+                pictureBox1.Cursor = Cursors.Cross;
+            }
             if (e.KeyData == (Keys.C | Keys.Control)) {
-                CopyImage();
+                if (selectionStarting.HasValue) {
+                    var start = selectionStarting.Value;
+                    selectionStarting = null;
+                    lock (pictureBox3) {
+                        pictureBox3.Location = new Point(-300, -300);
+                        pictureBox3.Size = new Size(100, 100);
+                    }
+                    var end = pictureBox1.PointToClient(Cursor.Position);
+                    var center = new Point((start.X + end.X) / 2 - end.X + Cursor.Position.X, (start.Y + end.Y) / 2 - end.Y + Cursor.Position.Y);
+                    end = new Point(end.X > 10 ? (start.X < pictureBox1.Width && end.X < pictureBox1.Width - 10 ? end.X : pictureBox1.Width) : (start.X > 0 ? 0 : end.X), end.Y > 10 ? (start.Y < pictureBox1.Height && end.Y < pictureBox1.Height - 10 ? end.Y : pictureBox1.Height) : (start.Y > 0 ? 0 : end.Y));
+                    start = ConvertPointToOriginal(start);
+                    end = ConvertPointToOriginal(end);
+                    var p = new Point(Math.Min(start.X, end.X) - StartLocation.X, Math.Min(start.Y, end.Y) - StartLocation.Y);
+                    var s = new Size(Math.Abs(start.X - end.X), Math.Abs(start.Y - end.Y));
+                    CopyImage(p, s);
+                }
+                else {
+                    CopyImage();
+                }
             }
             if (e.KeyData == Keys.Tab) {
                 SetTopMost(!TopMost);
@@ -347,7 +442,18 @@ namespace TrainCrewTIDWindow.Forms {
         }
 
         private void SubWindow_KeyUp(object sender, KeyEventArgs e) {
+            var mod = e.KeyData & Keys.Modifiers;
             UpdateMouseCursor();
+            if ((mod & Keys.Shift) != Keys.Shift && (mod & Keys.Control) != Keys.Control) {
+                if ((MouseButtons & MouseButtons.Left) == MouseButtons.Left) {
+                    /*mouseLoc = pictureBox1.PointToClient(Cursor.Position);*/
+                    selectionStarting = null;
+                    lock (pictureBox3) {
+                        pictureBox3.Location = new Point(-300, -300);
+                        pictureBox3.Size = new Size(100, 100);
+                    }
+                }
+            }
 
         }
 
@@ -380,6 +486,9 @@ namespace TrainCrewTIDWindow.Forms {
             if (ModifierKeys.HasFlag(Keys.Shift)) {
                 pictureBox1.Cursor = Cursors.Hand;
             }
+            else if (ModifierKeys.HasFlag(Keys.Control)) {
+                pictureBox1.Cursor = Cursors.Cross;
+            }
             else {
                 pictureBox1.Cursor = Cursors.SizeAll;
             }
@@ -396,6 +505,23 @@ namespace TrainCrewTIDWindow.Forms {
                 Clipboard.SetImage(i);
                 i.Dispose();
             }
+        }
+
+        public void CopyImage(int x, int y, int width, int height) {
+            lock (original) {
+                var i = new Bitmap(width, height + 13);
+                using (var g = Graphics.FromImage(i)) {
+                    g.Clear(Color.FromArgb(10, 10, 10));
+                    g.DrawImage(original, new Rectangle(0, 13, width, height), x, y, width, height, GraphicsUnit.Pixel);
+                    g.DrawString(labelClock.Text, new Font("ＭＳ ゴシック", 12, GraphicsUnit.Pixel), Brushes.White, width - 51, 0);
+                }
+                Clipboard.SetImage(i);
+                i.Dispose();
+            }
+        }
+
+        public void CopyImage(Point location, Size size) {
+            CopyImage(location.X, location.Y, size.Width, size.Height);
         }
 
         private void menuItemCopy_Click(object sender, EventArgs e) {
