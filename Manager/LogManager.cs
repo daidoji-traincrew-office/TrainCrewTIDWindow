@@ -12,21 +12,21 @@ namespace TrainCrewTIDWindow.Manager {
         public static bool NeededWarning { get; private set; } = false;
 
         public static void AddInfoLog(string text) {
-            log.Append($"{DateTime.Now.ToString()} [Info] ");
+            log.Append($"{DateTime.UtcNow.AddHours(9).ToString()} [Info] ");
             log.AppendLine(text);
             updated = true;
         }
 
 
         public static void AddWarningLog(string text) {
-            log.Append($"{DateTime.Now.ToString()} [Warning] ");
+            log.Append($"{DateTime.UtcNow.AddHours(9).ToString()} [Warning] ");
             log.AppendLine(text);
             updated = true;
         }
 
 
         public static void AddExceptionLog(HttpRequestException e) {
-            log.Append($"{DateTime.Now.ToString()} [Error] ");
+            log.Append($"{DateTime.UtcNow.AddHours(9).ToString()} [Error] ");
             log.AppendLine(e.GetType().FullName);
             log.AppendLine($"status: {e.StatusCode}");
             log.AppendLine($"source: {e.Source}");
@@ -37,7 +37,7 @@ namespace TrainCrewTIDWindow.Manager {
 
 
         public static void AddExceptionLog(Exception e) {
-            log.Append($"{DateTime.Now.ToString()} [Error] ");
+            log.Append($"{DateTime.UtcNow.AddHours(9).ToString()} [Error] ");
             log.AppendLine(e.GetType().FullName);
             log.AppendLine($"source: {e.Source}");
             log.AppendLine(e.Message);

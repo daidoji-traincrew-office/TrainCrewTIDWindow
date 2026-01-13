@@ -205,7 +205,10 @@ namespace TrainCrewTIDWindow.Forms {
 
         private void PictureBox1_MouseDown(object sender, MouseEventArgs e) {
             if ((e.Button & MouseButtons.Left) == MouseButtons.Left) {
-                if (ModifierKeys.HasFlag(Keys.Shift)) {
+                if (ModifierKeys.HasFlag(Keys.Control)) {
+                    selectionStarting = e.Location;
+                }
+                else if (ModifierKeys.HasFlag(Keys.Shift)) {
                     foreach (var w in displayManager.NumberWindowDict.Values) {
                         var t = w.Train;
                         if (t != null && IsInArea(e.Location, w.PosX, w.PosY, w.GetSize(), 1) && displayManager.Window.TrainDataDict.TryGetValue(t, out var td)) {
@@ -215,9 +218,6 @@ namespace TrainCrewTIDWindow.Forms {
                             displayManager.Window.ReservedUpdate = true;*/
                         }
                     }
-                }
-                else if (ModifierKeys.HasFlag(Keys.Control)) {
-                    selectionStarting = e.Location;
                 }
                 else {
                     mouseLoc = Cursor.Position;
@@ -288,7 +288,7 @@ namespace TrainCrewTIDWindow.Forms {
                 end = new Point(end.X > 16 ? (start.X >= pictureBox1.Width || end.X < pictureBox1.Width - 16 ? end.X : pictureBox1.Width) : (start.X > 0 ? 0 : end.X), end.Y > 16 ? (start.Y >= pictureBox1.Height || end.Y < pictureBox1.Height - 16 ? end.Y : pictureBox1.Height) : (start.Y > 0 ? 0 : end.Y));
                 var startOrig = ConvertPointToOriginal(start);
                 var endOrig = ConvertPointToOriginal(end);
-                var pos = new Point(Math.Min(start.X, end.X)/* - StartLocation.X*/, Math.Min(start.Y, end.Y)/* - StartLocation.Y*/);
+                var pos = new Point(Math.Min(start.X, end.X), Math.Min(start.Y, end.Y));
                 var size = new Size(Math.Abs(start.X - end.X), Math.Abs(start.Y - end.Y));
                 var sizeOrig = new Size(Math.Abs(startOrig.X - endOrig.X), Math.Abs(startOrig.Y - endOrig.Y));
                 if (size.Width > 1 && size.Height > 1) {
@@ -306,7 +306,6 @@ namespace TrainCrewTIDWindow.Forms {
                         old?.Dispose();
                     }
                 }
-
             }
         }
 
@@ -396,11 +395,11 @@ namespace TrainCrewTIDWindow.Forms {
         private void SubWindow_KeyDown(object sender, KeyEventArgs e) {
             var code = e.KeyData & Keys.KeyCode;
             var mod = e.KeyData & Keys.Modifiers;
-            if ((mod & Keys.Shift) == Keys.Shift) {
-                pictureBox1.Cursor = Cursors.Hand;
-            }
-            else if ((mod & Keys.Control) == Keys.Control) {
+            if ((mod & Keys.Control) == Keys.Control) {
                 pictureBox1.Cursor = Cursors.Cross;
+            }
+            else if ((mod & Keys.Shift) == Keys.Shift) {
+                pictureBox1.Cursor = Cursors.Hand;
             }
             if (e.KeyData == (Keys.C | Keys.Control)) {
                 if (selectionStarting.HasValue) {
@@ -444,9 +443,8 @@ namespace TrainCrewTIDWindow.Forms {
         private void SubWindow_KeyUp(object sender, KeyEventArgs e) {
             var mod = e.KeyData & Keys.Modifiers;
             UpdateMouseCursor();
-            if ((mod & Keys.Shift) != Keys.Shift && (mod & Keys.Control) != Keys.Control) {
+            if (/*(mod & Keys.Shift) != Keys.Shift && */(mod & Keys.Control) != Keys.Control) {
                 if ((MouseButtons & MouseButtons.Left) == MouseButtons.Left) {
-                    /*mouseLoc = pictureBox1.PointToClient(Cursor.Position);*/
                     selectionStarting = null;
                     lock (pictureBox3) {
                         pictureBox3.Location = new Point(-300, -300);
@@ -483,11 +481,11 @@ namespace TrainCrewTIDWindow.Forms {
         }
 
         private void UpdateMouseCursor() {
-            if (ModifierKeys.HasFlag(Keys.Shift)) {
-                pictureBox1.Cursor = Cursors.Hand;
-            }
-            else if (ModifierKeys.HasFlag(Keys.Control)) {
+            if (ModifierKeys.HasFlag(Keys.Control)) {
                 pictureBox1.Cursor = Cursors.Cross;
+            }
+            else if (ModifierKeys.HasFlag(Keys.Shift)) {
+                pictureBox1.Cursor = Cursors.Hand;
             }
             else {
                 pictureBox1.Cursor = Cursors.SizeAll;

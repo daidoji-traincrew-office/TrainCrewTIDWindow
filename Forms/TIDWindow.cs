@@ -109,7 +109,7 @@ namespace TrainCrewTIDWindow.Forms
         public DateTime RealTime {
             get;
             set;
-        } = DateTime.Now;
+        } = DateTime.UtcNow.AddHours(9);
 
         /// <summary>
         /// 現実との時差
@@ -748,7 +748,7 @@ namespace TrainCrewTIDWindow.Forms
                 return;
             }
             if (showOffset <= 0) {
-                var now = DateTime.Now;
+                var now = DateTime.UtcNow.AddHours(9);
                 Clock = new DateTime(now.Year, now.Month, now.Day, tcData.nowTime.hour, tcData.nowTime.minute, (int)tcData.nowTime.second);
                 var time = Clock + TimeOffset;
                 displayManager.SetClockSubWindows(time);
@@ -1058,7 +1058,7 @@ namespace TrainCrewTIDWindow.Forms
             }
 
             var oldFlashState = FlashState;
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow.AddHours(9);
             var deltaSeconds = (now - RealTime).TotalSeconds;
             RealTime = now;
             if (flashInterval > 0) {
@@ -1417,11 +1417,11 @@ namespace TrainCrewTIDWindow.Forms
         private void TIDWindow_KeyDown(object sender, KeyEventArgs e) {
             var code = e.KeyData & Keys.KeyCode;
             var mod = e.KeyData & Keys.Modifiers;
-            if ((mod & Keys.Shift) == Keys.Shift) {
-                pictureBox1.Cursor = Cursors.Hand;
-            }
-            else if ((mod & Keys.Control) == Keys.Control) {
+            if ((mod & Keys.Control) == Keys.Control) {
                 pictureBox1.Cursor = Cursors.Cross;
+            }
+            else if ((mod & Keys.Shift) == Keys.Shift) {
+                pictureBox1.Cursor = Cursors.Hand;
             }
             if (e.KeyData == (Keys.C | Keys.Control)) {
                 if (selectionStarting.HasValue) {
@@ -1557,7 +1557,7 @@ namespace TrainCrewTIDWindow.Forms
         private void TIDWindow_KeyUp(object sender, KeyEventArgs e) {
             var mod = e.KeyData & Keys.Modifiers;
             UpdateMouseCursor();
-            if ((mod & Keys.Shift) != Keys.Shift && (mod & Keys.Control) != Keys.Control) {
+            if (/*(mod & Keys.Shift) != Keys.Shift && */(mod & Keys.Control) != Keys.Control) {
                 if ((MouseButtons & MouseButtons.Left) == MouseButtons.Left) {
                     mouseLoc = pictureBox1.PointToClient(Cursor.Position);
                     selectionStarting = null;
@@ -1705,7 +1705,10 @@ namespace TrainCrewTIDWindow.Forms
                 UpdateMouseCursor();
             }
             if ((e.Button & MouseButtons.Left) == MouseButtons.Left) {
-                if (ModifierKeys.HasFlag(Keys.Shift)) {
+                if (ModifierKeys.HasFlag(Keys.Control)) {
+                    selectionStarting = e.Location;
+                }
+                else if (ModifierKeys.HasFlag(Keys.Shift)) {
                     foreach (var w in displayManager.NumberWindowDict.Values) {
                         var t = w.Train;
                         if (t != null && IsInArea(e.Location, w.PosX, w.PosY, w.GetSize(), 1)/* && trainDataDict.TryGetValue(t, out var td)*/) {
@@ -1715,9 +1718,6 @@ namespace TrainCrewTIDWindow.Forms
                             ReservedUpdate = true;*/
                         }
                     }
-                }
-                else if (ModifierKeys.HasFlag(Keys.Control)) {
-                    selectionStarting = e.Location;
                 }
                 else {
                     mouseLoc = e.Location;
@@ -1751,7 +1751,15 @@ namespace TrainCrewTIDWindow.Forms
                 UpdateMouseCursor();
             }
             if (toggleMagnifyingGlass && (e.Button & MouseButtons.Left) == MouseButtons.Left) {
-                if (ModifierKeys.HasFlag(Keys.Shift)) {
+                if (ModifierKeys.HasFlag(Keys.Control)) {
+                    usingMagnifyingGlass = false;
+
+                    pictureBox2.Location = new Point(-300, -300);
+                    pictureBox2.Size = new Size(240, 240);
+                    UpdateMouseCursor();
+                    selectionStarting = pictureBox1.PointToClient(Cursor.Position);
+                }
+                else if (ModifierKeys.HasFlag(Keys.Shift)) {
                     foreach (var w in displayManager.NumberWindowDict.Values) {
                         var t = w.Train;
                         if (t != null && IsInArea(pictureBox1.PointToClient(Cursor.Position), w.PosX, w.PosY, w.GetSize(), 1)/* && trainDataDict.TryGetValue(t, out var td)*/) {
@@ -1761,14 +1769,6 @@ namespace TrainCrewTIDWindow.Forms
                             ReservedUpdate = true;*/
                         }
                     }
-                }
-                else if (ModifierKeys.HasFlag(Keys.Control)) {
-                    usingMagnifyingGlass = false;
-
-                    pictureBox2.Location = new Point(-300, -300);
-                    pictureBox2.Size = new Size(240, 240);
-                    UpdateMouseCursor();
-                    selectionStarting = pictureBox1.PointToClient(Cursor.Position);
                 }
             }
         }
@@ -2352,13 +2352,13 @@ namespace TrainCrewTIDWindow.Forms
         }
 
         private void UpdateMouseCursor() {
-            if (ModifierKeys.HasFlag(Keys.Shift)) {
-                pictureBox1.Cursor = Cursors.Hand;
-                pictureBox2.Cursor = Cursors.Hand;
-            }
-            else if (ModifierKeys.HasFlag(Keys.Control)) {
+            if (ModifierKeys.HasFlag(Keys.Control)) {
                 pictureBox1.Cursor = Cursors.Cross;
                 pictureBox2.Cursor = Cursors.Cross;
+            }
+            else if (ModifierKeys.HasFlag(Keys.Shift)) {
+                pictureBox1.Cursor = Cursors.Hand;
+                pictureBox2.Cursor = Cursors.Hand;
             }
             else if (usingMagnifyingGlass) {
                 pictureBox1.Cursor = Cursors.Cross;
