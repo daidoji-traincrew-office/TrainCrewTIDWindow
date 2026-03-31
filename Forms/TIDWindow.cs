@@ -1,4 +1,5 @@
 ﻿using Dapplo.Microsoft.Extensions.Hosting.WinForms;
+using NAudio.Wave;
 using System.Collections.ObjectModel;
 using OpenIddict.Client;
 using System.Diagnostics;
@@ -163,8 +164,6 @@ namespace TrainCrewTIDWindow.Forms
         /// </summary>
         private int debugCount = -99999;
 
-        private SoundPlayer? warningSound = null;
-
         private bool windowMinimized = false;
 
         private float flashInterval = 0.5f;
@@ -246,14 +245,84 @@ namespace TrainCrewTIDWindow.Forms
         public bool OpeningDialog {
             get;
             set;
-        } = false;
+        } = true;
 
-        public void PlayWarningSound() {
-            if (warningSound != null) {
-                warningSound.Play();
+        public string ErrorText {
+            get;
+            private set;
+        } = "エラー";
+
+        private bool cancelAprilFool = false;
+
+        private static int volumeMaster = 100;
+
+        private static bool muteMaster = false;
+
+        public static int VolumeMaster {
+            get {
+                return volumeMaster;
+            }
+            set {
+                volumeMaster = value;
+                UpdateVolumeWarning(false);
+            }
+        }
+
+        public static bool MuteMaster {
+            get {
+                return muteMaster;
+            }
+            set {
+                muteMaster = value;
+                UpdateVolumeWarning(false);
+            }
+        }
+
+
+        private static AudioFileReader? warningSound = null;
+        private static WaveOut woWarningSound = new();
+
+        public static void PlayWarningSound() {
+            if (woWarningSound.Volume <= 0) {
+                return;
+            }
+            else if (warningSound != null) {
+                warningSound.Position = 0;
+                woWarningSound.Play();
             }
             else {
                 SystemSounds.Hand.Play();
+            }
+        }
+
+        private static int volumeWarning = 100;
+
+        private static bool muteWarningSound = false;
+
+        public static int VolumeWarning {
+            get {
+                return volumeWarning;
+            }
+            set {
+                volumeWarning = value;
+                UpdateVolumeWarning(false);
+            }
+        }
+
+        public static bool MuteWarningSound {
+            get {
+                return muteWarningSound;
+            }
+            set {
+                muteWarningSound = value;
+                UpdateVolumeWarning(true);
+            }
+        }
+
+        public static void UpdateVolumeWarning(bool playSample) {
+            woWarningSound.Volume = muteMaster || muteWarningSound ? 0 : volumeMaster * volumeWarning / 10000f;
+            if (playSample) {
+                PlayWarningSound();
             }
         }
 
@@ -326,7 +395,7 @@ namespace TrainCrewTIDWindow.Forms
 
             if (!loaded) {
                 using (StreamWriter w = new(".\\setting\\setting.txt", false, new UTF8Encoding(false))) {
-                    w.Write($"#このファイルは {docuPath} に配置しても動作します。\nsource=select\ntopMost=true\nscaleList=50,75,90,100,110,125,150,175,200\ninitialScale=100\ntimeOffset=14\nzoomMode=pushtozoom\nzoomSize=240\nsilent=false\nflashInterval=0.5\nmarkupType=0\nmarkupDelayed=0\nmarkupDuplication=false\nmarkupFillZero=false\nmarkup9999=false\nmarkupNotTrain=false\nmarkupSpawned=false\nmarkupHandover=false\nhideNumber=false");
+                    w.Write($"#このファイルは {docuPath} に配置しても動作します。\nsource=select\ntopMost=true\nscaleList=50,75,90,100,110,125,150,175,200\ninitialScale=100\ntimeOffset=14\nzoomMode=pushtozoom\nzoomSize=240\nsilent=false\nflashInterval=0.5\nmarkupType=0\nmarkupDelayed=0\nmarkupDuplication=false\nmarkupFillZero=false\nmarkup9999=false\nmarkupNotTrain=false\nmarkupSpawned=false\nmarkupHandover=false\nhideNumber=false\nvolumeMaster=100\nvolumeWarning=100");
                 }
                 LogManager.AddInfoLog("ローカル設定ファイルを作成しました");
 
@@ -340,7 +409,8 @@ namespace TrainCrewTIDWindow.Forms
 
 
             if (File.Exists(".\\sound\\warning.wav")) {
-                warningSound = new SoundPlayer(".\\sound\\warning.wav");
+                warningSound = new AudioFileReader(".\\sound\\warning.wav");
+                woWarningSound.Init(warningSound);
             }
 
 
@@ -553,6 +623,22 @@ namespace TrainCrewTIDWindow.Forms
                                 debugDelayUp = 0;
                             }
                             break;
+                        case "volumeMaster":
+                            if (int.TryParse(texts[1], out var volumeMaster)) {
+                                TIDWindow.volumeMaster = volumeMaster < 0 ? 0 : (volumeMaster > 100 ? 100 : volumeMaster);
+                            }
+                            break;
+                        case "volumeWarning":
+                            if (int.TryParse(texts[1], out var volumeWarning)) {
+                                TIDWindow.volumeWarning = volumeWarning < 0 ? 0 : (volumeWarning > 100 ? 100 : volumeWarning);
+                            }
+                            break;
+                        case "errorText":
+                            ErrorText = texts[1];
+                            break;
+                        case "cancelAprilFool":
+                            cancelAprilFool = v == "true";
+                            break;
                     }
                 }
             }
@@ -564,6 +650,60 @@ namespace TrainCrewTIDWindow.Forms
 
         private async void TIDWindow_Load(object? sender, EventArgs? e) {
             _ = Task.Run(ClockUpdateLoop);
+
+            new InitialIconWindow(Icon).ShowDialog();
+
+            var now = DateTime.Now;
+
+            if (!cancelAprilFool && now.Month == 4 && now.Day == 1) {
+                var result = TaskDialog.ShowDialog(this, new TaskDialogPage {
+                    Caption = $"{ErrorText} | TID - タイヤ運転会",
+                    Heading = $"バージョンが古いです",
+                    Icon = TaskDialogIcon.Error,
+                    Text = $"本ソフトのバージョンが古いです。\n最新のバージョンをダウンロードしてください。",
+                    Buttons = { TaskDialogButton.Yes, TaskDialogButton.No },
+                    DefaultButton = TaskDialogButton.No
+                });
+                if (result == TaskDialogButton.Yes) {
+                    var startInfo = new ProcessStartInfo("https://github.com/daidoji-traincrew-office/TrainCrewTIDWindow/releases");
+                    startInfo.UseShellExecute = true;
+                    Process.Start(startInfo);
+                    Close();
+                }
+                else if (result == TaskDialogButton.No) {
+                    TaskDialog.ShowDialog(this, new TaskDialogPage {
+                        Caption = $"...？ | TlD - ダイヤ運転会",
+                        Heading = $"...？",
+                        Icon = TaskDialogIcon.Information,
+                        Text = $"えっ...？これが最新バージョンだって...？",
+                        Buttons = { new TaskDialogButton("はい...") }
+                    });
+                    var forgiveButton = new TaskDialogButton("許す");
+                    var notForgiveButton = new TaskDialogButton("許さない");
+                    result = TaskDialog.ShowDialog(this, new TaskDialogPage {
+                        Caption = $"ごめん | TDI - ダイヤ運転会",
+                        Heading = $"謝罪",
+                        Icon = TaskDialogIcon.Information,
+                        Text = $"ごめんなさい！間違えました！\n許してください！！！！\nちゃんとTIDの仕事はしますので！！！！\n（許さないとソフトを終了します）",
+                        Buttons = { forgiveButton, notForgiveButton },
+                        DefaultButton = forgiveButton
+                    });
+                    if (result == forgiveButton) {
+                        TaskDialog.ShowDialog(this, new TaskDialogPage {
+                            Caption = $"ありがとう | TID - ダイヤ横転会",
+                            Heading = $"感謝",
+                            Icon = TaskDialogIcon.Information,
+                            Text = $"ありがとうございます！！\nそれではここからはいつも通りに...\n（大変失礼いたしました。本日はエイプリルフールです）",
+                            Buttons = { new TaskDialogButton("さっさと働け") }
+                        });
+                    }
+                    else if (result == notForgiveButton) {
+                        Close();
+                    }
+                }
+
+            }
+
 
             var s = source;
 
@@ -578,6 +718,9 @@ namespace TrainCrewTIDWindow.Forms
             }
 
             SetTopMost(topMostSetting);
+            OpeningDialog = false;
+
+            /*return;*/
 
             switch (s) {
                 case "traincrew":
@@ -1187,7 +1330,7 @@ namespace TrainCrewTIDWindow.Forms
         }
 
         private void labelClock_MouseDown(object sender, MouseEventArgs e) {
-            if(e.Button == MouseButtons.Middle) {
+            if (e.Button == MouseButtons.Middle) {
                 SetUseServerTime(true);
             }
             if (e.Button != MouseButtons.Left && e.Button != MouseButtons.Right) {
@@ -2036,14 +2179,29 @@ namespace TrainCrewTIDWindow.Forms
             menuItemToggle.CheckState = CheckState.Indeterminate;
         }
 
-        private void TIDWindow_Closing(object sender, EventArgs e) {
+        private void TIDWindow_Closing(object sender, FormClosingEventArgs e) {
+            if (displayManager.SubWindows.Count > 0) {
+                OpeningDialog = true;
+                var result = TaskDialog.ShowDialog(this, new TaskDialogPage {
+                    Caption = $"ソフト終了確認 | TID - ダイヤ運転会",
+                    Heading = $"ソフト終了確認",
+                    Icon = TaskDialogIcon.Information,
+                    Text = $"サブウィンドウを全て閉じ、ソフトを終了しますか？",
+                    Buttons = { TaskDialogButton.Yes, TaskDialogButton.No },
+                    DefaultButton = TaskDialogButton.Yes
+                });
+                if (result == TaskDialogButton.No) {
+                    e.Cancel = true;
+                }
+            }
             if (LogManager.Output && LogManager.NeededWarning) {
+                OpeningDialog = true;
                 TaskDialog.ShowDialog(this, new TaskDialogPage {
-                    Caption = "エラーログ出力 | TID - ダイヤ運転会",
-                    Heading = "エラーログ出力",
+                    Caption = $"{ErrorText}ログ出力 | TID - ダイヤ運転会",
+                    Heading = $"{ErrorText}ログ出力",
                     Icon = TaskDialogIcon.Information,
                     Text =
-                        $"エラーログが出力されました。\n本ソフトの製作担当者にお問い合わせのうえ、\n必要な場合はErrorLog.txtをお送りください。\n（ErrorLog.txtは次回起動後に削除される場合があります）"
+                        $"{ErrorText}ログが出力されました。\n本ソフトの製作担当者にお問い合わせのうえ、\n必要な場合はErrorLog.txtをお送りください。\n（ErrorLog.txtは次回起動後に削除される場合があります）"
                 });
             }
         }
@@ -2324,7 +2482,7 @@ namespace TrainCrewTIDWindow.Forms
                     color = Color.Yellow;
                 }
                 labelClock.ForeColor = color;
-                foreach(var w in displayManager.SubWindows) {
+                foreach (var w in displayManager.SubWindows) {
                     w.SetClockColor(color);
                 }
             }
@@ -2364,19 +2522,14 @@ namespace TrainCrewTIDWindow.Forms
                 pictureBox1.Cursor = Cursors.Cross;
                 pictureBox2.Cursor = Cursors.Cross;
             }
-            else {
+            else if (pictureBox1.Cursor != defaultCursor || pictureBox2.Cursor != Cursors.Cross) {
                 pictureBox1.Cursor = defaultCursor;
                 pictureBox2.Cursor = Cursors.Cross;
             }
         }
 
         private void menuItemVersion_Click(object sender, EventArgs e) {
-            var form = new VersionWindow();
-            form.Icon = Icon;
-            var bitmap = Icon != null ? new Icon(Icon, 256, 256).ToBitmap() : new Bitmap(10, 10);
-            form.PictureIcon.Image = bitmap;
-            form.PictureIcon.Size = new Size(bitmap.Width, bitmap.Height);
-            form.LabelVersion.Text = $"TrainCrewTIDWindow\nVer. {ServerAddress.Version.Replace("TrainCrewTIDWindow_", "")}";
+            var form = new VersionWindow(Icon);
             if (TopMost) {
                 form.TopMost = true;
             }
@@ -2418,6 +2571,42 @@ namespace TrainCrewTIDWindow.Forms
             foreach (var w in displayManager.SubWindows) {
                 w.UpdateStatus();
             }
+        }
+
+        public void OpenNavigationWindow() {
+            if (NavigationWindow.Instance != null) {
+                NavigationWindow.Instance.Activate();
+                return;
+            }
+            var w = new NavigationWindow(displayManager);
+            w.Show();
+            w.TopMost = TopMost;
+        }
+
+        private void menuItemNavigationWindow_Click(object sender, EventArgs e) {
+            OpenNavigationWindow();
+        }
+
+        private void menuItemErrorLog_Click(object sender, EventArgs e) {
+            OpeningDialog = true;
+            var result = TaskDialog.ShowDialog(this, new TaskDialogPage {
+                Caption = $"ログファイル出力確認 | TID - ダイヤ運転会",
+                Heading = $"ログファイル出力確認",
+                Icon = TaskDialogIcon.Information,
+                Text = $"{ErrorText}ログファイルを出力しますか？",
+                Buttons = { TaskDialogButton.Yes, TaskDialogButton.No },
+                DefaultButton = TaskDialogButton.Yes
+            });
+            if (result == TaskDialogButton.Yes) {
+                LogManager.OutputLog();
+                TaskDialog.ShowDialog(this, new TaskDialogPage {
+                    Caption = $"{ErrorText}ログ出力 | TID - ダイヤ運転会",
+                    Heading = $"{ErrorText}ログ出力",
+                    Icon = TaskDialogIcon.Information,
+                    Text = $"{ErrorText}ログがErrorLog.txtとして出力されました。\n（ErrorLog.txtは次回起動後に削除される場合があります）"
+                });
+            }
+            OpeningDialog = false;
         }
     }
 }

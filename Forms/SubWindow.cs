@@ -552,12 +552,12 @@ namespace TrainCrewTIDWindow.Forms {
         }
 
         private void menuItemVersion_Click(object sender, EventArgs e) {
-            var form = new VersionWindow();
-            form.Icon = Icon;
+            var form = new VersionWindow(Icon);
+            /*form.Icon = Icon;
             var bitmap = Icon != null ? new Icon(Icon, 256, 256).ToBitmap() : new Bitmap(10, 10);
             form.PictureIcon.Image = bitmap;
             form.PictureIcon.Size = new Size(bitmap.Width, bitmap.Height);
-            form.LabelVersion.Text = $"TrainCrewTIDWindow\nVer. {ServerAddress.Version.Replace("TrainCrewTIDWindow_", "")}";
+            form.LabelVersion.Text = $"TrainCrewTIDWindow\nVer. {ServerAddress.Version.Replace("TrainCrewTIDWindow_", "")}";*/
             if (TopMost) {
                 form.TopMost = true;
             }
@@ -742,6 +742,28 @@ namespace TrainCrewTIDWindow.Forms {
 
         public void SetClockColor(Color color) {
             labelClock.ForeColor = color;
+        }
+
+        private void menuItemErrorLog_Click(object sender, EventArgs e) {
+            OpeningDialog = true;
+            var result = TaskDialog.ShowDialog(this, new TaskDialogPage {
+                Caption = $"ログファイル出力確認 | TID - ダイヤ運転会",
+                Heading = $"ログファイル出力確認",
+                Icon = TaskDialogIcon.Information,
+                Text = $"{displayManager.Window.ErrorText}ログファイルを出力しますか？",
+                Buttons = { TaskDialogButton.Yes, TaskDialogButton.No },
+                DefaultButton = TaskDialogButton.Yes
+            });
+            if (result == TaskDialogButton.Yes) {
+                LogManager.OutputLog();
+                TaskDialog.ShowDialog(this, new TaskDialogPage {
+                    Caption = $"{displayManager.Window.ErrorText}ログ出力 | TID - ダイヤ運転会",
+                    Heading = $"{displayManager.Window.ErrorText}ログ出力",
+                    Icon = TaskDialogIcon.Information,
+                    Text = $"{displayManager.Window.ErrorText}ログがErrorLog.txtとして出力されました。\n（ErrorLog.txtは次回起動後に削除される場合があります）"
+                });
+            }
+            OpeningDialog = false;
         }
     }
 }

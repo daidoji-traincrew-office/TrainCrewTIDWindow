@@ -10,6 +10,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="TrainCrewTIDIcon.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="TrainCrewTIDIcon.png" />
     <Content Include="TrainCrewTIDIconV2.ico" />
   </ItemGroup>
 
@@ -23,6 +28,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.9" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.9" />
+    <PackageReference Include="NAudio" Version="2.3.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="OpenIddict.Abstractions" Version="7.1.0" />
     <PackageReference Include="OpenIddict.Client" Version="7.1.0" />

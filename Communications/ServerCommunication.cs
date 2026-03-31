@@ -498,7 +498,7 @@ namespace TrainCrewTIDWindow.Communications {
                         _window.OpeningDialog = false;
                     }
                     else {
-                        _window.PlayWarningSound();
+                        TIDWindow.PlayWarningSound();
                     }
                 }
             }
@@ -522,7 +522,7 @@ namespace TrainCrewTIDWindow.Communications {
                         _window.OpeningDialog = false;
                     }
                     else {
-                        _window.PlayWarningSound();
+                        TIDWindow.PlayWarningSound();
                     }
                 }
             }
@@ -534,21 +534,21 @@ namespace TrainCrewTIDWindow.Communications {
                 Debug.WriteLine($"Server send failed: {e.Message}\n{e.StackTrace}");
                 if (!error) {
                     error = true;
-                    /*_window.Invoke(new Action(() => { _window.LabelStatusText = "未知のエラー"; }));*/
-                    _window.LabelStatusText = "未知のエラー";
+                    /*_window.Invoke(new Action(() => { _window.LabelStatusText = $"未知の{_window.ErrorText}"; }));*/
+                    _window.LabelStatusText = $"未知のエラー";
                     _window.SetStatusSubWindow("×", Color.Red);
                     if (!_window.Silent) {
                         _window.OpeningDialog = true;
                         TaskDialog.ShowDialog(_window, new TaskDialogPage {
-                            Caption = "未知のエラー | TID - ダイヤ運転会",
-                            Heading = "未知のエラー",
+                            Caption = $"未知の{_window.ErrorText} | TID - ダイヤ運転会",
+                            Heading = $"未知の{_window.ErrorText}",
                             Icon = TaskDialogIcon.Error,
-                            Text = "未知のエラーです。\nTID製作者に状況を報告願います。"
+                            Text = $"未知の{_window.ErrorText}です。\nTID製作者に状況を報告願います。"
                         });
                         _window.OpeningDialog = false;
                     }
                     else {
-                        _window.PlayWarningSound();
+                        TIDWindow.PlayWarningSound();
                     }
                 }
             }

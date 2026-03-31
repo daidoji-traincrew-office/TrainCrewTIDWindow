@@ -1165,8 +1165,20 @@ namespace TrainCrewTIDWindow.Manager {
 
                         if (!window.HideNumber) {
                             // 列番の頭の文字設置
-                            if (numHeader.Length > 0 && alphaIndexDict.TryGetValue(numHeader[0], out var nh)) {
-                                AddNumImage(g, nh.Width, nh.X, nh.Y, numWindow.PosX, numWindow.PosY, iaType);
+                            if (numHeader.Length > 0) {
+                                if (alphaIndexDict.TryGetValue(numHeader[0], out var nh)) {
+                                    AddNumImage(g, nh.Width, nh.X, nh.Y, numWindow.PosX, numWindow.PosY, iaType);
+                                }
+                                else {
+                                    window.OpeningDialog = true;
+                                    TaskDialog.ShowDialog(window, new TaskDialogPage {
+                                        Caption = $"不正な列番 | TID - ダイヤ運転会",
+                                        Heading = train,
+                                        Icon = TaskDialogIcon.Warning,
+                                        Text = $"不正な列車番号\"{train}\"が入力されています。\n確認願います。"
+                                    });
+                                    window.OpeningDialog = false;
+                                }
                             }
 
                             // 列番本体設置
@@ -1175,19 +1187,40 @@ namespace TrainCrewTIDWindow.Manager {
                                 AddNumImage(g, num, numWindow.PosX + 12 + (3 - i) * 6, numWindow.PosY, iaType);
                             }
 
-
-                            // 列番の末尾の文字設置
-                            if (numFooter.Length > 0) {
-                                var p = alphaIndexDict[numFooter[0]];
-                                if (p.X < 55 && p.Y < 55) {
-                                    AddNumImage(g, p.X, p.Y, numWindow.PosX + 36, numWindow.PosY, iaType);
+                            try {
+                                // 列番の末尾の文字設置
+                                if (numFooter.Length > 0) {
+                                    var p = alphaIndexDict[numFooter[0]];
+                                    if (p.X < 55 && p.Y < 55) {
+                                        AddNumImage(g, p.X, p.Y, numWindow.PosX + 36, numWindow.PosY, iaType);
+                                    }
+                                }
+                                if (numFooter.Length > 1) {
+                                    var p = alphaIndexDict[numFooter[1]];
+                                    if (p.X < 55 && p.Y < 55) {
+                                        AddNumImage(g, p.X, p.Y, numWindow.PosX + 42, numWindow.PosY, iaType);
+                                    }
+                                }
+                                if(numFooter.Contains('x') || numFooter.Contains('y') || numFooter.Contains('z')) {
+                                    window.OpeningDialog = true;
+                                    TaskDialog.ShowDialog(window, new TaskDialogPage {
+                                        Caption = $"不正な列番 | TID - ダイヤ運転会",
+                                        Heading = train,
+                                        Icon = TaskDialogIcon.Warning,
+                                        Text = $"不正な列車番号\"{train}\"が入力されています。\n確認願います。"
+                                    });
+                                    window.OpeningDialog = false;
                                 }
                             }
-                            if (numFooter.Length > 1) {
-                                var p = alphaIndexDict[numFooter[1]];
-                                if (p.X < 55 && p.Y < 55) {
-                                    AddNumImage(g, p.X, p.Y, numWindow.PosX + 42, numWindow.PosY, iaType);
-                                }
+                            catch(KeyNotFoundException) {
+                                window.OpeningDialog = true;
+                                TaskDialog.ShowDialog(window, new TaskDialogPage {
+                                    Caption = $"不正な列番 | TID - ダイヤ運転会",
+                                    Heading = train,
+                                    Icon = TaskDialogIcon.Warning,
+                                    Text = $"不正な列車番号\"{train}\"が入力されています。\n確認願います。"
+                                });
+                                window.OpeningDialog = false;
                             }
                         }
                         else if (numBody % 2 != 0) {
@@ -1390,11 +1423,11 @@ namespace TrainCrewTIDWindow.Manager {
                 if (!ServerCommunication.Error) {
                     ServerCommunication.Error = true;
                     /*window.Invoke(new Action(() => { window.LabelStatusText = "描画失敗"; }));*/
-                    window.LabelStatusText = "描画失敗";
+                    window.LabelStatusText = "描画エラー";
                     window.SetStatusSubWindow("×", Color.Red);
                     TaskDialog.ShowDialog(window, new TaskDialogPage {
-                        Caption = "描画エラー | TID - ダイヤ運転会",
-                        Heading = "描画エラー",
+                        Caption = $"描画{window.ErrorText} | TID - ダイヤ運転会",
+                        Heading = $"描画{window.ErrorText}",
                         Icon = TaskDialogIcon.Error,
                         Text = "TID画面の描画に失敗しました。\nTID製作者に状況を報告願います。"
                     });

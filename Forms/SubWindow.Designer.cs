@@ -58,6 +58,7 @@ namespace TrainCrewTIDWindow.Forms {
             menuItemMarkupType1 = new ToolStripMenuItem();
             menuItemMarkupType2 = new ToolStripMenuItem();
             menuItemMarkupType3 = new ToolStripMenuItem();
+            menuItemHideNumber = new ToolStripMenuItem();
             toolStripSeparator2 = new ToolStripSeparator();
             menuItemTopMost = new ToolStripMenuItem();
             menuItemSilent = new ToolStripMenuItem();
@@ -65,12 +66,12 @@ namespace TrainCrewTIDWindow.Forms {
             toolStripSeparator3 = new ToolStripSeparator();
             menuItemVersion = new ToolStripMenuItem();
             labelStatus = new Label();
-            menuItemHideNumber = new ToolStripMenuItem();
             pictureBox3 = new PictureBox();
+            menuItemErrorLog = new ToolStripMenuItem();
             flowLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)pictureBox3).BeginInit();
             contextMenuStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pictureBox3).BeginInit();
             SuspendLayout();
             // 
             // flowLayoutPanel1
@@ -154,20 +155,11 @@ namespace TrainCrewTIDWindow.Forms {
             pictureBox1.MouseUp += PictureBox1_MouseUp;
             pictureBox1.MouseWheel += PictureBox1_MouseWheel;
             // 
-            // pictureBox3
-            // 
-            pictureBox3.BackColor = Color.Transparent;
-            pictureBox3.Location = new Point(-300, -300);
-            pictureBox3.Name = "pictureBox3";
-            pictureBox3.Size = new Size(100, 100);
-            pictureBox3.TabIndex = 7;
-            pictureBox3.TabStop = false;
-            // 
             // contextMenuStrip1
             // 
-            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { menuItemCopy, toolStripSeparator1, menuItemTrainMarkup, menuItemMarkupType, menuItemHideNumber, toolStripSeparator2, menuItemTopMost, menuItemSilent, menuItemRename, toolStripSeparator3, menuItemVersion });
+            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { menuItemCopy, toolStripSeparator1, menuItemTrainMarkup, menuItemMarkupType, menuItemHideNumber, toolStripSeparator2, menuItemTopMost, menuItemSilent, menuItemRename, toolStripSeparator3, menuItemErrorLog, menuItemVersion });
             contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new Size(181, 220);
+            contextMenuStrip1.Size = new Size(181, 242);
             // 
             // menuItemCopy
             // 
@@ -191,14 +183,14 @@ namespace TrainCrewTIDWindow.Forms {
             // menuItemMarkupClass
             // 
             menuItemMarkupClass.Name = "menuItemMarkupClass";
-            menuItemMarkupClass.Size = new Size(180, 22);
+            menuItemMarkupClass.Size = new Size(134, 22);
             menuItemMarkupClass.Text = "列車種別";
             // 
             // menuItemMarkupDelayed
             // 
             menuItemMarkupDelayed.DropDownItems.AddRange(new ToolStripItem[] { menuItemMarkupDelayed0, toolStripSeparator5, menuItemMarkupDelayed1, menuItemMarkupDelayed5, menuItemMarkupDelayed10, menuItemMarkupDelayed20 });
             menuItemMarkupDelayed.Name = "menuItemMarkupDelayed";
-            menuItemMarkupDelayed.Size = new Size(180, 22);
+            menuItemMarkupDelayed.Size = new Size(134, 22);
             menuItemMarkupDelayed.Text = "遅延列車";
             // 
             // menuItemMarkupDelayed0
@@ -247,74 +239,74 @@ namespace TrainCrewTIDWindow.Forms {
             // 
             menuItemMarkupOther.DropDownItems.AddRange(new ToolStripItem[] { menuItemMarkupDuplication, menuItemMarkupFillZero, menuItemMarkup9999, menuItemMarkupNotTrain, toolStripSeparator6, menuItemMarkupSpawned, menuItemMarkupHandover });
             menuItemMarkupOther.Name = "menuItemMarkupOther";
-            menuItemMarkupOther.Size = new Size(180, 22);
+            menuItemMarkupOther.Size = new Size(134, 22);
             menuItemMarkupOther.Text = "その他";
             // 
             // menuItemMarkupDuplication
             // 
             menuItemMarkupDuplication.Name = "menuItemMarkupDuplication";
-            menuItemMarkupDuplication.Size = new Size(180, 22);
+            menuItemMarkupDuplication.Size = new Size(165, 22);
             menuItemMarkupDuplication.Text = "重複列車番号";
             menuItemMarkupDuplication.Click += menuItemMarkupDuplication_Click;
             // 
             // menuItemMarkupFillZero
             // 
             menuItemMarkupFillZero.Name = "menuItemMarkupFillZero";
-            menuItemMarkupFillZero.Size = new Size(180, 22);
+            menuItemMarkupFillZero.Size = new Size(165, 22);
             menuItemMarkupFillZero.Text = "ゼロ埋め列車番号";
             menuItemMarkupFillZero.Click += menuItemMarkupFillZero_Click;
             // 
             // menuItemMarkup9999
             // 
             menuItemMarkup9999.Name = "menuItemMarkup9999";
-            menuItemMarkup9999.Size = new Size(180, 22);
+            menuItemMarkup9999.Size = new Size(165, 22);
             menuItemMarkup9999.Text = "9999";
             menuItemMarkup9999.Click += menuItemMarkup9999_Click;
             // 
             // menuItemMarkupNotTrain
             // 
             menuItemMarkupNotTrain.Name = "menuItemMarkupNotTrain";
-            menuItemMarkupNotTrain.Size = new Size(180, 22);
+            menuItemMarkupNotTrain.Size = new Size(165, 22);
             menuItemMarkupNotTrain.Text = "列車以外";
             menuItemMarkupNotTrain.Click += menuItemMarkupNotTrain_Click;
             // 
             // toolStripSeparator6
             // 
             toolStripSeparator6.Name = "toolStripSeparator6";
-            toolStripSeparator6.Size = new Size(177, 6);
+            toolStripSeparator6.Size = new Size(162, 6);
             // 
             // menuItemMarkupSpawned
             // 
             menuItemMarkupSpawned.Name = "menuItemMarkupSpawned";
-            menuItemMarkupSpawned.Size = new Size(180, 22);
+            menuItemMarkupSpawned.Size = new Size(165, 22);
             menuItemMarkupSpawned.Text = "新規スポーン";
             menuItemMarkupSpawned.Click += menuItemMarkupSpawned_Click;
             // 
             // menuItemMarkupHandover
             // 
             menuItemMarkupHandover.Name = "menuItemMarkupHandover";
-            menuItemMarkupHandover.Size = new Size(180, 22);
+            menuItemMarkupHandover.Size = new Size(165, 22);
             menuItemMarkupHandover.Text = "同一運番に引継ぎ";
             menuItemMarkupHandover.Click += menuItemMarkupHandover_Click;
             // 
             // menuItemMarkupAll
             // 
             menuItemMarkupAll.Name = "menuItemMarkupAll";
-            menuItemMarkupAll.Size = new Size(180, 22);
+            menuItemMarkupAll.Size = new Size(134, 22);
             menuItemMarkupAll.Text = "列番全選択";
             menuItemMarkupAll.Click += menuItemMarkupAll_Click;
             // 
             // menuItemMarkupCancel
             // 
             menuItemMarkupCancel.Name = "menuItemMarkupCancel";
-            menuItemMarkupCancel.Size = new Size(180, 22);
+            menuItemMarkupCancel.Size = new Size(134, 22);
             menuItemMarkupCancel.Text = "列番全解除";
             menuItemMarkupCancel.Click += menuItemMarkupCancel_Click;
             // 
             // toolStripSeparator4
             // 
             toolStripSeparator4.Name = "toolStripSeparator4";
-            toolStripSeparator4.Size = new Size(177, 6);
+            toolStripSeparator4.Size = new Size(131, 6);
             // 
             // menuItemMarkupType
             // 
@@ -345,6 +337,13 @@ namespace TrainCrewTIDWindow.Forms {
             menuItemMarkupType3.Size = new Size(191, 22);
             menuItemMarkupType3.Text = "タイプ3（色逆転固定）";
             menuItemMarkupType3.Click += menuItemMarkupType3_Click;
+            // 
+            // menuItemHideNumber
+            // 
+            menuItemHideNumber.Name = "menuItemHideNumber";
+            menuItemHideNumber.Size = new Size(180, 22);
+            menuItemHideNumber.Text = "列車番号隠し";
+            menuItemHideNumber.Click += menuItemHideNumber_Click;
             // 
             // toolStripSeparator2
             // 
@@ -397,12 +396,21 @@ namespace TrainCrewTIDWindow.Forms {
             labelStatus.TabIndex = 10;
             labelStatus.Text = " ";
             // 
-            // menuItemHideNumber
+            // pictureBox3
             // 
-            menuItemHideNumber.Name = "menuItemHideNumber";
-            menuItemHideNumber.Size = new Size(180, 22);
-            menuItemHideNumber.Text = "列車番号隠し";
-            menuItemHideNumber.Click += menuItemHideNumber_Click;
+            pictureBox3.BackColor = Color.Transparent;
+            pictureBox3.Location = new Point(-300, -300);
+            pictureBox3.Name = "pictureBox3";
+            pictureBox3.Size = new Size(100, 100);
+            pictureBox3.TabIndex = 7;
+            pictureBox3.TabStop = false;
+            // 
+            // menuItemErrorLog
+            // 
+            menuItemErrorLog.Name = "menuItemErrorLog";
+            menuItemErrorLog.Size = new Size(180, 22);
+            menuItemErrorLog.Text = "ログファイル生成";
+            menuItemErrorLog.Click += menuItemErrorLog_Click;
             // 
             // SubWindow
             // 
@@ -426,8 +434,8 @@ namespace TrainCrewTIDWindow.Forms {
             flowLayoutPanel1.ResumeLayout(false);
             flowLayoutPanel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
-            ((System.ComponentModel.ISupportInitialize)pictureBox3).EndInit();
             contextMenuStrip1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)pictureBox3).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -475,5 +483,6 @@ namespace TrainCrewTIDWindow.Forms {
         private ToolStripMenuItem menuItemMarkupHandover;
         private ToolStripMenuItem menuItemHideNumber;
         private PictureBox pictureBox3;
+        private ToolStripMenuItem menuItemErrorLog;
     }
 }
