@@ -67,7 +67,7 @@ namespace TrainCrewTIDWindow.Manager {
         /// <summary>
         /// 列車番号の文字の画像内座標とサイズ
         /// </summary>
-        private readonly Dictionary<char, NumberImageSetting> alphaIndexDict = [];
+        private readonly Dictionary<string, NumberImageSetting> alphaIndexDict = [];
 
         /// <summary>
         /// 特殊な列車番号の画像内座標とサイズ
@@ -272,11 +272,12 @@ namespace TrainCrewTIDWindow.Manager {
                     if (texts.Length < 4 || texts.Any(t => t == "")) {
                         continue;
                     }
-                    if (texts[0].Length != 1) {
-                        numIndexList.Add(new(texts[0], int.Parse(texts[1]), int.Parse(texts[2]), int.Parse(texts[3])));
+                    var charWidth = int.Parse(texts[3]);
+                    if (/*texts[0].Length != 1*/charWidth > 2) {
+                        numIndexList.Add(new(texts[0], int.Parse(texts[1]), int.Parse(texts[2]), charWidth));
                     }
                     else {
-                        alphaIndexDict.Add(texts[0][0], new(texts[0], int.Parse(texts[1]), int.Parse(texts[2]), int.Parse(texts[3])));
+                        alphaIndexDict.Add(texts[0], new(texts[0], int.Parse(texts[1]), int.Parse(texts[2]), charWidth));
                     }
 
                 }
@@ -742,7 +743,7 @@ namespace TrainCrewTIDWindow.Manager {
                 if (hf != "臨Z" && (numHeader == "" || numHeader == "臨") && (numFooter == "" || numFooter == "X" || numFooter == "Y" || numFooter == "Z")) {
                     markUp |= !window.HideNumber && markupClassesData["local"];
                 }
-                if (numHeader == "臨") {
+                if (numHeader == "臨" || numHeader == "臨回" || numHeader == "検" || numHeader == "試") {
                     markUp |= !window.HideNumber && markupClassesData["rinji"];
                 }
                 if (numFooter.Contains('Z')) {
@@ -785,113 +786,10 @@ namespace TrainCrewTIDWindow.Manager {
 
                 // 運番
                 if (numWindow.Size == NumberSize.S) {
-                    /*var hf = $"{numHeader}{numFooter}";
-                    foreach (var k in numColor.Keys) {
-                        if (hf.Contains(k)) {
-                            if (markupClassesData.ContainsKey(k)) {
-                                markUp |= markupClassesData[k];
-                            }
-                            break;
-                        }
-                    }
-                    if(hf != "臨Z" && (numHeader == "" || numHeader == "臨") && (numFooter == "" || numFooter == "X" || numFooter == "Y" || numFooter == "Z")) {
-                        markUp |= markupClassesData["local"];
-                    }
-                    if (numHeader == "臨") {
-                        markUp |= markupClassesData["rinji"];
-                    }
-                    if (numFooter.Contains('Z')) {
-                        markUp |= markupClassesData["illegalZ"];
-                    }
-                    if (numHeader == "臨" && numFooter.Contains('Z')) {
-                        markUp |= markupClassesData["superIllegalZ"];
-                    }
-
-                    Color? classColor = null;
-                    // 0埋め列番への警告色として不明色に
-                    if (isTrain && numBodyStr[0] == '0') {
-                        markUp |= window.MarkupFillZero;
-                        if (colorDict.ContainsKey("UNKNOWN")) {
-                            classColor = colorDict["UNKNOWN"];
-                        }
-                    }
-                    // 列番被りへの警告色として不明色に
-                    if (isTrain && duplicatingTrains.Contains(train)) {
-                        markUp |= window.MarkupDuplication;
-                        if (colorDict.ContainsKey("UNKNOWN")) {
-                            classColor = colorDict["UNKNOWN"];
-                        }
-                    }
-                    markUp |= window.MarkupNotTrain && !isTrain;*/
-
-
-                    // 種別色
-                    /*Color? classColor = null;
-                    var hf = $"{numHeader}{numFooter}";
-                    foreach (var k in numColor.Keys) {
-                        if (hf.Contains(k)) {
-                            classColor = numColor[k];
-
-                            if (markupClassesData.ContainsKey(k)) {
-                                markUp |= markupClassesData[k];
-                            }
-                            break;
-                        }
-                    }
-                    if (hf != "臨Z" && (numHeader == "" || numHeader == "臨") && (numFooter == "" || numFooter == "X" || numFooter == "Y" || numFooter == "Z")) {
-                        markUp |= markupClassesData["local"];
-                    }
-                    if (numHeader == "臨") {
-                        markUp |= markupClassesData["rinji"];
-                    }
-                    if (numFooter.Contains('Z')) {
-                        markUp |= markupClassesData["illegalZ"];
-                    }
-                    if (numHeader == "臨" && numFooter.Contains('Z')) {
-                        markUp |= markupClassesData["superIllegalZ"];
-                    }
-                    // 0埋め列番への警告色として不明色に
-                    if (isTrain && numBodyStr[0] == '0') {
-                        markUp |= window.MarkupFillZero;
-                        if (colorDict.ContainsKey("UNKNOWN")) {
-                            classColor = colorDict["UNKNOWN"];
-                        }
-                    }
-                    // 列番被りへの警告色として不明色に
-                    if (isTrain && duplicatingTrains.Contains(train)) {
-                        markUp |= window.MarkupDuplication;
-                        if (colorDict.ContainsKey("UNKNOWN")) {
-                            classColor = colorDict["UNKNOWN"];
-                        }
-                    }
-                    // 種別色無しかつ数字なしであれば不明色に
-                    if (classColor == null) {
-                        if (!isTrain && colorDict.ContainsKey("UNKNOWN")) {
-                            classColor = colorDict["UNKNOWN"];
-                        }
-                        else {
-                            classColor = Color.White;
-                        }
-                    }
-
-                    markUp |= window.MarkupNotTrain && !isTrain;*/
 
                     var numIndex = numIndexList.FirstOrDefault(i => i.Text == train && i.Width == 5);
                     if(numIndex != null) {
                         //色を取得
-                        /*var colorKey = numColor.Keys.FirstOrDefault(train.Contains);
-                        if (colorKey != null && numColor.TryGetValue(colorKey, out var newColor)) {
-                            classColor = numColor[colorKey];
-                        }
-                        // 色が見つからなければとりあえず不明色に
-                        if (classColor == null) {
-                            if (colorDict.ContainsKey("UNKNOWN")) {
-                                classColor = colorDict["UNKNOWN"];
-                            }
-                            else {
-                                classColor = Color.White;
-                            }
-                        }*/
 
                         
                         if (trainData == null && !markUp) {
@@ -923,11 +821,11 @@ namespace TrainCrewTIDWindow.Manager {
                         }
                         else if (isTrain) {
                             if (numBody % 2 != 0) {
-                                var index = alphaIndexDict['←'];
+                                var index = alphaIndexDict["←"];
                                 AddNumImage(g, index.X, index.Y, numWindow.PosX, numWindow.PosY, iaType);
                             }
                             else {
-                                var index = alphaIndexDict['→'];
+                                var index = alphaIndexDict["→"];
                                 AddNumImage(g, index.X, index.Y, numWindow.PosX + 24, numWindow.PosY, iaType);
                             }
                         }
@@ -987,11 +885,11 @@ namespace TrainCrewTIDWindow.Manager {
                         }
                         else if (umban % 2 != 0) {
                             umban -= 1;
-                            var index = alphaIndexDict['←'];
+                            var index = alphaIndexDict["←"];
                             AddNumImage(g, index.X, index.Y, numWindow.PosX, numWindow.PosY, iaType);
                         }
                         else {
-                            var index = alphaIndexDict['→'];
+                            var index = alphaIndexDict["→"];
                             AddNumImage(g, index.X, index.Y, numWindow.PosX + 24, numWindow.PosY, iaType);
                         }
 
@@ -1014,59 +912,6 @@ namespace TrainCrewTIDWindow.Manager {
                 }
                 // 列番
                 else {
-
-                    // 種別色
-                    /*Color? classColor = null;
-                    var hf = $"{numHeader}{numFooter}";
-                    foreach (var k in numColor.Keys) {
-                        if (hf.Contains(k)) {
-                            classColor = numColor[k];
-
-                            if (markupClassesData.ContainsKey(k)) {
-                                markUp |= markupClassesData[k];
-                            }
-                            break;
-                        }
-                    }
-                    if (hf != "臨Z" && (numHeader == "" || numHeader == "臨") && (numFooter == "" || numFooter == "X" || numFooter == "Y" || numFooter == "Z")) {
-                        markUp |= markupClassesData["local"];
-                    }
-                    if (numHeader == "臨") {
-                        markUp |= markupClassesData["rinji"];
-                    }
-                    if (numFooter.Contains('Z')) {
-                        markUp |= markupClassesData["illegalZ"];
-                    }
-                    if (numHeader == "臨" && numFooter.Contains('Z')) {
-                        markUp |= markupClassesData["superIllegalZ"];
-                    }
-                    // 0埋め列番への警告色として不明色に
-                    if (isTrain && numBodyStr[0] == '0') {
-                        markUp |= window.MarkupFillZero;
-                        if (colorDict.ContainsKey("UNKNOWN")) {
-                            classColor = colorDict["UNKNOWN"];
-                        }
-                    }
-                    // 列番被りへの警告色として不明色に
-                    if (isTrain && duplicatingTrains.Contains(train)) {
-                        markUp |= window.MarkupDuplication;
-                        if (colorDict.ContainsKey("UNKNOWN")) {
-                            classColor = colorDict["UNKNOWN"];
-                        }
-                    }
-                    // 種別色無しかつ数字なしであれば不明色に
-                    if (classColor == null) {
-                        if (!isTrain && colorDict.ContainsKey("UNKNOWN")) {
-                            classColor = colorDict["UNKNOWN"];
-                        }
-                        else {
-                            classColor = Color.White;
-                        }
-                    }
-
-                    markUp |= window.MarkupNotTrain && !isTrain;*/
-
-
 
 
 
@@ -1129,11 +974,11 @@ namespace TrainCrewTIDWindow.Manager {
                         }
                         else if (isTrain) {
                             if (numBody % 2 != 0) {
-                                var index = alphaIndexDict['←'];
+                                var index = alphaIndexDict["←"];
                                 AddNumImage(g, index.X, index.Y, numWindow.PosX, numWindow.PosY, iaType);
                             }
                             else {
-                                var index = alphaIndexDict['→'];
+                                var index = alphaIndexDict["→"];
                                 AddNumImage(g, index.X, index.Y, numWindow.PosX + 42, numWindow.PosY, iaType);
                             }
                         }
@@ -1166,7 +1011,7 @@ namespace TrainCrewTIDWindow.Manager {
                         if (!window.HideNumber) {
                             // 列番の頭の文字設置
                             if (numHeader.Length > 0) {
-                                if (alphaIndexDict.TryGetValue(numHeader[0], out var nh)) {
+                                if (alphaIndexDict.TryGetValue(numHeader, out var nh)) {
                                     AddNumImage(g, nh.Width, nh.X, nh.Y, numWindow.PosX, numWindow.PosY, iaType);
                                 }
                                 else {
@@ -1189,14 +1034,15 @@ namespace TrainCrewTIDWindow.Manager {
 
                             try {
                                 // 列番の末尾の文字設置
+                                Debug.WriteLine($"numfoot: {numFooter}");
                                 if (numFooter.Length > 0) {
-                                    var p = alphaIndexDict[numFooter[0]];
+                                    var p = alphaIndexDict[numFooter[0].ToString()];
                                     if (p.X < 55 && p.Y < 55) {
                                         AddNumImage(g, p.X, p.Y, numWindow.PosX + 36, numWindow.PosY, iaType);
                                     }
                                 }
                                 if (numFooter.Length > 1) {
-                                    var p = alphaIndexDict[numFooter[1]];
+                                    var p = alphaIndexDict[numFooter[1].ToString()];
                                     if (p.X < 55 && p.Y < 55) {
                                         AddNumImage(g, p.X, p.Y, numWindow.PosX + 42, numWindow.PosY, iaType);
                                     }
@@ -1224,11 +1070,11 @@ namespace TrainCrewTIDWindow.Manager {
                             }
                         }
                         else if (numBody % 2 != 0) {
-                            var index = alphaIndexDict['←'];
+                            var index = alphaIndexDict["←"];
                             AddNumImage(g, index.X, index.Y, numWindow.PosX, numWindow.PosY, iaType);
                         }
                         else {
-                            var index = alphaIndexDict['→'];
+                            var index = alphaIndexDict["→"];
                             AddNumImage(g, index.X, index.Y, numWindow.PosX + 42, numWindow.PosY, iaType);
                         }
 
