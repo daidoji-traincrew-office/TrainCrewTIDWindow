@@ -708,8 +708,20 @@ namespace TrainCrewTIDWindow.Forms
             var s = source;
 
             if (s == "select" || s == "sct" || s == "sel" || s == "sl") {
-                DialogResult result = MessageBox.Show($"TIDをサーバに接続しますか？\n（いいえを選択するとTRAIN CREW本体に接続します）", "接続先選択 | TID", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (result == DialogResult.Yes) {
+                var serverButton = new TaskDialogButton("運転会サーバ接続");
+                var trainCrewButton = new TaskDialogButton("TRAIN CREW本体接続");
+                var result = TaskDialog.ShowDialog(this, new TaskDialogPage {
+                    Caption = $"モード選択 | TID",
+                    Heading = $"モード選択",
+                    Icon = TaskDialogIcon.Information,
+                    Text = $"モードを選択してください。",
+                    Buttons = { serverButton, trainCrewButton },
+                    DefaultButton = serverButton
+                });
+
+
+                /*DialogResult result = MessageBox.Show($"TIDをサーバに接続しますか？\n（いいえを選択するとTRAIN CREW本体に接続します）", "接続先選択 | TID", MessageBoxButtons.YesNo, MessageBoxIcon.Question);*/
+                if (result == serverButton) {
                     s = "server";
                 }
                 else {
