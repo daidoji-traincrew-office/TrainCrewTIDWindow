@@ -64,10 +64,11 @@ namespace TrainCrewTIDWindow.Forms {
             menuItemSilent = new ToolStripMenuItem();
             menuItemRename = new ToolStripMenuItem();
             toolStripSeparator3 = new ToolStripSeparator();
+            menuItemErrorLog = new ToolStripMenuItem();
+            menuItemReserveLog = new ToolStripMenuItem();
             menuItemVersion = new ToolStripMenuItem();
             labelStatus = new Label();
             pictureBox3 = new PictureBox();
-            menuItemErrorLog = new ToolStripMenuItem();
             flowLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             contextMenuStrip1.SuspendLayout();
@@ -157,27 +158,27 @@ namespace TrainCrewTIDWindow.Forms {
             // 
             // contextMenuStrip1
             // 
-            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { menuItemCopy, toolStripSeparator1, menuItemTrainMarkup, menuItemMarkupType, menuItemHideNumber, toolStripSeparator2, menuItemTopMost, menuItemSilent, menuItemRename, toolStripSeparator3, menuItemErrorLog, menuItemVersion });
+            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { menuItemCopy, toolStripSeparator1, menuItemTrainMarkup, menuItemMarkupType, menuItemHideNumber, toolStripSeparator2, menuItemTopMost, menuItemSilent, menuItemRename, toolStripSeparator3, menuItemErrorLog, menuItemReserveLog, menuItemVersion });
             contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new Size(181, 242);
+            contextMenuStrip1.Size = new Size(196, 242);
             // 
             // menuItemCopy
             // 
             menuItemCopy.Name = "menuItemCopy";
-            menuItemCopy.Size = new Size(180, 22);
+            menuItemCopy.Size = new Size(195, 22);
             menuItemCopy.Text = "TID画面をコピー";
             menuItemCopy.Click += menuItemCopy_Click;
             // 
             // toolStripSeparator1
             // 
             toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new Size(177, 6);
+            toolStripSeparator1.Size = new Size(192, 6);
             // 
             // menuItemTrainMarkup
             // 
             menuItemTrainMarkup.DropDownItems.AddRange(new ToolStripItem[] { menuItemMarkupClass, menuItemMarkupDelayed, menuItemMarkupOther, menuItemMarkupAll, menuItemMarkupCancel, toolStripSeparator4 });
             menuItemTrainMarkup.Name = "menuItemTrainMarkup";
-            menuItemTrainMarkup.Size = new Size(180, 22);
+            menuItemTrainMarkup.Size = new Size(195, 22);
             menuItemTrainMarkup.Text = "列車番号強調表示";
             // 
             // menuItemMarkupClass
@@ -312,7 +313,7 @@ namespace TrainCrewTIDWindow.Forms {
             // 
             menuItemMarkupType.DropDownItems.AddRange(new ToolStripItem[] { menuItemMarkupType1, menuItemMarkupType2, menuItemMarkupType3 });
             menuItemMarkupType.Name = "menuItemMarkupType";
-            menuItemMarkupType.Size = new Size(180, 22);
+            menuItemMarkupType.Size = new Size(195, 22);
             menuItemMarkupType.Text = "強調表示タイプ";
             // 
             // menuItemMarkupType1
@@ -341,45 +342,59 @@ namespace TrainCrewTIDWindow.Forms {
             // menuItemHideNumber
             // 
             menuItemHideNumber.Name = "menuItemHideNumber";
-            menuItemHideNumber.Size = new Size(180, 22);
+            menuItemHideNumber.Size = new Size(195, 22);
             menuItemHideNumber.Text = "列車番号隠し";
             menuItemHideNumber.Click += menuItemHideNumber_Click;
             // 
             // toolStripSeparator2
             // 
             toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(177, 6);
+            toolStripSeparator2.Size = new Size(192, 6);
             // 
             // menuItemTopMost
             // 
             menuItemTopMost.Name = "menuItemTopMost";
-            menuItemTopMost.Size = new Size(180, 22);
+            menuItemTopMost.Size = new Size(195, 22);
             menuItemTopMost.Text = "最前面表示";
             menuItemTopMost.Click += menuItemTopMost_Click;
             // 
             // menuItemSilent
             // 
             menuItemSilent.Name = "menuItemSilent";
-            menuItemSilent.Size = new Size(180, 22);
+            menuItemSilent.Size = new Size(195, 22);
             menuItemSilent.Text = "サイレントモード";
             menuItemSilent.Click += menuItemSilent_Click;
             // 
             // menuItemRename
             // 
             menuItemRename.Name = "menuItemRename";
-            menuItemRename.Size = new Size(180, 22);
+            menuItemRename.Size = new Size(195, 22);
             menuItemRename.Text = "ウィンドウ名の変更";
             menuItemRename.Click += menuItemRename_Click;
             // 
             // toolStripSeparator3
             // 
             toolStripSeparator3.Name = "toolStripSeparator3";
-            toolStripSeparator3.Size = new Size(177, 6);
+            toolStripSeparator3.Size = new Size(192, 6);
+            // 
+            // menuItemErrorLog
+            // 
+            menuItemErrorLog.Name = "menuItemErrorLog";
+            menuItemErrorLog.Size = new Size(195, 22);
+            menuItemErrorLog.Text = "ログファイル即時出力";
+            menuItemErrorLog.Click += menuItemErrorLog_Click;
+            // 
+            // menuItemReserveLog
+            // 
+            menuItemReserveLog.Name = "menuItemReserveLog";
+            menuItemReserveLog.Size = new Size(195, 22);
+            menuItemReserveLog.Text = "終了時にログファイル出力";
+            menuItemReserveLog.Click += menuItemReserveLog_Click;
             // 
             // menuItemVersion
             // 
             menuItemVersion.Name = "menuItemVersion";
-            menuItemVersion.Size = new Size(180, 22);
+            menuItemVersion.Size = new Size(195, 22);
             menuItemVersion.Text = "バージョン情報";
             menuItemVersion.Click += menuItemVersion_Click;
             // 
@@ -404,13 +419,6 @@ namespace TrainCrewTIDWindow.Forms {
             pictureBox3.Size = new Size(100, 100);
             pictureBox3.TabIndex = 7;
             pictureBox3.TabStop = false;
-            // 
-            // menuItemErrorLog
-            // 
-            menuItemErrorLog.Name = "menuItemErrorLog";
-            menuItemErrorLog.Size = new Size(180, 22);
-            menuItemErrorLog.Text = "ログファイル生成";
-            menuItemErrorLog.Click += menuItemErrorLog_Click;
             // 
             // SubWindow
             // 
@@ -484,5 +492,6 @@ namespace TrainCrewTIDWindow.Forms {
         private ToolStripMenuItem menuItemHideNumber;
         private PictureBox pictureBox3;
         private ToolStripMenuItem menuItemErrorLog;
+        private ToolStripMenuItem menuItemReserveLog;
     }
 }

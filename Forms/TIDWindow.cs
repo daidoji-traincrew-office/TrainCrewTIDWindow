@@ -328,6 +328,8 @@ namespace TrainCrewTIDWindow.Forms
 
         public bool Silent { get; private set; } = false;
 
+        public bool ReserveLog { get; private set; } = false;
+
         private string debugNumberDown = "1111";
         private string debugNumberUp = "1112";
         private int debugDelayDown = 0;
@@ -1449,6 +1451,16 @@ namespace TrainCrewTIDWindow.Forms
             }
         }
 
+        public void SetReserveLog(bool reserve) {
+            ReserveLog = reserve;
+            menuItemReserveLog.CheckState = reserve ? CheckState.Checked : CheckState.Unchecked;
+            if (displayManager != null) {
+                foreach (var w in displayManager.SubWindows) {
+                    w.SetReserveLog(reserve);
+                }
+            }
+        }
+
         public void SetMarkupType(int type) {
 
             MarkupType = type < 3 ? (type >= 0 ? type : 0) : 2;
@@ -1957,6 +1969,7 @@ namespace TrainCrewTIDWindow.Forms
                         sub.Location = new Point(center.X - s.Width / 2 - border, center.Y - s.Height / 2 - Size.Height + ClientSize.Height - panel1.Location.Y / 2 - border);
                         sub.SetTopMost(TopMost);
                         sub.SetSilent(Silent);
+                        sub.SetReserveLog(ReserveLog);
                         sub.SetClockColor(serverCommunication == null || UseServerTime ? Color.White : Color.Yellow);
                         displayManager.AddSubWindow(sub);
                     }
@@ -2133,6 +2146,7 @@ namespace TrainCrewTIDWindow.Forms
                         sub.Location = new Point(center.X - s.Width / 2 - border, center.Y - s.Height / 2 - Size.Height + ClientSize.Height - panel1.Location.Y / 2 - border);
                         sub.SetTopMost(TopMost);
                         sub.SetSilent(Silent);
+                        sub.SetReserveLog(ReserveLog);
                         sub.SetClockColor(serverCommunication == null || UseServerTime ? Color.White : Color.Yellow);
                         displayManager.AddSubWindow(sub);
                     }
@@ -2204,7 +2218,11 @@ namespace TrainCrewTIDWindow.Forms
                 });
                 if (result == TaskDialogButton.No) {
                     e.Cancel = true;
+                    return;
                 }
+            }
+            if (ReserveLog) {
+                LogManager.OutputLog();
             }
             if (LogManager.Output && LogManager.NeededWarning) {
                 OpeningDialog = true;
@@ -2214,6 +2232,15 @@ namespace TrainCrewTIDWindow.Forms
                     Icon = TaskDialogIcon.Information,
                     Text =
                         $"{ErrorText}ログが出力されました。\n本ソフトの製作担当者にお問い合わせのうえ、\n必要な場合はErrorLog.txtをお送りください。\n（ErrorLog.txtは次回起動後に削除される場合があります）"
+                });
+            }
+            else if (ReserveLog) {
+                OpeningDialog = true;
+                TaskDialog.ShowDialog(this, new TaskDialogPage {
+                    Caption = $"{ErrorText}ログ出力 | TID - ダイヤ運転会",
+                    Heading = $"{ErrorText}ログ出力",
+                    Icon = TaskDialogIcon.Information,
+                    Text = $"{ErrorText}ログが出力されました。\n（ErrorLog.txtは次回起動後に削除される場合があります）"
                 });
             }
         }
@@ -2619,6 +2646,10 @@ namespace TrainCrewTIDWindow.Forms
                 });
             }
             OpeningDialog = false;
+        }
+
+        private void menuItemReserveLog_Click(object sender, EventArgs e) {
+            SetReserveLog(!ReserveLog);
         }
     }
 }

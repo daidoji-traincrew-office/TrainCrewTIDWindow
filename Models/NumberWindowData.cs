@@ -87,6 +87,7 @@ namespace TrainCrewTIDWindow.Models {
                 NumberSize.L => new Size(59, 11),
                 NumberSize.M => new Size(47, 11),
                 NumberSize.S => new Size(29, 11),
+                NumberSize.JR => new Size(41, 9),
                 _ => new Size(0, 0),
             };
         }

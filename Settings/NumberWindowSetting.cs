@@ -111,6 +111,10 @@ namespace TrainCrewTIDWindow.Settings {
         /// <summary>
         /// 運行番号のみ
         /// </summary>
-        S
+        S,
+        /// <summary>
+        /// 自営R用（下線なし、Mより1桁少ない）
+        /// </summary>
+        JR
     }
 }

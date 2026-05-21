@@ -339,6 +339,7 @@ namespace TrainCrewTIDWindow.Forms {
                         sub.Location = new Point(center.X - s.Width / 2 - border, center.Y - s.Height / 2 - Size.Height + ClientSize.Height - pictureBox1.Location.Y / 2 - border);
                         sub.SetTopMost(TopMost);
                         sub.SetSilent(displayManager.Window.Silent);
+                        sub.SetReserveLog(displayManager.Window.ReserveLog);
                         sub.SetClockColor(displayManager.Window.HasServerCommunication || displayManager.Window.UseServerTime ? Color.White : Color.Yellow);
                         displayManager.AddSubWindow(sub);
                     }
@@ -537,6 +538,10 @@ namespace TrainCrewTIDWindow.Forms {
 
         public void SetSilent(bool silent) {
             menuItemSilent.CheckState = silent ? CheckState.Checked : CheckState.Unchecked;
+        }
+
+        public void SetReserveLog(bool reserve) {
+            menuItemReserveLog.CheckState = reserve ? CheckState.Checked : CheckState.Unchecked;
         }
 
         public void SetWindowName(string name) {
@@ -764,6 +769,10 @@ namespace TrainCrewTIDWindow.Forms {
                 });
             }
             OpeningDialog = false;
+        }
+
+        private void menuItemReserveLog_Click(object sender, EventArgs e) {
+            displayManager.Window.SetReserveLog(!displayManager.Window.ReserveLog);
         }
     }
 }
