@@ -723,7 +723,7 @@ namespace TrainCrewTIDWindow.Manager {
                 }
                 _ = trainDataDict.TryGetValue(train, out var trainData);
 
-                var numHeader = Regex.Replace(train, @"[0-9a-zA-Z]", "");  // 列番の頭の文字（回、試など）
+                var numHeader = Regex.Replace(train, @"[0-9a-zA-Z]", "").Replace("貨", "").Replace("入換", "");  // 列番の頭の文字（回、試など）
                 var numBodyStr = Regex.Replace(train, @"[^0-9]", "");
                 var isTrain = int.TryParse(numBodyStr, out var numBody);  // 列番本体（数字部分）
                 var numFooter = Regex.Replace(train, @"[^a-zA-Z]", "");  // 列番の末尾の文字
@@ -1073,7 +1073,7 @@ namespace TrainCrewTIDWindow.Manager {
                                 if (alphaIndexDict.TryGetValue(numHeader, out var nh)) {
                                     AddNumImage(g, nh.Width, nh.X, nh.Y, numWindow.PosX, numWindow.PosY, iaType);
                                 }
-                                else if(!numHeader.Contains('貨')) {
+                                else {
                                     window.OpeningDialog = true;
                                     TaskDialog.ShowDialog(window, new TaskDialogPage {
                                         Caption = $"不正な列番 | TID - ダイヤ運転会",
